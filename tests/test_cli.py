@@ -8,10 +8,10 @@ from eil.agent import ModelUnavailableError
 
 
 def test_cli_model_failure_has_no_traceback(monkeypatch, capsys):
-    def unavailable(question):
+    def unavailable(question, limits):
         raise ModelUnavailableError("Start Ollama and select an installed model.")
 
-    monkeypatch.setattr(cli, "run_agent", unavailable)
+    monkeypatch.setattr(cli, "_run_local", unavailable)
     monkeypatch.setattr("sys.argv", ["eil", "agent"])
     with pytest.raises(SystemExit) as exc:
         cli.main()
@@ -22,8 +22,8 @@ def test_cli_model_failure_has_no_traceback(monkeypatch, capsys):
 
 
 def test_cli_unicode_answer_survives_windows_redirected_output(monkeypatch):
-    result = {"answer": "S03: Δ 12.5021 pp → inspect lighting ✓"}
-    monkeypatch.setattr(cli, "run_agent", lambda question: result)
+    result = {"status": "completed", "result": {"answer": "S03: Δ 12.5021 pp → inspect lighting ✓"}}
+    monkeypatch.setattr(cli, "_run_local", lambda question, limits: result)
     monkeypatch.setattr("sys.argv", ["eil", "agent"])
     buffer = io.BytesIO()
     output = io.TextIOWrapper(buffer, encoding="cp1252", write_through=True)

@@ -50,15 +50,16 @@ def _tools():
     return [compare_station_performance, inspect_station]
 
 
-def _build_model():
+def _build_model(*, model_name=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL, max_output_tokens=None):
     from langchain_ollama import ChatOllama
 
     try:
         return ChatOllama(
-            model=OLLAMA_MODEL,
-            base_url=OLLAMA_BASE_URL,
+            model=model_name,
+            base_url=base_url,
             temperature=0,
             num_ctx=MODEL_CONTEXT_TOKENS,
+            num_predict=max_output_tokens,
             validate_model_on_init=True,
             client_kwargs={
                 "timeout": httpx.Timeout(REQUEST_TIMEOUT_SECONDS, connect=CONNECT_TIMEOUT_SECONDS),
@@ -71,12 +72,14 @@ def _build_model():
         ) from exc
     except (ValueError, ConnectionError, httpx.RequestError, ResponseError) as exc:
         raise ModelUnavailableError(
-            f"Cannot validate Ollama model {OLLAMA_MODEL!r}. Start Ollama, check "
+            f"Cannot validate Ollama model {model_name!r}. Start Ollama, check "
             "EIL_OLLAMA_BASE_URL, and install/select the model using ollama list/pull."
         ) from exc
 
 
-def build_agent(model: BaseChatModel | None = None):
+def build_agent(
+    model: BaseChatModel | None = None, *, checkpointer=None, middleware=(), model_options=None
+):
     """Build a tool-using Deep Agent with a local Ollama model.
 
     The default Deep Agents StateBackend is virtual. No real shell/sandbox
@@ -94,21 +97,26 @@ def build_agent(model: BaseChatModel | None = None):
         from langgraph.checkpoint.memory import InMemorySaver
     except ImportError as exc:
         raise RuntimeError("Install dependencies first: uv sync --extra dev") from exc
-    model = model if model is not None else _build_model()
+    model = model if model is not None else _build_model(**(model_options or {}))
     # This app only uses Ollama. Disable its automatically added delegation tool.
     register_harness_profile(
         "ollama",
-        HarnessProfile(general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=False)),
+        HarnessProfile(
+            general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=False),
+            # A summary invokes its own model outside the run's budget middleware.
+            excluded_middleware={"SummarizationMiddleware"},
+        ),
     )
     backend = StateBackend()
     return create_deep_agent(
         model=model,
         tools=_tools(),
         system_prompt=SYSTEM_PROMPT,
-        checkpointer=InMemorySaver(),
+        checkpointer=checkpointer if checkpointer is not None else InMemorySaver(),
         backend=backend,
         middleware=[
             FilesystemMiddleware(backend=backend, tools=["ls", "read_file", "glob", "grep"]),
+            *middleware,
         ],
     )
 

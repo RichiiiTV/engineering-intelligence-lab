@@ -17,3 +17,4 @@ DATA_DIR = ROOT / "data"
 DATASET_NAME = os.environ.get("EIL_DATASET", "synthetic_inspection_v1.csv")
 OLLAMA_BASE_URL = os.environ.get("EIL_OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("EIL_OLLAMA_MODEL", "qwen3.5:4b-q8_0")
+STATE_DIR = Path(os.environ.get("EIL_STATE_DIR", str(ROOT / ".eil"))).resolve()

@@ -36,4 +36,4 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
-Milestone 1: working deterministic synthetic-data investigation and optional tool-calling Deep Agent. Do not add PDF RAG, MCP servers, Langfuse, or UI until verified in later milestones.
+Milestone 2: durable, inspectable and bounded local investigation execution. Preserve the M1 read-only tool boundary. Stop after the M2 acceptance checks and report. Do not add PDF RAG, MCP servers, Langfuse, or UI until separately authorized in later milestones.

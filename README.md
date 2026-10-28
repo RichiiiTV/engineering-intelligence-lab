@@ -2,15 +2,17 @@
 
 A local-first **agentic engineering investigation workbench** developed with OpenAI Codex. **Independent of NodeWeft.**
 
-## What is in this starter?
+## What is included?
 
 - Generated, versioned synthetic inspection dataset (`data/synthetic_inspection_v1.csv`)
 - Deterministic and inspectable station comparison (`backend/src/eil/analytics.py`)
 - FastAPI endpoints to inspect findings
 - **Optional real Deep Agents + LangGraph tool-calling path** using an Ollama `ChatOllama` model
+- Durable SQLite investigation queue, thread-scoped checkpoints, run history and SSE events
+- Step, model/tool call, token and time budgets; pause, resume and cancellation
 - `AGENTS.md`, milestone-specific Codex tasks, evaluation fixture, and tests
 
-This is an initial vertical slice, **not yet a full PDF+CSV investigation app**. No PDF ingestion, React frontend, RAG, MCP, persistent checkpointing, or safe sandboxed execution is implemented yet. A live Ollama/Deep Agents smoke test passed on the synthetic fixture; a broader model benchmark remains future work. See [the Ollama verification](docs/ollama-verification.md).
+M2 adds durable local execution. PDF ingestion, React, RAG, MCP and sandboxed code execution remain future work. The real Ollama agent has passed the synthetic investigation smoke through the bounded service. See [the M2 report](docs/m2-results.md) and [M1 Ollama verification](docs/ollama-verification.md).
 
 ## Quick start (Windows PowerShell)
 
@@ -21,14 +23,15 @@ uv run ruff check .
 uv run ruff format --check .
 uv run pytest -q
 uv run python -m eil.cli demo
-uv run uvicorn eil.api:app --reload
+uv run uvicorn eil.api:app --host 127.0.0.1 --timeout-graceful-shutdown 5
 # Open http://127.0.0.1:8000/docs
 ```
 
 Optional: **run a real agent** after starting Ollama and ensuring the configured model is installed:
 
 ```powershell
-Copy-Item .env.example .env
+# Only when .env does not already exist:
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 uv run python -m eil.cli agent
 ```
 
@@ -41,11 +44,25 @@ ollama list
 uv run python -m eil.cli agent
 ```
 
-The adapter validates model availability before constructing the graph, explicitly requests an 8,192-token context, uses a 5-second connection timeout and 60-second HTTP inactivity timeout, and reports connection, missing-model, inference-timeout and rejected-request errors. The CLI exits with code 1 and an actionable message; the API returns 503. CLI JSON escapes Unicode so redirected output works with Windows legacy code pages. No model download or paid-provider fallback happens automatically.
+The adapter validates model availability, requests an 8,192-token context, and uses 5-second connection and 60-second HTTP inactivity timeouts. The run supervisor separately enforces total active time. CLI output is a run record with its answer under `result.answer`; it includes the run ID, status, counters and errors. Unicode is JSON-escaped for Windows redirected output. No model download or paid-provider fallback happens automatically.
 
-A small local model may fail to call tools, emit invalid arguments, ignore evidence, or exhaust the graph's 35-step recursion limit. Model availability does not prove tool-calling support. In the live smoke, the server's 4,096-token default produced a wrong answer despite correct tool output; an explicit 8,192-token context retained the full evidence and passed. Longer tasks need their own context/memory measurements. The HTTP timeouts apply to individual requests/inactivity; they do not impose an overall investigation deadline. There is no total token budget, hard cancellation, queue, or production resource policy yet. General accuracy and performance across tasks remain unbenchmarked.
+A small local model may ignore evidence or return invalid arguments. The server's original 4,096-token context produced an incorrect answer; the explicit 8,192-token setting passed the fixture. Longer tasks still need context/memory measurements. Development defaults are 35 steps, 8 model attempts, 16 tool calls, 32,768 total tokens, 1,024 output tokens per call and 120 seconds of active time. Limits persist across resume. Token admission conservatively reserves a full context plus output allowance before each request; unknown or interrupted usage retains that charge. Automatic summarization is disabled so it cannot make unbudgeted model calls. See [execution controls and limitations](docs/m2-results.md).
 
-The exposed tools are `compare_station_performance`, `inspect_station`, `ls`, `read_file`, `glob`, and `grep`. File tools use an explicit in-memory `StateBackend`, with no host files mounted. File-writing, deletion, shell execution, code interpreters, network-fetch tools and the default delegation tool are unavailable. Framework context offloading may still write to virtual state internally. `ground_truth.json` is not mounted or returned to the model. Dataset reads resolve paths and enforce the configured file within `data/`, including when an explicit path is supplied.
+Only one CLI/API service may own a state directory. Stop the API before running `agent` or `resume` through the CLI, or use the API to submit work. The default state folder is ignored `.eil/`; `EIL_STATE_DIR` can select another trusted local folder. Use one Uvicorn worker. Reloading or stopping the service interrupts active work; it requires an explicit resume. Queued work remains durable.
+
+The CLI prints the investigation ID to stderr at submission. From a second PowerShell session using the same state directory:
+
+```powershell
+uv run python -m eil.cli status <run-id>
+uv run python -m eil.cli pause <run-id>
+uv run python -m eil.cli cancel <run-id>
+# Once the first service has stopped, resume the same durable thread:
+uv run python -m eil.cli resume <run-id>
+```
+
+Ctrl+C cancels a CLI investigation. `agent --timeout-seconds 60` selects a shorter total time budget. Paused, interrupted and failed jobs can resume with their remaining budgets; completed, cancelled and exhausted jobs cannot resume. A failed job that exhausts its remaining budget on retry must be replaced with a new investigation.
+
+The exposed tools are `compare_station_performance`, `inspect_station`, `ls`, `read_file`, `glob`, and `grep`. File tools use an explicit virtual `StateBackend`, now persisted inside the thread's checkpoint, with no host files mounted. File-writing, deletion, shell execution, code interpreters, network-fetch tools and default delegation are unavailable. Framework result offloading can write virtual state internally. `ground_truth.json` is not mounted or returned to the model. Dataset paths remain allowlisted. The application starts its own fixed worker process; the agent has no process-launch tool or access to the run databases.
 
 The committed `uv.lock` and `.python-version` record the reviewed environment. Offline tests use a scripted ChatOllama subclass with real tool binding and the actual Deep Agents graph; HTTP requests are forbidden in those tests. They verify framework wiring and permissions, not the quality or behavior of a real model. See [the completed M1 review](docs/review-results.md) for versions, commands and remaining limits.
 
@@ -62,12 +79,26 @@ The deterministic baseline report tells you *which station* changed and how stro
 - `GET /api/metrics/summary`
 - `GET /api/metrics/stations/S03`
 - `GET /api/investigations/demo-report`
+- `POST /api/investigations` — create a job, HTTP 202
+- `GET /api/investigations` — recent run records
+- `GET /api/investigations/{id}` — status, result, counters and actionable errors
+- `GET /api/investigations/{id}/events` — persisted SSE stream; reconnect with `Last-Event-ID`
+- `POST /api/investigations/{id}/pause`, `/resume`, `/cancel`
 
-`POST /api/investigations` with `{"question":"Which station's false ejections changed most?"}` invokes the local Ollama-backed agent. Blank/oversized questions return 422. This experimental synchronous endpoint is for local development only; shared deployment still needs queues, persistent run state, total budgets and cancellation.
+`POST /api/investigations` accepts `{"question":"Which station's false ejections changed most?","limits":{"timeout_seconds":120}}`. It now returns HTTP **202** and a run record instead of synchronously returning an answer. Poll the run or consume its events. Model failure is recorded as `status: "failed"` with an actionable `error`; job creation itself can succeed while Ollama is down. Invalid questions/options return 422, unknown jobs 404, conflicting actions 409, full queue 429 and invalid server model-URL configuration 503.
+
+```powershell
+$body = @{question="Which station changed most? Cite tool evidence."} | ConvertTo-Json
+$job = Invoke-RestMethod http://127.0.0.1:8000/api/investigations -Method Post -ContentType application/json -Body $body
+Invoke-RestMethod "http://127.0.0.1:8000/api/investigations/$($job.id)"
+curl.exe -N "http://127.0.0.1:8000/api/investigations/$($job.id)/events"
+```
+
+This API is for loopback development. It has no authentication, per-user authorization, retention quota or shared-deployment policy. Cancelling terminates the local worker; a remote Ollama server may continue computing until it notices the disconnected client. Checkpoint recovery can repeat an unfinished read-only node.
 
 ## Codex usage
 
-The first-session review is recorded in [docs/review-results.md](docs/review-results.md). Stop at M1 until the user explicitly authorizes another milestone. See `docs/roadmap.md` and `AGENTS.md`.
+M1 review and live verification are recorded in `docs/review-results.md` and `docs/ollama-verification.md`. M2 results are in [docs/m2-results.md](docs/m2-results.md). Stop after M2; later milestones require another user request. See `docs/roadmap.md` and `AGENTS.md`.
 
 ## Data governance
 

@@ -4,7 +4,7 @@
 - deterministic baseline metrics and evidence IDs
 - FastAPI read endpoints and optional Deep Agents + Ollama CLI
 - unit/integration tests on synthetic incident
-- Review: known anomalous station S03 ranks first; baseline and offline graph/permission tests verified. Live Ollama smoke passed after Windows output and context fixes. See `review-results.md` and `ollama-verification.md`. No later milestone has started.
+- Review: known anomalous station S03 ranks first; baseline and offline graph/permission tests verified. Live Ollama smoke passed after Windows output and context fixes. See `review-results.md` and `ollama-verification.md`.
 
 ## M2 — Real agent execution infrastructure
 - persistent LangGraph checkpoints with distinct investigation threads
@@ -12,6 +12,7 @@
 - bounded steps/tokens/time, error handling, cancellation
 - model adapter and tests with mocked tool-calling models
 - Acceptance: resume interrupted run, no cross-run data leakage, failure cases pass
+- Implemented: durable queue/checkpoints, run and event APIs, SSE replay, process pause/cancel, cumulative budgets and offline recovery/isolation tests. See `m2-results.md`. Stop after M2; M3 has not started.
 
 ## M3 — PDF+CSV evidence ingestion
 - Docling PDF ingestion including tables and page metadata
