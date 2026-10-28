@@ -1,0 +1,7 @@
+{
+  "evaluation_only": true,
+  "known_anomalous_station": "S03",
+  "change_date": "2026-10-10T00:00:00",
+  "injected_change": "increased false-ejection probability and decreased illumination/exposure",
+  "causal_caveat": "Synthetic data generation includes a co-occurring lighting/exposure intervention; observed correlations alone do not prove physical mechanism."
+}

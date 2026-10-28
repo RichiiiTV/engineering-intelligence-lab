@@ -1,0 +1,15 @@
+.venv/
+.uv-cache/
+.uv-python/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.env
+*.pyc
+*.db
+*.sqlite3
+node_modules/
+dist/
+.coverage
+reports/*
+!reports/.gitkeep

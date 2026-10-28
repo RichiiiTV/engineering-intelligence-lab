@@ -1,0 +1,1 @@
+All dataset records here are fictional. `ground_truth.json` is intended only for unit tests/evaluation; it must not be exposed to the investigation agent. Synthetic row IDs are stable evidence identifiers.
