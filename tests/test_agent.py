@@ -117,6 +117,7 @@ def test_ollama_adapter_validates_model_and_sets_http_timeouts(monkeypatch):
     assert kwargs["model"] == agent.OLLAMA_MODEL
     assert kwargs["base_url"] == agent.OLLAMA_BASE_URL
     assert kwargs["validate_model_on_init"] is True
+    assert kwargs["num_ctx"] == 8192
     assert kwargs["client_kwargs"]["timeout"].connect == 5
     assert kwargs["client_kwargs"]["timeout"].read == 60
     assert kwargs["client_kwargs"]["trust_env"] is False
@@ -129,6 +130,7 @@ def test_real_ollama_constructor_validates_stubbed_model_listing(monkeypatch):
     model = agent._build_model()
     assert isinstance(model, ChatOllama)
     assert model.model == agent.OLLAMA_MODEL
+    assert model.num_ctx == 8192
     assert model._client._client.timeout.connect == 5
     assert model._client._client.timeout.read == 60
 

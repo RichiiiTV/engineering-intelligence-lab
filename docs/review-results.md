@@ -1,8 +1,10 @@
 # M1 foundation review — 2026-10-28
 
 The requested foundation review is complete. Deterministic analytics, offline Deep Agents
-integration, permission checks, lint and the local FastAPI HTTP smoke passed. Real Ollama
-inference remains unverified: the local service was unavailable. M2 has not started.
+integration, permission checks, lint and the local FastAPI HTTP smoke passed. Ollama was
+unavailable during that original review. The subsequent user-requested live verification
+passed after two compatibility fixes; see [ollama-verification.md](ollama-verification.md).
+M2 has not started.
 
 ## Environment and reproducibility
 
@@ -97,7 +99,7 @@ with local socket support outside it. Those environment failures are not recorde
 | `uv lock --offline` | Lockfile resolved using downloaded metadata |
 | `uv sync --locked --extra dev` | Locked environment verified |
 | `uv lock --check --offline` | Lockfile current |
-| Final `uv run pytest -q` | 43 passed; includes actual graph execution with scripted model, permissions, adapter, API and CLI failure cases |
+| Original review `uv run pytest -q` | 43 passed; includes actual graph execution with scripted model, permissions, adapter, API and CLI failure cases; follow-up suite has 44 |
 | `uv run ruff check .` | All checks passed |
 | `uv run ruff format --check .` | All discovered source files formatted |
 | `uv pip check` | All 72 installed packages compatible |
@@ -105,8 +107,8 @@ with local socket support outside it. Those environment failures are not recorde
 | Real Uvicorn server, loopback port 8765 | Startup succeeded; server stopped after HTTP checks |
 | `GET /api/health`, `/api/datasets`, `/api/metrics/summary`, `/api/metrics/stations/S03`, `/api/investigations/demo-report`, `/docs` | All returned HTTP 200 with expected results |
 | `POST /api/investigations`, whitespace-only question | HTTP 422; no inference |
-| `GET http://localhost:11434/api/tags` outside socket restrictions | Connection refused |
-| `uv run python -m eil.cli agent` | Deliberately skipped because Ollama/model availability prerequisite failed |
+| Original `GET http://localhost:11434/api/tags` outside socket restrictions | Connection refused; service became available during the later follow-up |
+| Original `uv run python -m eil.cli agent` | Skipped during the original review; passed in the later follow-up |
 
 The deterministic report found S03 increasing from **1.6123%** to **14.1144%**, a
 **12.5021 percentage-point** rise. It retains evidence row IDs and labels concurrent lighting
@@ -118,9 +120,9 @@ real ChatOllama initialization is separately tested with a stubbed model listing
 
 ## Remaining unverified behavior and stopping point
 
-- The configured `qwen3.5:4b-q8_0` model's installation, tool-calling support, output quality,
-  latency, GPU/VRAM fit, context behavior and real request/response protocol have not been
-  tested. The Ollama executable was not found on PATH, and the service refused the connection.
+- The follow-up verified `qwen3.5:4b-q8_0` through the real local Ollama API, real tool
+  execution and the default CLI question. General output quality, performance and context
+  limits across tasks have not been benchmarked. See the separate verification report.
 - Model availability validation does not establish tool support or reliable evidence use.
   Scripted responses prove integration wiring and tool boundaries, not LLM reasoning quality
   or resistance to all prompt injection.
@@ -130,7 +132,7 @@ real ChatOllama initialization is separately tested with a stubbed model listing
 - No optional document ingestion, PDF RAG, MCP server, UI, Langfuse, production connection or
   later-milestone execution infrastructure was implemented.
 
-To finish live validation manually, start Ollama, confirm the configured model appears in
+To repeat live validation manually, start Ollama, confirm the configured model appears in
 `/api/tags` or `ollama list`, then run `uv run python -m eil.cli agent`. Check that it calls
 analytics tools, cites returned row IDs, identifies S03 and distinguishes hypotheses from
 evidence. Do not treat a fluent answer without tool evidence as a successful smoke test.

@@ -4,7 +4,7 @@
 - deterministic baseline metrics and evidence IDs
 - FastAPI read endpoints and optional Deep Agents + Ollama CLI
 - unit/integration tests on synthetic incident
-- Review: known anomalous station S03 ranks first; baseline and offline graph/permission tests verified. See `review-results.md`. Manual live-agent smoke remains pending because Ollama was unavailable. No later milestone has started.
+- Review: known anomalous station S03 ranks first; baseline and offline graph/permission tests verified. Live Ollama smoke passed after Windows output and context fixes. See `review-results.md` and `ollama-verification.md`. No later milestone has started.
 
 ## M2 — Real agent execution infrastructure
 - persistent LangGraph checkpoints with distinct investigation threads

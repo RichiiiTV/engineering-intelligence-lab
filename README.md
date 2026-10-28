@@ -10,7 +10,7 @@ A local-first **agentic engineering investigation workbench** developed with Ope
 - **Optional real Deep Agents + LangGraph tool-calling path** using an Ollama `ChatOllama` model
 - `AGENTS.md`, milestone-specific Codex tasks, evaluation fixture, and tests
 
-This is an initial vertical slice, **not yet a full PDF+CSV investigation app**. No PDF ingestion, React frontend, RAG, MCP, persistent checkpointing, or safe sandboxed execution is implemented yet. Live inference has not been benchmarked or verified in the generated environment.
+This is an initial vertical slice, **not yet a full PDF+CSV investigation app**. No PDF ingestion, React frontend, RAG, MCP, persistent checkpointing, or safe sandboxed execution is implemented yet. A live Ollama/Deep Agents smoke test passed on the synthetic fixture; a broader model benchmark remains future work. See [the Ollama verification](docs/ollama-verification.md).
 
 ## Quick start (Windows PowerShell)
 
@@ -41,9 +41,9 @@ ollama list
 uv run python -m eil.cli agent
 ```
 
-The adapter validates model availability before constructing the graph, uses a 5-second connection timeout and 60-second HTTP inactivity timeout, and reports connection, missing-model, inference-timeout and rejected-request errors. The CLI exits with code 1 and an actionable message; the API returns 503. No model download or paid-provider fallback happens automatically.
+The adapter validates model availability before constructing the graph, explicitly requests an 8,192-token context, uses a 5-second connection timeout and 60-second HTTP inactivity timeout, and reports connection, missing-model, inference-timeout and rejected-request errors. The CLI exits with code 1 and an actionable message; the API returns 503. CLI JSON escapes Unicode so redirected output works with Windows legacy code pages. No model download or paid-provider fallback happens automatically.
 
-A small local model may fail to call tools, emit invalid arguments, ignore evidence, or exhaust the graph's 35-step recursion limit. Model availability does not prove tool-calling support. The HTTP timeouts apply to individual requests/inactivity; they do not impose an overall investigation deadline. There is no total token budget, hard cancellation, queue, or production resource policy yet. Hardware fit, context size, latency, accuracy and real Ollama tool use still require a live benchmark.
+A small local model may fail to call tools, emit invalid arguments, ignore evidence, or exhaust the graph's 35-step recursion limit. Model availability does not prove tool-calling support. In the live smoke, the server's 4,096-token default produced a wrong answer despite correct tool output; an explicit 8,192-token context retained the full evidence and passed. Longer tasks need their own context/memory measurements. The HTTP timeouts apply to individual requests/inactivity; they do not impose an overall investigation deadline. There is no total token budget, hard cancellation, queue, or production resource policy yet. General accuracy and performance across tasks remain unbenchmarked.
 
 The exposed tools are `compare_station_performance`, `inspect_station`, `ls`, `read_file`, `glob`, and `grep`. File tools use an explicit in-memory `StateBackend`, with no host files mounted. File-writing, deletion, shell execution, code interpreters, network-fetch tools and the default delegation tool are unavailable. Framework context offloading may still write to virtual state internally. `ground_truth.json` is not mounted or returned to the model. Dataset reads resolve paths and enforce the configured file within `data/`, including when an explicit path is supplied.
 

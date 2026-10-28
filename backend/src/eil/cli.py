@@ -19,7 +19,8 @@ def main():
         result = provisional_report() if args.mode == "demo" else run_agent(args.question)
     except (ModelUnavailableError, ValueError) as exc:
         parser.exit(1, f"Investigation failed: {exc}\n")
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+    # Escaped JSON also works when Windows redirects stdout through a legacy code page.
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

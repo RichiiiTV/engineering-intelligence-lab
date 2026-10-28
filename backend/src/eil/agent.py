@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 REQUEST_TIMEOUT_SECONDS = 60.0
 CONNECT_TIMEOUT_SECONDS = 5.0
 RECURSION_LIMIT = 35
+MODEL_CONTEXT_TOKENS = 8192
 
 
 class ModelUnavailableError(RuntimeError):
@@ -57,6 +58,7 @@ def _build_model():
             model=OLLAMA_MODEL,
             base_url=OLLAMA_BASE_URL,
             temperature=0,
+            num_ctx=MODEL_CONTEXT_TOKENS,
             validate_model_on_init=True,
             client_kwargs={
                 "timeout": httpx.Timeout(REQUEST_TIMEOUT_SECONDS, connect=CONNECT_TIMEOUT_SECONDS),
