@@ -6,14 +6,19 @@ import sys
 
 from .agent import ModelUnavailableError
 from .analytics import provisional_report
+from .evidence import EvidenceConflict, EvidenceNotFound
 from .runs import RunConflict, RunLimits, RunNotFound, RunStore
 from .service import RunService
 from .settings import STATE_DIR
 
 
-def _run_local(question, limits, run_id=None):
+def _run_local(question, limits, run_id=None, *, case_id=None):
     with RunService() as runner:
-        run = runner.store.control(run_id, "resume") if run_id else runner.submit(question, limits)
+        run = (
+            runner.store.control(run_id, "resume")
+            if run_id
+            else runner.submit(question, limits, case_id=case_id)
+        )
         print(f"Investigation {run['id']}", file=sys.stderr)
         try:
             return runner.wait(run["id"])
@@ -27,6 +32,7 @@ def main():
     parser.add_argument("mode", choices=("demo", "agent", "status", "pause", "resume", "cancel"))
     parser.add_argument("run_id", nargs="?")
     parser.add_argument("--timeout-seconds", type=float, default=120)
+    parser.add_argument("--case-id", help="Use this case's immutable uploaded-evidence snapshot")
     parser.add_argument(
         "--question",
         default="Which station had the largest increase in false ejections? Use tool evidence and distinguish hypotheses from facts.",
@@ -36,7 +42,12 @@ def main():
         if args.mode == "demo":
             result = provisional_report()
         elif args.mode == "agent":
-            result = _run_local(args.question, RunLimits(timeout_seconds=args.timeout_seconds))
+            limits = RunLimits(timeout_seconds=args.timeout_seconds)
+            result = (
+                _run_local(args.question, limits, case_id=args.case_id)
+                if args.case_id
+                else _run_local(args.question, limits)
+            )
         else:
             if not args.run_id:
                 parser.error("This command requires an investigation ID")
@@ -49,7 +60,15 @@ def main():
                     if args.mode == "status"
                     else store.control(args.run_id, args.mode)
                 )
-    except (ModelUnavailableError, RunConflict, RunNotFound, ValueError, TimeoutError) as exc:
+    except (
+        ModelUnavailableError,
+        RunConflict,
+        RunNotFound,
+        EvidenceConflict,
+        EvidenceNotFound,
+        ValueError,
+        TimeoutError,
+    ) as exc:
         parser.exit(1, f"Investigation failed: {exc}\n")
     # Escaped JSON also works when Windows redirects stdout through a legacy code page.
     print(json.dumps(result, indent=2))

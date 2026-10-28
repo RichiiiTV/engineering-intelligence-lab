@@ -78,10 +78,16 @@ def execute_run(directory, run_id, *, model=None):
     }
     try:
         with SqliteSaver.from_conn_string(str(store.directory / "checkpoints.sqlite3")) as saver:
+            evidence_tools = None
+            if run.get("case_id"):
+                from .case_tools import case_tools
+
+                evidence_tools = case_tools(store.directory, run["case_id"], run["source_ids"])
             graph = build_agent(
                 model=model,
                 checkpointer=saver,
                 middleware=[RunMiddleware(store, run_id)],
+                evidence_tools=evidence_tools,
                 model_options={
                     "model_name": run["model"],
                     "base_url": run["base_url"],

@@ -12,7 +12,7 @@
 - bounded steps/tokens/time, error handling, cancellation
 - model adapter and tests with mocked tool-calling models
 - Acceptance: resume interrupted run, no cross-run data leakage, failure cases pass
-- Implemented: durable queue/checkpoints, run and event APIs, SSE replay, process pause/cancel, cumulative budgets and offline recovery/isolation tests. See `m2-results.md`. Stop after M2; M3 has not started.
+- Implemented: durable queue/checkpoints, run and event APIs, SSE replay, process pause/cancel, cumulative budgets and offline recovery/isolation tests. See `m2-results.md`.
 
 ## M3 — PDF+CSV evidence ingestion
 - Docling PDF ingestion including tables and page metadata
@@ -20,6 +20,7 @@
 - multiple allowlisted CSV uploads; schema validation and per-case file isolation
 - export citations, query provenance and calibrated uncertainty
 - Acceptance: golden fixture returns correct document page + correct CSV finding
+- Implemented: bounded offline Docling conversion, immutable case-scoped uploads, snapshot-isolated lexical retrieval, CSV schema validation and citation/query exports. The golden fixture retrieves page 2 and S03 +12.5021 points. See `m3-results.md`. Stop after M3; M4 has not started.
 
 ## M4 — Agentic user experience and MCP
 - React UI case list, event timeline, tool-call detail, charts, report drafts

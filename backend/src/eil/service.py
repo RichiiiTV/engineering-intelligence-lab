@@ -90,10 +90,10 @@ class RunService:
             self._owner.close()
             self._owner = None
 
-    def submit(self, question, limits=None):
+    def submit(self, question, limits=None, *, case_id=None):
         if self._stop.is_set() or self._fatal_error is not None:
             raise RunConflict("Run service is unavailable; restart the API")
-        return self.store.create(question, limits)
+        return self.store.create(question, limits, case_id=case_id)
 
     def wait(self, run_id, timeout=610):
         deadline = time.monotonic() + timeout

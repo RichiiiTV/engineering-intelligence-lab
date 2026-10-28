@@ -36,4 +36,4 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
-Milestone 2: durable, inspectable and bounded local investigation execution. Preserve the M1 read-only tool boundary. Stop after the M2 acceptance checks and report. Do not add PDF RAG, MCP servers, Langfuse, or UI until separately authorized in later milestones.
+Milestone 3: case-isolated PDF/CSV evidence ingestion, lexical retrieval and traceable exports. Preserve the read-only agent tools and M2 runtime budgets. Stop after M3 checks and reporting. Do not add UI, MCP, Langfuse or later-milestone integrations without another user request.

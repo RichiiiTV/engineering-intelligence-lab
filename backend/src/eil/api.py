@@ -6,15 +6,31 @@ import asyncio
 import json
 from contextlib import asynccontextmanager
 from typing import Literal
+from urllib.parse import quote
+from uuid import UUID
 
-from fastapi import APIRouter, FastAPI, Header, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import (
+    APIRouter,
+    FastAPI,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .analytics import ALLOWED_STATIONS, compare_stations, provisional_report, station_metrics
+from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore
+from .exports import export_investigation
+from .pdf_ingest import MAX_PDF_BYTES, PDFBusy, PDFUnavailable, parse_pdf
 from .runs import STOPPED, QueueFull, RunConflict, RunLimits, RunNotFound
 from .service import RunService
 from .settings import DATASET_NAME
+from .uploads import UploadBodyLimit
 
 router = APIRouter()
 
@@ -23,6 +39,7 @@ class InvestigationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     question: str = Field(min_length=1, max_length=4000)
     limits: RunLimits = Field(default_factory=RunLimits)
+    case_id: UUID | None = None
 
     @field_validator("question")
     @classmethod
@@ -71,7 +88,11 @@ def service(request: Request) -> RunService:
 @router.post("/api/investigations", status_code=202)
 def investigate(payload: InvestigationRequest, request: Request):
     try:
-        return service(request).submit(payload.question, payload.limits)
+        return service(request).submit(
+            payload.question,
+            payload.limits,
+            case_id=str(payload.case_id) if payload.case_id else None,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -84,6 +105,101 @@ def investigations(request: Request):
 @router.get("/api/investigations/{run_id}")
 def investigation(run_id: str, request: Request):
     return service(request).store.get(run_id)
+
+
+@router.get("/api/investigations/{run_id}/export")
+def export(run_id: str, request: Request):
+    try:
+        return export_investigation(service(request).store, run_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+class CaseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str = Field(min_length=1, max_length=120)
+
+
+def evidence(request):
+    return EvidenceStore(service(request).store.directory)
+
+
+@router.post("/api/cases", status_code=201)
+def create_case(payload: CaseRequest, request: Request):
+    try:
+        return evidence(request).create_case(payload.title)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/api/cases")
+def cases(request: Request):
+    return {"cases": evidence(request).cases()}
+
+
+@router.get("/api/cases/{case_id}")
+def case(case_id: str, request: Request):
+    store = evidence(request)
+    return {**store.case(case_id), "sources": store.sources(case_id)}
+
+
+@router.post("/api/cases/{case_id}/sources", status_code=201)
+def upload(
+    case_id: str,
+    request: Request,
+    file: UploadFile = File(),
+    data_policy: Literal["synthetic", "licensed-public"] = Form(),
+):
+    # Read at most one byte over the largest allowed upload. The original name is metadata only.
+    try:
+        content = file.file.read(MAX_PDF_BYTES + 1)
+        parser = getattr(request.app.state, "pdf_parser", parse_pdf)
+        return evidence(request).ingest(
+            case_id, file.filename, content, pdf_parser=parser, data_policy=data_policy
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    finally:
+        file.file.close()
+
+
+@router.get("/api/cases/{case_id}/sources/{source_id}/file")
+def download(case_id: str, source_id: str, request: Request):
+    source = evidence(request).source(case_id, source_id)
+    return Response(
+        content=source["raw"],
+        media_type="application/pdf" if source["kind"] == "pdf" else "text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename*=UTF-8''"
+            + quote(source["filename"], safe="")
+        },
+    )
+
+
+@router.get("/api/cases/{case_id}/search")
+def search(
+    case_id: str,
+    request: Request,
+    q: str = Query(min_length=1, max_length=500),
+    limit: int = Query(default=3, ge=1, le=5),
+):
+    try:
+        return evidence(request).search(case_id, q, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/api/cases/{case_id}/sources/{source_id}/comparison")
+def comparison(case_id: str, source_id: str, request: Request):
+    try:
+        return evidence(request).compare(case_id, source_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/api/cases/{case_id}/citations/{citation_id}")
+def citation(case_id: str, citation_id: str, request: Request):
+    return evidence(request).resolve(case_id, citation_id)
 
 
 @router.post("/api/investigations/{run_id}/{action}", status_code=202)
@@ -133,7 +249,8 @@ def create_app(service_factory=RunService):
             app.state.runs = runner
             yield
 
-    app = FastAPI(title="Engineering Intelligence Lab", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="Engineering Intelligence Lab", version="0.3.0", lifespan=lifespan)
+    app.add_middleware(UploadBodyLimit)
     app.include_router(router)
 
     @app.exception_handler(RunNotFound)
@@ -144,6 +261,20 @@ def create_app(service_factory=RunService):
     async def conflict(request, exc):
         return JSONResponse(
             status_code=429 if isinstance(exc, QueueFull) else 409, content={"detail": str(exc)}
+        )
+
+    @app.exception_handler(EvidenceNotFound)
+    async def missing_evidence(request, exc):
+        return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+    @app.exception_handler(EvidenceConflict)
+    async def conflicting_evidence(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    @app.exception_handler(PDFUnavailable)
+    async def unavailable_pdf(request, exc):
+        return JSONResponse(
+            status_code=429 if isinstance(exc, PDFBusy) else 503, content={"detail": str(exc)}
         )
 
     return app

@@ -10,6 +10,10 @@ An agent-driven investigation system that uses evidence from structured measurem
 - `runs.py`: transactional SQLite run records, durable queue, event log and budget counters.
 - `service.py`: single-owner dispatcher, Windows-spawn worker supervision and process cancellation.
 - `execution.py`: standard Deep Agents middleware for budgets/tool audit and LangGraph SQLite checkpoints.
+- `evidence.py`: immutable case/source records, strict CSV validation, snapshot-scoped FTS5 retrieval and citation resolution.
+- `pdf_ingest.py`: offline CPU Docling conversion in a bounded, supervised process.
+- `case_tools.py`, `exports.py`: read-only case evidence tools and auditable JSON reports.
+- `uploads.py`: request-size admission before multipart file spooling.
 - `data/`: generated synthetic evidence. `ground_truth.json` is eval-only; do not expose to agent.
 - `tests/`: reference expectations independent of the model.
 
@@ -52,3 +56,50 @@ its internal model calls would bypass the external run-budget hooks.
 - M2 uses one active worker with up to twenty queued jobs. This is a local development service, with no distributed queue, authentication or retention policy.
 - No vector database until document retrieval evaluation justifies one. Start with full-text retrieval and citations.
 - Multi-agent only after comparison with a single-agent baseline.
+
+## M3 evidence boundary
+
+Explicit PDF/CSV uploads create generated source UUIDs and SHA-256 hashes under an existing
+case UUID. Raw bytes, normalized CSV rows, PDF chunks and provenance live as BLOB/JSON data
+in `<state>/data/evidence.sqlite3`. Filenames are display metadata and are never joined to a
+host path. Sources are immutable; there are no update/delete endpoints in this milestone.
+
+```mermaid
+flowchart LR
+    Upload[Explicit PDF/CSV upload] --> Guard[Byte and schema limits]
+    Guard --> Parse[Local Docling or strict CSV parser]
+    Parse --> Evidence[Case evidence SQLite]
+    Evidence --> Snapshot[Freeze source IDs at run creation]
+    Snapshot --> Worker[M2 bounded agent worker]
+    Worker --> Tools[Read-only case tools]
+    Tools --> Evidence
+    Worker --> Events[M2 durable tool and run events]
+    Events --> Export[JSON citations, query provenance and uncertainty]
+```
+
+Case-backed run records freeze `case_id` and `source_ids` at creation. Case tools close over
+that snapshot; the model cannot supply another case ID or file path. They replace the legacy
+fixture analytics tools, so case runs cannot silently fall back to the global demo dataset.
+Later uploads are visible only to new runs. A paused run resumes against its original IDs.
+
+Docling receives a `DocumentStream` of uploaded bytes, supports PDF input only, uses local
+prefetched layout/table models on CPU, and disables OCR, remote services and external plugins.
+One parser runs at a time with byte/page/chunk/time limits and an orphan-parent watcher.
+Item references, offsets, bounding boxes and page numbers are retained. Multi-page elements
+retain their full page range rather than falsely attributing the entire item to each page.
+The parser process is a lifecycle boundary, not an OS sandbox for hostile native PDF exploits.
+
+Search constructs a bounded, in-memory SQLite FTS5 index from only the frozen source list.
+Its BM25 statistics therefore cannot be influenced by another case or later uploads. Query
+text is tokenized into literal quoted words; SQL and FTS operators are not accepted from the
+model. Each CSV is analyzed independently through the existing deterministic metric function.
+Incomplete station periods are reported, not invented or silently included in aggregates.
+
+Exports preserve source hashes, exact query inputs, observed tool outputs and resolvable
+PDF/CSV citation IDs. They expand explicit grouped shorthand, flag malformed/unresolved or
+unobserved citations, and state when the answer contains no citations. Resolution proves a
+source location, not claim entailment or causality. Confidence is not statistically estimated.
+
+Limits do not replace authentication, a native-parser sandbox, retention policy or storage
+encryption. Keep the API on loopback and use generated/licensed public demo data. No vector
+database, UI, MCP integration or later-milestone feature was added.

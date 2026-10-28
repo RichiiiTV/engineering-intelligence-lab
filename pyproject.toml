@@ -1,6 +1,6 @@
 [project]
 name = "engineering-intelligence-lab"
-version = "0.2.0"
+version = "0.3.0"
 description = "Local-first agentic engineering investigation workbench"
 requires-python = ">=3.12"
 dependencies = [
@@ -16,9 +16,11 @@ dependencies = [
     "duckdb>=1.3,<2",
     "python-dotenv>=1,<2",
     "httpx>=0.28,<1",
+    "python-multipart>=0.0.20,<1",
+    "docling-core>=2.105,<3",
 ]
 [project.optional-dependencies]
-documents = ["docling>=2,<3"]
+documents = ["docling>=2.144,<3"]
 dev = ["pytest>=8,<10", "httpx>=0.27,<1", "ruff>=0.11,<1"]
 
 [build-system]

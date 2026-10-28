@@ -2,6 +2,7 @@
 .uv-cache/
 .uv-python/
 .eil/
+tmp/
 __pycache__/
 .pytest_cache/
 .ruff_cache/

@@ -130,7 +130,7 @@ class RunStore:
                 )
             ]
 
-    def create(self, question, limits=None):
+    def create(self, question, limits=None, *, case_id=None):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
         limits = RunLimits.model_validate(limits or {})
@@ -138,6 +138,11 @@ class RunStore:
         if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password:
             raise ValueError("Configure an HTTP Ollama URL without embedded credentials")
         run_id = str(uuid.uuid4())
+        source_ids = None
+        if case_id is not None:
+            from .evidence import EvidenceStore
+
+            source_ids = EvidenceStore(self.directory).snapshot(case_id)
         run = dict(
             id=run_id,
             thread_id=run_id,
@@ -161,6 +166,8 @@ class RunStore:
             model=OLLAMA_MODEL,
             base_url=OLLAMA_BASE_URL,
             worker_pid=None,
+            case_id=case_id,
+            source_ids=source_ids,
         )
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")

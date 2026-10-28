@@ -71,8 +71,61 @@ def controlled_worker(directory, run_id):
     httpx.Client.send = forbidden_http
     httpx.AsyncClient.send = forbidden_http
     run = RunStore(directory).get(run_id)
-    model = ControlledOllama(model=run["model"], directory=directory, run_id=run_id)
+    model_class = CaseOllama if run.get("case_id") else ControlledOllama
+    model = model_class(model=run["model"], directory=directory, run_id=run_id)
     execute_run(directory, run_id, model=model)
+
+
+class CaseOllama(ControlledOllama):
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        store = RunStore(self.directory)
+        run = store.get(self.run_id)
+        tools = [m for m in messages if isinstance(m, ToolMessage)]
+        if not tools:
+            calls = [
+                {"name": "list_case_sources", "args": {}, "id": "inventory", "type": "tool_call"}
+            ]
+            answer = AIMessage(content="", tool_calls=calls)
+        elif len(tools) == 1:
+            inventory = json.loads(tools[0].content)["sources"]
+            assert {s["id"] for s in inventory} == set(run["source_ids"])
+            csv_id = next(s["id"] for s in inventory if s["kind"] == "csv")
+            answer = AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "name": "compare_case_stations",
+                        "args": {"source_id": csv_id},
+                        "id": "compare",
+                        "type": "tool_call",
+                    },
+                    {
+                        "name": "search_case_documents",
+                        "args": {"query": "S03 illumination exposure setpoint", "limit": 3},
+                        "id": "search",
+                        "type": "tool_call",
+                    },
+                ],
+            )
+        else:
+            if run["question"].startswith("resume_case") and run["attempts"] == 1:
+                store.event(self.run_id, "fake_blocked", {})
+                time.sleep(60)
+            comparison = json.loads(
+                next(m.content for m in tools if m.name == "compare_case_stations")
+            )
+            retrieval = json.loads(
+                next(m.content for m in tools if m.name == "search_case_documents")
+            )
+            hit = next(h for h in retrieval["hits"] if h["page"] == 2)
+            station = comparison["ranking"][0]
+            assert station["station_id"] == "S03"
+            answer = AIMessage(
+                content=f"S03 increased +12.5021 percentage points [{station['example_citations'][0]}]. "
+                f"The page 2 illumination/exposure record [{hit['citation_id']}] supports a hypothesis, not causation."
+            )
+        answer.usage_metadata = {"input_tokens": 100, "output_tokens": 80, "total_tokens": 180}
+        return ChatResult(generations=[ChatGeneration(message=answer)])
 
 
 def wait_for_event(store, run_id, kind, timeout=15):
