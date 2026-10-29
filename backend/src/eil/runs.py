@@ -43,7 +43,9 @@ class QueueFull(RunConflict):
 
 
 class BudgetExceeded(RuntimeError):
-    pass
+    def __init__(self, message, resource=None):
+        super().__init__(message)
+        self.resource = resource
 
 
 class RunStopped(RuntimeError):
@@ -298,8 +300,100 @@ class RunStore:
                 "tokens": "max_total_tokens",
             }[kind]
             if run[kind] + amount > run["limits"][key]:
-                raise BudgetExceeded(f"{kind} budget exhausted; create a new investigation")
+                raise BudgetExceeded(f"{kind} budget exhausted; create a new investigation", kind)
             run[kind] += amount
+
+        return self.change(run_id, update)
+
+    def reserve_model(self, run_id, context_tokens):
+        """Atomically admit one actual request, fitting its output cap to remaining capacity."""
+        reservation = {}
+
+        def update(run, conn):
+            if run["status"] != "running" or run["control"]:
+                raise RunStopped("Investigation was stopped")
+            limits = run["limits"]
+            if run["model_calls"] >= limits["max_model_calls"]:
+                raise BudgetExceeded("Model call limit reached", "model_calls")
+            remaining = limits["max_total_tokens"] - run["tokens"]
+            output = min(limits["max_output_tokens"], remaining - context_tokens)
+            if output < min(limits["max_output_tokens"], 256):
+                raise BudgetExceeded(
+                    "Token allowance reached. Continue with extra capacity to keep this investigation's progress.",
+                    "tokens",
+                )
+            reserved = context_tokens + output
+            finalizing = (
+                run["model_calls"] + 1 >= limits["max_model_calls"]
+                or run["tool_calls"] >= limits["max_tool_calls"]
+                or remaining - reserved < context_tokens + limits["max_output_tokens"]
+            )
+            run["model_calls"] += 1
+            run["tokens"] += reserved
+            reservation.update(reserved=reserved, output_tokens=output, finalizing=finalizing)
+
+        run = self.change(run_id, update)
+        return run, reservation
+
+    def continue_tokens(self, run_id, additional_tokens=0):
+        """Explicit user action: extend tokens within the hard cap, never reset usage or other limits."""
+        if (
+            isinstance(additional_tokens, bool)
+            or not isinstance(additional_tokens, int)
+            or not 0 <= additional_tokens <= 65536
+        ):
+            raise ValueError("Additional tokens must be an integer between 0 and 65,536")
+
+        def update(run, conn):
+            error = run.get("error") or {}
+            token_stop = error.get("resource") == "tokens" or (
+                error.get("resource") is None
+                and str(error.get("message", "")).startswith("tokens budget exhausted")
+            )
+            if run["status"] != "budget_exceeded" or not token_stop:
+                raise RunConflict(
+                    "Only an investigation stopped by its token allowance can continue this way"
+                )
+            limits = run["limits"]
+            if any(
+                run[counter] >= limits[limit]
+                for counter, limit in (
+                    ("model_calls", "max_model_calls"),
+                    ("tool_calls", "max_tool_calls"),
+                    ("steps", "max_steps"),
+                    ("elapsed_seconds", "timeout_seconds"),
+                )
+            ):
+                raise RunConflict("Another run limit is exhausted; start a new question")
+            new_limit = limits["max_total_tokens"] + additional_tokens
+            if new_limit > 131072:
+                raise RunConflict("The maximum token allowance for one investigation is 131,072")
+            from .agent import MODEL_CONTEXT_TOKENS
+
+            if new_limit - run["tokens"] < MODEL_CONTEXT_TOKENS + min(
+                limits["max_output_tokens"], 256
+            ):
+                raise RunConflict(
+                    "Request additional token capacity to continue this investigation"
+                )
+            if conn.execute("SELECT count(*) FROM runs WHERE status='queued'").fetchone()[0] >= 20:
+                raise QueueFull("The local queue is full; wait before continuing")
+            run.setdefault("initial_limits", dict(limits))
+            previous = limits["max_total_tokens"]
+            run["limits"] = {**limits, "max_total_tokens": new_limit}
+            run.update(status="queued", control=None, error=None, finished_at=None)
+            self._event(
+                conn,
+                run_id,
+                "token_allowance_extended" if additional_tokens else "investigation_continued",
+                {
+                    "previous_limit": previous,
+                    "new_limit": new_limit,
+                    "additional_tokens": additional_tokens,
+                    "tokens_already_used": run["tokens"],
+                    "reason": "explicit_user_continuation",
+                },
+            )
 
         return self.change(run_id, update)
 

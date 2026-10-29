@@ -16,6 +16,7 @@ import { Modal } from "./components";
 import { stopped, useInvestigation } from "./useInvestigation";
 import { friendlyStatus, readableAnswer } from "./userFlow";
 import { userReport } from "./userReport";
+import { tokenContinuation } from "./budgetRecovery";
 import { advancedUrl, message } from "./UserApp";
 import type {
   CaseDetail,
@@ -97,11 +98,11 @@ export default function UserResults({
       });
     return () => c.abort();
   }, [caseId, sourceId]);
-  async function control(action: string) {
+  async function control(action: string, body?: unknown) {
     setBusy(true);
     setError("");
     try {
-      await post(`/api/investigations/${id}/${action}`);
+      await post(`/api/investigations/${id}/${action}`, body);
       setRevision((n) => n + 1);
     } catch (e) {
       setError(message(e));
@@ -134,6 +135,7 @@ export default function UserResults({
   const active = run && !stopped.has(run.status),
     resumable = run && ["paused", "failed", "interrupted"].includes(run.status);
   const completed = run?.status === "completed";
+  const extraTokens = run ? tokenContinuation(run) : null;
   const chartId = `chart-${id}`;
   return (
     <>
@@ -168,7 +170,9 @@ export default function UserResults({
           </div>
           <h1 className="ux-result-title">
             {completed
-              ? "Here's what changed."
+              ? run.result?.capacity_limited
+                ? "Here's what we found so far."
+                : "Here's what changed."
               : active
                 ? "Following the evidence."
                 : run.status === "paused"
@@ -202,8 +206,12 @@ export default function UserResults({
                   ? "You can leave this page and return to the same investigation. Your files stay on this computer."
                   : run.status === "paused"
                     ? "Your progress is saved. Resume whenever you are ready."
-                    : run.error?.message ||
-                      "The investigation stopped. You can start another question with the same files."}
+                    : extraTokens !== null
+                      ? extraTokens
+                        ? "Your progress is saved. Continue with one bounded allowance of extra capacity; your files and other limits stay in place."
+                        : "Your progress is saved. Continue using the remaining allowance without uploading your files again."
+                      : run.error?.message ||
+                        "The investigation stopped. You can start another question with the same files."}
               </p>
               <div className="ux-progress-actions">
                 {active && (
@@ -244,7 +252,23 @@ export default function UserResults({
                     </button>
                   </>
                 )}
-                {!active && !resumable && (
+                {extraTokens !== null && (
+                  <button
+                    className="ux-primary"
+                    disabled={busy}
+                    onClick={() =>
+                      void control("continue", {
+                        additional_tokens: extraTokens,
+                      })
+                    }
+                  >
+                    <Play size={17} />
+                    {extraTokens
+                      ? "Continue with extra capacity"
+                      : "Continue investigation"}
+                  </button>
+                )}
+                {!active && !resumable && extraTokens === null && (
                   <button className="ux-primary" onClick={onAnother}>
                     Ask another question
                     <ArrowRight size={16} />
@@ -264,6 +288,12 @@ export default function UserResults({
           )}
           {completed && report && (
             <>
+              {run.result?.capacity_limited && (
+                <p className="ux-caution">
+                  This is a summary of evidence gathered so far. Further checks
+                  may still be needed.
+                </p>
+              )}
               <section className="ux-finding-card">
                 <span className="ux-section-label">Main finding</span>
                 {csvSources.length > 1 && (

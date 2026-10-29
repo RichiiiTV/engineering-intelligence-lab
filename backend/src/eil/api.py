@@ -264,6 +264,16 @@ def citation(case_id: str, citation_id: str, request: Request):
     return evidence(request).resolve(case_id, citation_id)
 
 
+class ContinuationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    additional_tokens: int = Field(default=0, ge=0, le=65536, strict=True)
+
+
+@router.post("/api/investigations/{run_id}/continue", status_code=202)
+def continue_investigation(run_id: str, payload: ContinuationRequest, request: Request):
+    return service(request).store.continue_tokens(run_id, payload.additional_tokens)
+
+
 @router.post("/api/investigations/{run_id}/{action}", status_code=202)
 def control(run_id: str, action: Literal["pause", "resume", "cancel"], request: Request):
     return service(request).store.control(run_id, action)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import httpx
 from langchain.agents.middleware import AgentMiddleware
+from langchain_core.messages import SystemMessage
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.errors import GraphRecursionError
 from ollama import ResponseError
@@ -17,10 +18,32 @@ class RunMiddleware(AgentMiddleware):
         self.store, self.run_id = store, run_id
 
     def wrap_model_call(self, request, handler):
-        run = self.store.charge(self.run_id, "model_calls")
-        reserved = MODEL_CONTEXT_TOKENS + run["limits"]["max_output_tokens"]
-        self.store.charge(self.run_id, "tokens", reserved)
-        self.store.event(self.run_id, "model_started", {"reserved_tokens": reserved})
+        run, admission = self.store.reserve_model(self.run_id, MODEL_CONTEXT_TOKENS)
+        reserved = admission["reserved"]
+        finalizing = admission["finalizing"]
+        request = request.override(
+            model=request.model.model_copy(update={"num_predict": admission["output_tokens"]})
+        )
+        if finalizing:
+            system = request.system_message.text if request.system_message else ""
+            request = request.override(
+                tools=[],
+                tool_choice=None,
+                model_settings={**request.model_settings, "reasoning": False},
+                system_message=SystemMessage(
+                    content=system
+                    + "\nCAPACITY SUMMARY: Finish now using only evidence already gathered. Do not call any more tools. Return a concise useful answer with exact source citations. State missing evidence and uncertainty, and do not imply that unperformed checks succeeded. This is a bounded summary, not proof of cause."
+                ),
+            )
+        self.store.event(
+            self.run_id,
+            "model_started",
+            {
+                "reserved_tokens": reserved,
+                "output_tokens": admission["output_tokens"],
+                "finalizing": finalizing,
+            },
+        )
         response = handler(request)
         # Missing usage is conservatively charged as the whole reservation.
         usage = [getattr(m, "usage_metadata", None) for m in response.result]
@@ -32,7 +55,14 @@ class RunMiddleware(AgentMiddleware):
             getattr(m, "response_metadata", {}).get("done_reason") in {"length", "max_tokens"}
             for m in response.result
         ):
-            raise BudgetExceeded("Model output limit reached before completion")
+            raise BudgetExceeded("Model output limit reached before completion", "output_tokens")
+        if finalizing:
+            if any(getattr(m, "tool_calls", []) for m in response.result):
+                raise BudgetExceeded(
+                    "The model requested more tools instead of finishing its bounded summary",
+                    "model_calls",
+                )
+            self.store.change(self.run_id, lambda r, c: r.update(budget_summary=True))
         for message in response.result:
             for call in getattr(message, "tool_calls", []):
                 self.store.event(
@@ -128,7 +158,13 @@ def execute_run(directory, run_id, *, model=None):
                 "completed",
                 result={
                     "answer": last.content,
-                    "warning": "Experimental local LLM output; verify metrics against tool results.",
+                    "capacity_limited": bool(store.get(run_id).get("budget_summary")),
+                    "warning": "Experimental local LLM output; verify metrics against tool results."
+                    + (
+                        " A bounded summary uses only the evidence gathered so far; further checks may be needed."
+                        if store.get(run_id).get("budget_summary")
+                        else ""
+                    ),
                 },
             )
     except RunStopped:
@@ -137,7 +173,13 @@ def execute_run(directory, run_id, *, model=None):
     except (BudgetExceeded, GraphRecursionError) as exc:
         message = str(exc) if isinstance(exc, BudgetExceeded) else "Graph step budget exhausted"
         store.finish(
-            run_id, "budget_exceeded", error={"code": "budget_exceeded", "message": message}
+            run_id,
+            "budget_exceeded",
+            error={
+                "code": "budget_exceeded",
+                "message": message,
+                "resource": getattr(exc, "resource", None),
+            },
         )
     except (ModelUnavailableError, ConnectionError, httpx.RequestError, ResponseError) as exc:
         if isinstance(exc, ModelUnavailableError):

@@ -43,6 +43,8 @@ For UI development, run the backend on port 8000, then `cd frontend; npm.cmd run
 
 ## Using the workbench
 
+If a run reaches its token allowance, **Continue investigation** resumes its saved progress using the remaining capacity when possible. If needed, **Continue with extra capacity** explicitly adds a bounded token allowance; other limits and usage counters remain intact. The agent now summarizes gathered evidence before reaching capacity, and those results are labeled as findings so far. See [token recovery and validation](docs/token-budget-recovery.md). This refines the original fixed-reservation/immutable-limit behavior described in the historical M2 report.
+
 The default page now follows the approved simpler design: add files, ask a question, then review the finding and source links. It creates the case automatically, keeps run controls in plain language, and downloads a readable HTML report that can be printed or saved as PDF from a browser. Use **Try the demo files** to start with the committed generated fixtures.
 
 The original full interface remains available through **Advanced workspace** (`/?view=advanced`). It retains model/run settings, tool activity, complete source provenance, JSON exports and explicit draft approval. The mode switch changes presentation; it is not an admin authentication boundary. Simple investigations keep the existing server budgets, use the longer supported 2,048-token output allowance, and leave mock MCP off by default.

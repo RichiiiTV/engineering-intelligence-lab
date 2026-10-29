@@ -38,6 +38,7 @@ import {
   time,
 } from "./components";
 import { stopped, useInvestigation } from "./useInvestigation";
+import { tokenContinuation } from "./budgetRecovery";
 import type {
   Case,
   CaseDetail,
@@ -627,6 +628,23 @@ function Workspace({ id }: { id: string }) {
             {run.question}
           </span>
           <div className="run-actions">
+            {tokenContinuation(run) !== null && (
+              <button
+                className="secondary compact"
+                disabled={!!busy}
+                onClick={() =>
+                  void act("continue", async () => {
+                    await post(`/api/investigations/${run.id}/continue`, {
+                      additional_tokens: tokenContinuation(run),
+                    });
+                    setRevision((x) => x + 1);
+                  })
+                }
+              >
+                <Play size={14} />
+                Continue{tokenContinuation(run) ? " with extra capacity" : ""}
+              </button>
+            )}
             {active && (
               <>
                 <button

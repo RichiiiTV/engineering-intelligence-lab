@@ -40,8 +40,12 @@ export interface Run {
   source_ids: string[];
   use_mock_mcp: boolean;
   limits: Limits;
-  error: { code: string; message: string } | null;
-  result: { answer: string; warning: string } | null;
+  error: { code: string; message: string; resource?: string | null } | null;
+  result: {
+    answer: string;
+    warning: string;
+    capacity_limited?: boolean;
+  } | null;
 }
 export interface RunEvent {
   id: number;

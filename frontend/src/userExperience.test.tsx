@@ -9,6 +9,7 @@ import {
   validateFiles,
 } from "./userFlow";
 import { userReport } from "./userReport";
+import { tokenContinuation } from "./budgetRecovery";
 import type { EvidenceReport, Run, Source } from "./types";
 
 const CASE = "11111111-1111-4111-8111-111111111111",
@@ -106,6 +107,7 @@ function mockServer(
     status?: string;
     foreign?: boolean;
     extraSource?: boolean;
+    tokenStop?: boolean;
   } = {},
 ) {
   const existingAtStart = Boolean(location.search);
@@ -178,7 +180,7 @@ function mockServer(
       ) {
         currentStatus = path.endsWith("/pause")
           ? "paused"
-          : path.endsWith("/resume")
+          : path.endsWith("/resume") || path.endsWith("/continue")
             ? "running"
             : "cancelled";
         return json({ ...run, status: currentStatus }, 202);
@@ -198,10 +200,12 @@ function mockServer(
           status: currentStatus,
           case_id: options.foreign ? "another-case" : CASE,
           error:
-            options.status === "budget_exceeded"
+            currentStatus === "budget_exceeded"
               ? {
                   code: "budget_exceeded",
-                  message: "Model output limit reached before completion",
+                  message: options.tokenStop
+                    ? "tokens budget exhausted; create a new investigation"
+                    : "Model output limit reached before completion",
                 }
               : null,
         });
@@ -361,6 +365,48 @@ it("pauses and resumes the selected investigation through the existing control A
       (c) => String(c[0]).endsWith("/resume") && c[1]?.method === "POST",
     ),
   ).toBe(true);
+});
+it("continues a legacy token stop in the same investigation without reuploading", async () => {
+  history.replaceState(null, "", `/?case=${CASE}&run=${RUN}`);
+  const fetcher = mockServer({ status: "budget_exceeded", tokenStop: true });
+  render(<UserApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Continue investigation" }),
+  );
+  await screen.findByRole("heading", { name: "Following the evidence." });
+  const call = fetcher.mock.calls.find(
+    (c) => String(c[0]).endsWith("/continue") && c[1]?.method === "POST",
+  );
+  expect(JSON.parse(String(call?.[1]?.body))).toEqual({ additional_tokens: 0 });
+  expect(
+    fetcher.mock.calls.some(
+      (c) => c[0] === "/api/cases" && c[1]?.method === "POST",
+    ),
+  ).toBe(false);
+  expect(new URLSearchParams(location.search).get("run")).toBe(RUN);
+});
+it("offers bounded extra capacity only when token recovery is permitted", () => {
+  const limited = {
+    ...run,
+    status: "budget_exceeded",
+    tokens: 32768,
+    error: {
+      code: "budget_exceeded",
+      message: "Token limit",
+      resource: "tokens",
+    },
+  };
+  expect(tokenContinuation(limited)).toBe(32768);
+  expect(
+    tokenContinuation({
+      ...limited,
+      tokens: 131072,
+      limits: { ...run.limits, max_total_tokens: 131072 },
+    }),
+  ).toBeNull();
+  expect(
+    tokenContinuation({ ...limited, model_calls: run.limits.max_model_calls }),
+  ).toBeNull();
 });
 it("starts a fresh investigation without silently reusing the previous case files", async () => {
   history.replaceState(null, "", `/?case=${CASE}&run=${RUN}`);
