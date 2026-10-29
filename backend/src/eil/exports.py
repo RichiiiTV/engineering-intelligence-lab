@@ -5,6 +5,7 @@ import re
 
 from .claims import evidence_ledger
 from .evidence import EvidenceNotFound, EvidenceStore
+from .siemens_chat import reference_snapshot
 
 
 def answer_citations(answer):
@@ -49,10 +50,10 @@ def answer_citations(answer):
 def export_investigation(run_store, run_id):
     run = run_store.get(run_id)
     case_id = run.get("case_id")
-    if not case_id:
+    if not case_id and not run.get("chat_mode"):
         raise ValueError("Evidence export requires a case-backed investigation")
     store = EvidenceStore(run_store.directory)
-    allowed = run["source_ids"]
+    allowed = run["source_ids"] or []
     observations, queries, supplied = [], [], set()
     cursor = 0
     while batch := run_store.events(run_id, cursor):
@@ -90,6 +91,12 @@ def export_investigation(run_store, run_id):
                     supplied.add(observation["citation_id"])
     answer = (run.get("result") or {}).get("answer", "")
     cited, malformed = answer_citations(answer)
+    siemens = reference_snapshot(run)
+    public_cited = set(re.findall(r"\[(siemens:[^\]]+)\]", str(answer)))
+    public_refs = [
+        {**r, "cited_in_answer": r["citation_id"] in public_cited}
+        for r in (siemens or {}).get("references", [])
+    ]
     resolved, unknown = [], []
     for cid in sorted(cited | supplied):
         try:
@@ -102,20 +109,28 @@ def export_investigation(run_store, run_id):
             )
     return {
         "schema": "eil-evidence-report-v1",
-        "verified_evidence": evidence_ledger(store, case_id, allowed),
+        "verified_evidence": evidence_ledger(store, case_id, allowed)
+        if case_id
+        else {"comparisons": [], "conflicting_csv_measurements": [], "incomplete_sources": []},
         "run_id": run_id,
         "case_id": case_id,
         "status": run["status"],
         "integrations": {
+            "siemens": siemens,
             "mock_mcp": {
                 "enabled": run.get("use_mock_mcp", False),
                 "server_id": "eil-synthetic-maintenance-v1",
                 "transport": "in-process-memory",
-            }
+            },
         },
         "answer": answer,
+        "external_references": public_refs,
+        "external_reference_checks": {
+            "unresolved": sorted(public_cited - {r["citation_id"] for r in public_refs}),
+            "technical_claims_verified": False,
+        },
         "error": run["error"],
-        "source_snapshot": store.sources(case_id, allowed),
+        "source_snapshot": store.sources(case_id, allowed) if case_id else [],
         "citations": resolved,
         "query_provenance": queries,
         "tool_observations": observations,

@@ -95,6 +95,7 @@ def test_session_expiry_is_enforced(tmp_path, field, seconds):
     "question,family,tia,expected",
     [
         ("Where is OB1 cycle time documented?", "S7-1500", "V20", "1500-cycle-v20"),
+        ("S7-1500 V20 cycle-time manual", "", "", "1500-cycle-v20"),
         ("Wo ist die Zykluszeit beschrieben?", "S7-1500", "V20", "1500-cycle-v20"),
         ("CPU firmware programming manual", "S7-1200", "V20", "1200-cpu-v20"),
         ("UMAC access security configuration", "S7-1200", "V20", "1200-configuration-v20"),

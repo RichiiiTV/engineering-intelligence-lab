@@ -89,6 +89,7 @@ def build_agent(
     extra_prompt="",
     filesystem_tools=("ls", "read_file", "glob", "grep"),
     response_format=None,
+    case_evidence=None,
 ):
     """Build a tool-using Deep Agent with a local Ollama model.
 
@@ -143,7 +144,7 @@ def build_agent(
             "Once you have enough evidence, answer concisely instead of repeating searches."
             " If read_mock_station_context is available, it returns fictional context via MCP. "
             "Label it synthetic mock context, never uploaded case evidence or a case citation."
-            if evidence_tools
+            if (bool(evidence_tools) if case_evidence is None else case_evidence)
             else ""
         ),
         checkpointer=checkpointer if checkpointer is not None else InMemorySaver(),

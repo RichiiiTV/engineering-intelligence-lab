@@ -138,9 +138,17 @@ audits. Dependabot covers both uv projects, npm, Docker and Actions weekly.
 There is no Git remote configured here, so hosted CI execution requires choosing
 and pushing to the intended repository.
 
-Siemens help sends only the explicit public question/product/version fields to
-the fixed MCP endpoint. It never sends case evidence. Reviewed V20 manual
+The normal question box includes Siemens documentation lookup. Public SPS/PLC
+questions without files select it automatically, with a visible opt-out.
+With attached files it starts disabled and requires a separate public product
+query. The graph tool has no query arguments: it sends only the user's fixed
+query/product/version fields to the MCP endpoint. It never sends case evidence
+or model-generated text. Lookup is charged to the same run budgets and its
+snapshot is reused after pause/resume; an interrupted unknown outcome is not
+resent automatically. Reviewed V20 manual
 candidates are metadata references, separated from unverified MCP summaries.
 Unsupported TIA versions and unknown CPU/firmware compatibility remain explicit
 gaps. On MCP outage, matching local manual candidates are still shown with an
 outage label. Linked pages are not automatically fetched or executed.
+The old `/?page=siemens` link opens the normal composer. The independent protocol
+diagnostic view remains at `/?view=advanced&page=siemens`.

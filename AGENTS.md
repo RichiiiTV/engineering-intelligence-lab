@@ -36,6 +36,17 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized Siemens MCP inside the normal question/answer flow on
+2026-10-29, superseding the earlier separate-page restriction. The graph may
+use only a no-argument reference tool bound to the human's public query and
+product context. No file text, case history, model-generated query or arbitrary
+URL may be transmitted. Persist the bounded lookup once per run; retries reuse
+the observation, and interrupted unknown outcomes must not be resent silently.
+Keep normal run budgets, owner authorization and external-reference provenance.
+Questions without files must not inherit the synthetic inspection tools/data.
+Preserve the diagnostic view under Advanced; the default entry is the common
+composer. Stop after implementation, tests and reporting.
+
 The user authorized fixing all review gaps on 2026-10-29. Implement the scoped
 remediation, maintain its acceptance checks and report limitations honestly.
 Preserve authenticated case ownership and reviewer identity, recoverable

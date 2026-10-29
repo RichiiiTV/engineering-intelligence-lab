@@ -108,7 +108,7 @@ def references(question, context):
             if "s7-1500" in lower
             else ""
         )
-    tokens = set(re.findall(r"[\w-]+", lower))
+    tokens = set(re.findall(r"[\w-]+", lower)) | set(re.findall(r"\w+", lower))
     # Explicit versions in free text cannot be silently treated as V20.
     mentioned = set(re.findall(r"\bv(?:1[7-9]|2[0-1])\b", lower))
     version = context.get("tia_version", "")

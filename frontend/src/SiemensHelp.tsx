@@ -7,6 +7,8 @@ import {
   Search,
 } from "lucide-react";
 import { post } from "./api";
+import { siemensUrl } from "./siemens";
+export { siemensUrl } from "./siemens";
 import "./user.css";
 
 type Source = { title: string; url: string; description: string; kind: string };
@@ -26,25 +28,6 @@ type SearchResult = {
   version_notice?: string;
   outbound_query?: string;
 };
-
-export function siemensUrl(value: string) {
-  try {
-    if (/[\\\s]/.test(value)) return false;
-    const url = new URL(value);
-    return (
-      url.protocol === "https:" &&
-      !url.username &&
-      !url.password &&
-      (!url.port || url.port === "443") &&
-      (url.hostname === "siemens.com" ||
-        url.hostname === "docs.tia.siemens.cloud" ||
-        url.hostname.endsWith(".siemens.com")) &&
-      url.hostname !== "jobs.siemens.com"
-    );
-  } catch {
-    return false;
-  }
-}
 
 export default function SiemensHelp() {
   const [question, setQuestion] = useState("");

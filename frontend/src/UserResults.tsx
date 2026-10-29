@@ -17,6 +17,7 @@ import { stopped, useInvestigation } from "./useInvestigation";
 import { friendlyStatus, readableAnswer } from "./userFlow";
 import { userReport } from "./userReport";
 import { tokenContinuation } from "./budgetRecovery";
+import SiemensReferences from "./SiemensReferences";
 import { advancedUrl, message } from "./UserApp";
 import type {
   CaseDetail,
@@ -30,10 +31,13 @@ function progressText(status: string, events: RunEvent[]) {
   if (status !== "running") return friendlyStatus(status);
   const last = events.at(-1);
   const name = String(last?.data.name || "");
+  if (last?.type === "siemens_lookup_started")
+    return "Checking Siemens documentation…";
+  if (name.includes("siemens")) return "Checking Siemens documentation…";
   if (name.includes("search") || name.includes("citation"))
     return "Reading your evidence…";
   if (name.includes("compare")) return "Checking the inspection data…";
-  return "Reviewing your files and question…";
+  return "Reviewing your question and sources…";
 }
 export default function UserResults({
   id,
@@ -56,7 +60,8 @@ export default function UserResults({
     events,
     error: connectionError,
   } = useInvestigation(id, revision);
-  const run = loadedRun?.case_id === caseId ? loadedRun : null;
+  const run =
+    loadedRun && (loadedRun.case_id || "") === caseId ? loadedRun : null;
   const [report, setReport] = useState<EvidenceReport | null>(null),
     [sourceId, setSourceId] = useState("");
   const [comparison, setComparison] = useState<Comparison | null>(null),
@@ -164,7 +169,9 @@ export default function UserResults({
             )}
             <span>
               {completed
-                ? "Investigation complete"
+                ? run.chat_mode
+                  ? "Answer ready"
+                  : "Investigation complete"
                 : friendlyStatus(run.status)}
             </span>
           </div>
@@ -172,7 +179,9 @@ export default function UserResults({
             {completed
               ? run.result?.capacity_limited
                 ? "Here's what we found so far."
-                : "Here's what changed."
+                : run.chat_mode
+                  ? "Here's your answer."
+                  : "Here's what changed."
               : active
                 ? "Following the evidence."
                 : run.status === "paused"
@@ -203,7 +212,9 @@ export default function UserResults({
               <h2>{progressText(run.status, events)}</h2>
               <p>
                 {active
-                  ? "You can leave this page and return to the same investigation. Your files stay on this computer."
+                  ? run.chat_mode
+                    ? "You can return to this question from My investigations. Any enabled lookup sends only your public query to Siemens."
+                    : "You can leave this page and return to the same investigation. Your files stay on this computer."
                   : run.status === "paused"
                     ? "Your progress is saved. Resume whenever you are ready."
                     : extraTokens !== null
@@ -395,11 +406,15 @@ export default function UserResults({
                     <h2>
                       {compareError
                         ? "Review the investigation notes"
-                        : "What the files tell us"}
+                        : run.chat_mode
+                          ? "Answer"
+                          : "What the files tell us"}
                     </h2>
                     <p className="ux-answer">
-                      {readableAnswer(report.answer, report.citations) ||
-                        "No final finding was returned."}
+                      {readableAnswer(report.answer, [
+                        ...report.citations,
+                        ...(report.external_references || []),
+                      ]) || "No final finding was returned."}
                     </p>
                     {compareError && (
                       <p className="ux-small">
@@ -429,25 +444,32 @@ export default function UserResults({
                   </div>
                 )}
                 <div className="ux-caution">
-                  A finding to verify, not a confirmed cause.
+                  {run.chat_mode
+                    ? "Review the source documentation before applying this guidance."
+                    : "A finding to verify, not a confirmed cause."}
                 </div>
               </section>
               {top && (
                 <details className="ux-notes">
                   <summary>Read investigation notes</summary>
                   <p className="ux-answer">
-                    {readableAnswer(report.answer, report.citations)}
+                    {readableAnswer(report.answer, [
+                      ...report.citations,
+                      ...(report.external_references || []),
+                    ])}
                   </p>
                   <AnswerReferences report={report} onOpen={openCitation} />
                 </details>
               )}
               {!report.citation_checks.has_answer_citations &&
+                !report.external_references?.some((r) => r.cited_in_answer) &&
                 report.answer && (
                   <p className="ux-source-warning">
                     The assistant's notes need a source check. Use the source
                     links to review the evidence before relying on them.
                   </p>
                 )}
+              <SiemensReferences report={report} />
               {!top && (
                 <AnswerReferences report={report} onOpen={openCitation} />
               )}
@@ -500,8 +522,9 @@ export default function UserResults({
               <ArrowRight size={15} />
             </a>
             <p className="ux-small">
-              This investigation used {run.source_ids.length} saved source
-              file(s). Files added later are used only by new investigations.
+              This investigation used {(run.source_ids || []).length} saved
+              source file(s). Files added later are used only by new
+              investigations.
             </p>
           </details>
           <p className="ux-demo-note">

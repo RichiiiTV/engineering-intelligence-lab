@@ -1,3 +1,5 @@
+import type { PublicReference, SiemensQuery, SiemensSnapshot } from "./siemens";
+
 export interface Case {
   id: string;
   title: string;
@@ -26,7 +28,9 @@ export interface Limits {
 }
 export interface Run {
   id: string;
-  case_id: string;
+  case_id: string | null;
+  chat_mode?: boolean;
+  siemens?: SiemensQuery | null;
   question: string;
   status: string;
   created_at: string;
@@ -86,6 +90,12 @@ export interface Hit extends Citation {
   lexical_score: number;
 }
 export interface EvidenceReport {
+  integrations?: { siemens?: SiemensSnapshot | null };
+  external_references?: PublicReference[];
+  external_reference_checks?: {
+    unresolved: string[];
+    technical_claims_verified: boolean;
+  };
   answer: string;
   citations: Citation[];
   citation_checks: {

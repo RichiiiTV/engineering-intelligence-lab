@@ -244,7 +244,9 @@ async function fillForm() {
     name: "Investigate",
   }) as HTMLButtonElement;
   expect(button.disabled).toBe(true);
-  await userEvent.click(screen.getByRole("checkbox"));
+  await userEvent.click(
+    screen.getByRole("checkbox", { name: /I confirm these files/ }),
+  );
   expect(button.disabled).toBe(false);
   return button;
 }
@@ -485,7 +487,9 @@ it("starts a fresh investigation without silently reusing the previous case file
     name: "What would you like to investigate?",
   });
   expect(screen.queryByText("inspection.csv")).toBeNull();
-  expect(screen.queryByRole("checkbox")).toBeNull();
+  expect(
+    screen.queryByRole("checkbox", { name: /I confirm these files/ }),
+  ).toBeNull();
   expect(location.search).toBe("");
 });
 it("recovers a lost upload response by content hash rather than trusting a matching filename", async () => {

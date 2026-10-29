@@ -22,6 +22,7 @@ import {
 } from "./userFlow";
 import type { Case, CaseDetail, Run } from "./types";
 import UserResults from "./UserResults";
+import { isSiemensQuestion } from "./siemens";
 import "./user.css";
 
 type Route = { page: string; caseId: string; runId: string };
@@ -55,6 +56,7 @@ export default function UserApp() {
   const [cases, setCases] = useState<Case[]>([]),
     [runs, setRuns] = useState<Run[]>([]);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [nextRunOffset, setNextRunOffset] = useState<number | null>(null);
   const [detail, setDetail] = useState<CaseDetail | null>(null),
     [error, setError] = useState("");
   const [revision, setRevision] = useState(0),
@@ -81,14 +83,18 @@ export default function UserApp() {
       api<{ cases: Case[]; next_offset?: number | null }>("/api/cases", {
         signal: controller.signal,
       }),
-      api<{ investigations: Run[] }>("/api/investigations", {
-        signal: controller.signal,
-      }),
+      api<{ investigations: Run[]; next_offset?: number | null }>(
+        "/api/investigations",
+        {
+          signal: controller.signal,
+        },
+      ),
     ])
       .then(([c, r]) => {
         setCases(c.cases);
         setNextOffset(c.next_offset ?? null);
-        setRuns(r.investigations.filter((x) => x.case_id));
+        setRuns(r.investigations);
+        setNextRunOffset(r.next_offset ?? null);
       })
       .catch((e) => {
         if (!controller.signal.aborted) setError(message(e));
@@ -127,16 +133,35 @@ export default function UserApp() {
     }
   };
   async function loadMore() {
-    if (nextOffset === null || busy) return;
+    if ((nextOffset === null && nextRunOffset === null) || busy) return;
     setBusy(true);
     try {
-      const page = await api<{ cases: Case[]; next_offset: number | null }>(
-        `/api/cases?offset=${nextOffset}&limit=50`,
-      );
-      setCases((old) => [
-        ...new Map([...old, ...page.cases].map((c) => [c.id, c])).values(),
+      const [page, history] = await Promise.all([
+        nextOffset === null
+          ? Promise.resolve(null)
+          : api<{ cases: Case[]; next_offset: number | null }>(
+              `/api/cases?offset=${nextOffset}&limit=50`,
+            ),
+        nextRunOffset === null
+          ? Promise.resolve(null)
+          : api<{ investigations: Run[]; next_offset: number | null }>(
+              `/api/investigations?offset=${nextRunOffset}&limit=50`,
+            ),
       ]);
-      setNextOffset(page.next_offset);
+      if (page) {
+        setCases((old) => [
+          ...new Map([...old, ...page.cases].map((c) => [c.id, c])).values(),
+        ]);
+        setNextOffset(page.next_offset);
+      }
+      if (history) {
+        setRuns((old) => [
+          ...new Map(
+            [...old, ...history.investigations].map((r) => [r.id, r]),
+          ).values(),
+        ]);
+        setNextRunOffset(history.next_offset);
+      }
     } catch (e) {
       setError(message(e));
     } finally {
@@ -151,7 +176,6 @@ export default function UserApp() {
           <span>Engineering Intelligence Lab</span>
         </button>
         <nav aria-label="Main navigation">
-          <a href="/?page=siemens">SPS help</a>
           <button
             onClick={() =>
               navigate({ page: "investigations", caseId: "", runId: "" })
@@ -197,8 +221,15 @@ export default function UserApp() {
                 New investigation
               </button>
             </div>
-            <Recent cases={cases} runs={runs} onOpen={open} />
-            {nextOffset !== null && (
+            <Recent
+              cases={cases}
+              runs={runs}
+              onOpen={open}
+              onQuestion={(r) =>
+                navigate({ page: "new", caseId: "", runId: r.id })
+              }
+            />
+            {(nextOffset !== null || nextRunOffset !== null) && (
               <button
                 className="ux-secondary"
                 disabled={busy}
@@ -231,7 +262,7 @@ export default function UserApp() {
                 }}
                 onStarted={(r) =>
                   navigate(
-                    { page: "new", caseId: r.case_id, runId: r.id },
+                    { page: "new", caseId: r.case_id || "", runId: r.id },
                     true,
                   )
                 }
@@ -240,7 +271,7 @@ export default function UserApp() {
             <section className="ux-recent" aria-labelledby="recent-title">
               <div>
                 <h2 id="recent-title">Recent investigations</h2>
-                {cases.length > 3 && (
+                {cases.length + runs.filter((r) => r.chat_mode).length > 3 && (
                   <button
                     className="ux-link"
                     onClick={() =>
@@ -256,7 +287,15 @@ export default function UserApp() {
                   </button>
                 )}
               </div>
-              <Recent cases={cases.slice(0, 3)} runs={runs} onOpen={open} />
+              <Recent
+                cases={cases}
+                runs={runs}
+                onOpen={open}
+                onQuestion={(r) =>
+                  navigate({ page: "new", caseId: "", runId: r.id })
+                }
+                limit={3}
+              />
             </section>
           </>
         )}
@@ -279,22 +318,45 @@ function Recent({
   cases,
   runs,
   onOpen,
+  onQuestion,
+  limit,
 }: {
   cases: Case[];
   runs: Run[];
   onOpen: (c: Case) => void;
+  onQuestion: (r: Run) => void;
+  limit?: number;
 }) {
+  const entries = [
+    ...cases.map((c) => ({
+      id: c.id,
+      title: c.title,
+      date: c.created_at,
+      status: runs.find((r) => r.case_id === c.id)?.status,
+      open: () => onOpen(c),
+    })),
+    ...runs
+      .filter((r) => !r.case_id && r.chat_mode)
+      .map((r) => ({
+        id: r.id,
+        title: r.question,
+        date: r.created_at,
+        status: r.status,
+        open: () => onQuestion(r),
+      })),
+  ]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, limit);
   return (
     <div className="ux-recent-list">
-      {cases.length ? (
-        cases.map((c) => {
-          const run = runs.find((r) => r.case_id === c.id);
+      {entries.length ? (
+        entries.map((c) => {
           return (
-            <button key={c.id} onClick={() => onOpen(c)}>
+            <button key={c.id} onClick={c.open}>
               <span>{c.title}</span>
               <small>
-                {run ? friendlyStatus(run.status) : "Open investigation"} ·{" "}
-                {new Date(c.created_at).toLocaleDateString([], {
+                {c.status ? friendlyStatus(c.status) : "Open investigation"} ·{" "}
+                {new Date(c.date).toLocaleDateString([], {
                   month: "short",
                   day: "numeric",
                 })}
@@ -334,6 +396,22 @@ function QuestionForm({
     [progress, setProgress] = useState(""),
     [error, setError] = useState("");
   const hasNewFiles = files.some((f) => !f.source);
+  const [siemensChoice, setSiemensChoice] = useState<"auto" | "on" | "off">(
+    new URLSearchParams(location.search).get("page") === "siemens"
+      ? "on"
+      : "auto",
+  );
+  const [publicQuestion, setPublicQuestion] = useState("");
+  const [product, setProduct] = useState({
+    family: "",
+    cpu: "",
+    firmware: "",
+    tia_version: "",
+  });
+  const useSiemens =
+    siemensChoice === "on" ||
+    (siemensChoice === "auto" && !files.length && isSiemensQuestion(question));
+  const siemensQuestion = files.length ? publicQuestion : question;
   function add(incoming: File[]) {
     try {
       validateFiles(files, incoming);
@@ -385,7 +463,11 @@ function QuestionForm({
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!question.trim() || !files.length || (hasNewFiles && !confirmed))
+    if (
+      !question.trim() ||
+      (hasNewFiles && !confirmed) ||
+      (useSiemens && !siemensQuestion.trim())
+    )
       return;
     setBusy(true);
     onBusy(true);
@@ -396,6 +478,9 @@ function QuestionForm({
         files,
         caseId,
         policy,
+        ...(useSiemens
+          ? { siemens: { question: siemensQuestion.trim(), ...product } }
+          : {}),
         onCase: (id) => {
           setCaseId(id);
           onCase(id);
@@ -424,11 +509,11 @@ function QuestionForm({
     <>
       <div className="ux-steps" aria-label="Investigation steps">
         <span className="current">
-          <b>1</b>Add files
+          <b>1</b>Ask a question
         </span>
         <i />
         <span>
-          <b>2</b>Ask a question
+          <b>2</b>Add files if needed
         </span>
         <i />
         <span>
@@ -440,7 +525,7 @@ function QuestionForm({
         <p>
           {existing
             ? "Ask another question using these files, or add more evidence."
-            : "Add your files and ask in plain language."}
+            : "Ask about Siemens PLCs or attach your files for an investigation."}
         </p>
       </div>
       <form className="ux-question-card" onSubmit={submit}>
@@ -449,12 +534,120 @@ function QuestionForm({
           id="user-question"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Why did false rejects increase at station S03?"
+          placeholder="Ask about S7 / TIA Portal, or investigate a change in your files…"
           maxLength={4000}
           required
           rows={3}
           disabled={busy}
         />
+        <details
+          className="ux-siemens-options"
+          open={useSiemens || isSiemensQuestion(question)}
+        >
+          <summary>
+            {useSiemens
+              ? "Siemens documentation will be checked"
+              : "Siemens documentation"}
+          </summary>
+          <label className="ux-confirm">
+            <input
+              type="checkbox"
+              checked={useSiemens}
+              disabled={busy}
+              onChange={(e) =>
+                setSiemensChoice(e.target.checked ? "on" : "off")
+              }
+            />
+            <span>Use Siemens public documentation for this question</span>
+          </label>
+          {useSiemens && (
+            <>
+              {files.length > 0 && (
+                <>
+                  <label htmlFor="public-siemens-question">
+                    Public Siemens question
+                  </label>
+                  <textarea
+                    id="public-siemens-question"
+                    value={publicQuestion}
+                    onChange={(e) => setPublicQuestion(e.target.value)}
+                    maxLength={500}
+                    required
+                    disabled={busy}
+                    rows={2}
+                    placeholder="Only a public product question, such as S7-1500 OB1 cycle time"
+                  />
+                </>
+              )}
+              <p className="ux-small">
+                Siemens receives{" "}
+                {files.length
+                  ? "only the public question above"
+                  : "your question above"}{" "}
+                and any product fields below. File contents and case history
+                stay local. The public query has a 500-character limit.
+              </p>
+              <details>
+                <summary>CPU, firmware and TIA version (optional)</summary>
+                <div className="ux-product-fields">
+                  <label>
+                    SIMATIC family
+                    <select
+                      value={product.family}
+                      disabled={busy}
+                      onChange={(e) =>
+                        setProduct({ ...product, family: e.target.value })
+                      }
+                    >
+                      <option value="">Not specified</option>
+                      {["S7-1200", "S7-1200 G2", "S7-1500"].map((f) => (
+                        <option key={f}>{f}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    CPU model
+                    <input
+                      value={product.cpu}
+                      maxLength={50}
+                      disabled={busy}
+                      onChange={(e) =>
+                        setProduct({ ...product, cpu: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Firmware
+                    <input
+                      value={product.firmware}
+                      maxLength={12}
+                      placeholder="V3.1"
+                      disabled={busy}
+                      onChange={(e) =>
+                        setProduct({ ...product, firmware: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    TIA Portal
+                    <select
+                      value={product.tia_version}
+                      disabled={busy}
+                      onChange={(e) =>
+                        setProduct({ ...product, tia_version: e.target.value })
+                      }
+                    >
+                      <option value="">Not specified</option>
+                      {[17, 18, 19, 20, 21].map((v) => (
+                        <option key={v}>V{v}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </details>
+            </>
+          )}
+        </details>
         <label
           className={`ux-add-files ${busy ? "disabled" : ""}`}
           htmlFor="user-files"
@@ -559,7 +752,7 @@ function QuestionForm({
             disabled={
               busy ||
               !question.trim() ||
-              !files.length ||
+              (useSiemens && !siemensQuestion.trim()) ||
               (hasNewFiles && !confirmed)
             }
           >
@@ -567,7 +760,7 @@ function QuestionForm({
               <LoaderCircle className="spin" size={18} />
             ) : (
               <>
-                Investigate
+                {files.length ? "Investigate" : "Ask"}
                 <ArrowRight size={18} />
               </>
             )}

@@ -1,4 +1,5 @@
 import type { Comparison, EvidenceReport, Run } from "./types";
+import { siemensUrl } from "./siemens";
 
 export function escapeHtml(value: unknown): string {
   return String(value).replace(
@@ -16,6 +17,12 @@ export function userReport(
   filename: string,
 ) {
   const text = escapeHtml;
+  const publicReferences = (report.external_references || []).filter((r) =>
+    siemensUrl(r.url),
+  );
+  const externalSection = report.integrations?.siemens?.enabled
+    ? `<h2>Siemens documentation</h2><p>${text(report.integrations.siemens.version_notice || "Public references; exact CPU/firmware applicability is unverified.")}</p><ul>${publicReferences.map((r, i) => `<li><a href="${text(r.url)}" target="_blank" rel="noopener noreferrer">Siemens source ${i + 1}: ${text(r.title)}</a><br><small>${text(r.citation_id)}</small></li>`).join("")}</ul><details><summary>Public query sent to Siemens</summary><pre>${text(report.integrations.siemens.outbound_query)}</pre></details>`
+    : "";
   const rows =
     comparison?.ranking
       .map(
@@ -28,5 +35,5 @@ export function userReport(
 ${rows ? `<h2>Inspection comparison</h2><p>Source: ${text(filename)}. Rate = total false ejects / total inspected, grouped by station and period.</p><table><thead><tr><th>Station</th><th>Before</th><th>During incident</th><th>Change</th></tr></thead><tbody>${rows}</tbody></table>` : ""}
 <h2>Investigation notes</h2><p>${text(report.answer || "No final answer was produced.")}</p><p class="note">These findings require review. Correlation does not establish causation; statistical confidence and claim entailment have not been verified.</p>
 <h2>Sources</h2>${report.citations.map((c, i) => `<h3>Source ${i + 1}: ${text(c.filename)}</h3><p>${text(c.text || JSON.stringify(c.row))}</p><small>${text(c.citation_id)} · SHA-256 ${text(c.sha256)}</small>`).join("") || "<p>No source references were returned.</p>"}
-<h2>Limitations</h2><ul>${report.uncertainty.limitations.map((x) => `<li>${text(x)}</li>`).join("")}</ul><details><summary>Full evidence and calculation record</summary><pre>${text(JSON.stringify(report, null, 2))}</pre></details><p><small>Run ${text(run.id)}. Downloaded report; this does not save or approve a draft in the application.</small></p></body></html>`;
+${externalSection}<h2>Limitations</h2><ul>${report.uncertainty.limitations.map((x) => `<li>${text(x)}</li>`).join("")}</ul><details><summary>Full evidence and calculation record</summary><pre>${text(JSON.stringify(report, null, 2))}</pre></details><p><small>Run ${text(run.id)}. Downloaded report; this does not save or approve a draft in the application.</small></p></body></html>`;
 }

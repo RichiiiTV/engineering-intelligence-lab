@@ -1,5 +1,6 @@
 import { api, post } from "./api";
 import type { Case, CaseDetail, Run, Source } from "./types";
+import type { SiemensQuery } from "./siemens";
 
 export interface Attachment {
   key: string;
@@ -56,9 +57,19 @@ export async function startUserInvestigation(options: {
   onCase: (id: string) => void;
   onProgress: (text: string) => void;
   onUploaded: (key: string, source: Source) => void;
+  siemens?: SiemensQuery;
 }) {
   const { question, files, policy, onCase, onProgress, onUploaded } = options;
   let caseId = options.caseId;
+  if (!files.length) {
+    onProgress("Starting your question…");
+    return post<Run>("/api/investigations", {
+      question: question.trim(),
+      chat_mode: true,
+      ...(options.siemens ? { siemens: options.siemens } : {}),
+      limits: { max_output_tokens: 2048 },
+    });
+  }
   if (!caseId) {
     onProgress("Preparing your investigation…");
     const created = await post<Case>("/api/cases", {
@@ -93,6 +104,7 @@ export async function startUserInvestigation(options: {
     question: question.trim(),
     use_mock_mcp: false,
     limits: { max_output_tokens: 2048 },
+    ...(options.siemens ? { siemens: options.siemens } : {}),
   });
 }
 export function friendlyStatus(status: string) {
@@ -117,8 +129,16 @@ export function readableAnswer(
   citations: { citation_id: string }[],
 ) {
   return answer.replace(
-    /(?:pdf:[0-9a-f-]{36}:p[0-9]+:c[0-9]+|csv:[0-9a-f-]{36}:r[0-9]+)/g,
+    /(?:pdf:[0-9a-f-]{36}:p[0-9]+:c[0-9]+|csv:[0-9a-f-]{36}:r[0-9]+|siemens:[0-9a-f-]{36}:r[0-9]+)/g,
     (id) => {
+      if (id.startsWith("siemens:")) {
+        const index = citations
+          .filter((c) => c.citation_id.startsWith("siemens:"))
+          .findIndex((c) => c.citation_id === id);
+        return index < 0
+          ? "Unverified Siemens reference"
+          : `Siemens source ${index + 1}`;
+      }
       const index = citations.findIndex((c) => c.citation_id === id);
       return index < 0 ? "Unverified source" : `Source ${index + 1}`;
     },

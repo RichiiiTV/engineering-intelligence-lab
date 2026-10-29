@@ -9,11 +9,11 @@ afterEach(() => {
   history.replaceState(null, "", "/");
 });
 
-it("keeps SPS queries separate and sends only the submitted question", async () => {
+it("diagnostic search sends only the submitted public question", async () => {
   history.replaceState(
     null,
     "",
-    "/?page=siemens&case=private-case&run=private-run",
+    "/?view=advanced&page=siemens&case=private-case&run=private-run",
   );
   const fetcher = vi.fn().mockResolvedValue(
     new Response(
@@ -79,7 +79,7 @@ it("keeps SPS queries separate and sends only the submitted question", async () 
 });
 
 it("handles unavailable search and empty results without fabricating an answer", async () => {
-  history.replaceState(null, "", "/?page=siemens");
+  history.replaceState(null, "", "/?view=advanced&page=siemens");
   const fetcher = vi
     .fn()
     .mockResolvedValueOnce(

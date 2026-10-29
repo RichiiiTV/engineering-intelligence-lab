@@ -54,13 +54,27 @@ For UI development, run the backend on port 8000, then `cd frontend; npm.cmd run
 
 ## Using the workbench
 
-**SPS help** opens the [Siemens public knowledge search](http://127.0.0.1:8000/?page=siemens). Enter a public SIMATIC/S7/TIA Portal question and click **Search Siemens**. The app sends that question to the fixed Siemens MCP search tool and displays a labeled Siemens-generated summary and official source links. It keeps case files/history separate and provides no equipment connection. Search coverage varies; verify the exact CPU, firmware and TIA version against the linked documentation. See [project gaps and security review](docs/project-security-review.md).
+Ask Siemens/SPS questions in the normal question box and click **Ask**; no upload
+or separate help page is required. Public Siemens questions select documentation
+lookup automatically, with a visible opt-out and optional CPU/firmware/TIA fields.
+The Ollama agent uses the fixed Siemens MCP tool and answers in the same results
+view, with clickable source references. With files attached, lookup starts off:
+enable it and supply a public product query in the composer. Files, case history
+and model-generated queries are never sent to Siemens. See
+[chat integration and validation](docs/siemens-chat.md). The old SPS link opens
+this same composer; protocol diagnostics remain under Advanced.
 
-The local API now checks loopback Host headers, rejects unrelated browser origins/cross-site API requests, and bounds JSON bodies before parsing. This remains a single-user local application; those controls do not add authentication or make network deployment suitable.
+The local API checks loopback Host headers, rejects unrelated browser origins,
+bounds request bodies and requires authenticated ownership for case/run access.
+It remains a loopback development application; do not expose it to a network.
 
 If a run reaches its token allowance, **Continue investigation** resumes its saved progress using the remaining capacity when possible. If needed, **Continue with extra capacity** explicitly adds a bounded token allowance; other limits and usage counters remain intact. The agent now summarizes gathered evidence before reaching capacity, and those results are labeled as findings so far. See [token recovery and validation](docs/token-budget-recovery.md). This refines the original fixed-reservation/immutable-limit behavior described in the historical M2 report.
 
-The default page now follows the approved simpler design: add files, ask a question, then review the finding and source links. It creates the case automatically, keeps run controls in plain language, and downloads a readable HTML report that can be printed or saved as PDF from a browser. Use **Try the demo files** to start with the committed generated fixtures.
+The default page follows the simpler design: ask a question, attach files if
+needed, then review the answer and sources. File investigations create a case
+automatically; standalone questions do not create empty cases or inherit demo
+inspection data. Run controls and readable HTML downloads remain available.
+Use **Try the demo files** to start with the committed generated fixtures.
 
 The original full interface remains available through **Advanced workspace** (`/?view=advanced`). It retains model/run settings, tool activity, complete source provenance, JSON exports and explicit draft approval. The mode switch changes presentation; it is not an admin authentication boundary. Simple investigations keep the existing server budgets, use the longer supported 2,048-token output allowance, and leave mock MCP off by default.
 
@@ -75,7 +89,10 @@ The following detailed workflow remains available in the advanced workspace:
 
 The MCP mock implements the MCP SDK's actual initialization, tool listing and tool call exchange over in-memory streams. It has one reviewed synthetic station-context tool, no configurable commands/URLs and no writes. It is disabled by default; the option is frozen in each run. It is not an external plant connection or a case citation source.
 
-This remains a single-user loopback demo. Approval is an explicit local UI/API decision bound to immutable proposal content, **not authenticated proof of a person's identity**. Do not expose the API to a network. Browser mutations from unrelated origins are rejected; this does not replace authentication. Case creation and uploads are explicit user actions; no agent tool can create cases, upload files or save drafts.
+Approval is bound to immutable proposal content and attributed to the signed-in
+account. It is an application audit record, not proof of legal identity. The
+server remains loopback-only. Case creation and uploads are explicit user
+actions; no agent tool can create cases, upload files or save drafts.
 
 Optional: **run a real agent** after starting Ollama and ensuring the configured model is installed:
 

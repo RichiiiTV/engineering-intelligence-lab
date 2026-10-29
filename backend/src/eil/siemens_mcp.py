@@ -1,4 +1,4 @@
-"""Fixed public Siemens knowledge search. Never an investigation agent tool."""
+"""Fixed public Siemens knowledge transport; graph access binds a human-approved query."""
 
 from __future__ import annotations
 

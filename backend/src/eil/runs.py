@@ -145,10 +145,28 @@ class RunStore:
                 )
             ]
 
-    def create(self, question, limits=None, *, case_id=None, use_mock_mcp=False, owner_id=None):
+    def create(
+        self,
+        question,
+        limits=None,
+        *,
+        case_id=None,
+        use_mock_mcp=False,
+        owner_id=None,
+        siemens=None,
+        chat_mode=False,
+    ):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
         limits = RunLimits.model_validate(limits or {})
+        if not isinstance(chat_mode, bool) or (chat_mode and case_id is not None):
+            raise ValueError("Chat without files cannot select a case")
+        if siemens is not None:
+            from .siemens_chat import PublicSiemensQuery
+
+            siemens = PublicSiemensQuery.model_validate(siemens).model_dump()
+            if case_id is None:
+                chat_mode = True
         url = urlsplit(OLLAMA_BASE_URL)
         if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password:
             raise ValueError("Configure an HTTP Ollama URL without embedded credentials")
@@ -156,7 +174,7 @@ class RunStore:
         from .auth import local_owner
 
         owner_id = owner_id or local_owner(self.directory)
-        source_ids = None
+        source_ids = [] if chat_mode else None
         if case_id is not None:
             from .evidence import EvidenceStore
 
@@ -168,6 +186,8 @@ class RunStore:
             owner_id=owner_id,
             thread_id=run_id,
             question=question,
+            chat_mode=chat_mode,
+            siemens=siemens,
             use_mock_mcp=use_mock_mcp,
             status="queued",
             created_at=now(),

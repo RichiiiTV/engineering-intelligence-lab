@@ -22,7 +22,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .analytics import ALLOWED_STATIONS, compare_stations, provisional_report, station_metrics
@@ -44,6 +44,7 @@ from .pdf_ingest import MAX_PDF_BYTES, PDFBusy, PDFUnavailable, parse_pdf
 from .runs import STOPPED, QueueFull, RunConflict, RunLimits, RunNotFound
 from .service import RunService
 from .settings import DATASET_NAME, ROOT
+from .siemens_chat import PublicSiemensQuery
 from .storage import CASE_LOCK, StorageManager
 from .uploads import UploadBodyLimit
 
@@ -56,6 +57,14 @@ class InvestigationRequest(BaseModel):
     limits: RunLimits = Field(default_factory=RunLimits)
     case_id: UUID | None = None
     use_mock_mcp: bool = False
+    siemens: PublicSiemensQuery | None = None
+    chat_mode: bool = Field(default=False, strict=True)
+
+    @model_validator(mode="after")
+    def validate_chat_scope(self):
+        if self.chat_mode and self.case_id is not None:
+            raise ValueError("Use a case investigation when files are attached")
+        return self
 
     @field_validator("question")
     @classmethod
@@ -194,6 +203,8 @@ def investigate(payload: InvestigationRequest, request: Request):
                 case_id=str(payload.case_id) if payload.case_id else None,
                 use_mock_mcp=payload.use_mock_mcp,
                 owner_id=request.state.principal.id,
+                siemens=payload.siemens.model_dump() if payload.siemens else None,
+                chat_mode=payload.chat_mode,
             )
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

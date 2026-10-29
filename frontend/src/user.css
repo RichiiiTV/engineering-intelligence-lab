@@ -230,6 +230,77 @@
 .storage-settings li {
   margin: 8px 0;
 }
+.ux-siemens-options {
+  margin: 18px 0;
+  padding: 13px 16px;
+  border: 1px solid #e6e0f8;
+  border-radius: 10px;
+  background: #faf9ff;
+  font-size: 14px;
+}
+.ux-siemens-options summary {
+  cursor: pointer;
+  color: #6043c4;
+}
+.ux-siemens-options .ux-confirm {
+  margin: 12px 0;
+}
+.ux-product-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.ux-product-fields label {
+  display: grid;
+  gap: 5px;
+}
+.ux-product-fields input,
+.ux-product-fields select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px;
+  border: 1px solid #ddd7ef;
+  border-radius: 7px;
+  background: white;
+  font: inherit;
+}
+.ux-siemens-references {
+  margin: 24px 0;
+  padding: 23px;
+  border: 1px solid #e6e0f8;
+  border-radius: 12px;
+  background: #faf9ff;
+}
+.ux-siemens-references h2 {
+  font-size: 19px;
+  margin-top: 0;
+}
+.ux-siemens-references ul {
+  list-style: none;
+  padding: 0;
+}
+.ux-siemens-references li {
+  padding: 10px 0;
+  border-bottom: 1px solid #e8e4f0;
+}
+.ux-siemens-references a {
+  color: #6446ce;
+}
+.ux-siemens-references small {
+  display: block;
+  color: #777489;
+  margin-top: 4px;
+}
+.ux-siemens-references pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .ux-product-fields {
+    grid-template-columns: 1fr;
+  }
+}
 .storage-settings pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
