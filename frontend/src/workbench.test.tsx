@@ -8,7 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "./App";
+import App from "./AdvancedApp";
 import { CitationView, StationChart } from "./components";
 import { mergeEvents, parseEvent } from "./useInvestigation";
 import type { Comparison, RunEvent } from "./types";

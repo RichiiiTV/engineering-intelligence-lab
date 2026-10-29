@@ -43,6 +43,14 @@ For UI development, run the backend on port 8000, then `cd frontend; npm.cmd run
 
 ## Using the workbench
 
+The default page now follows the approved simpler design: add files, ask a question, then review the finding and source links. It creates the case automatically, keeps run controls in plain language, and downloads a readable HTML report that can be printed or saved as PDF from a browser. Use **Try the demo files** to start with the committed generated fixtures.
+
+The original full interface remains available through **Advanced workspace** (`/?view=advanced`). It retains model/run settings, tool activity, complete source provenance, JSON exports and explicit draft approval. The mode switch changes presentation; it is not an admin authentication boundary. Simple investigations keep the existing server budgets, use the longer supported 2,048-token output allowance, and leave mock MCP off by default.
+
+The default results use only the run's saved evidence snapshot. CSV findings and the comparison chart are computed by the deterministic API, one file at a time. Model notes remain separate and source-reference warnings remain visible. Report download does not save a draft in the application; saving a draft still requires approval in the advanced workspace.
+
+The following detailed workflow remains available in the advanced workspace:
+
 1. Create a case. Upload generated or explicitly licensed public inspection CSVs and text PDFs; confirm the data category. The guide and upload dialog link the committed synthetic samples.
 2. Review the Overview chart and calculation provenance, search the PDFs, and open row/page citations. Each CSV is compared separately. Overview includes current case sources; runs freeze their own source snapshot.
 3. Start an investigation with a question and active time limit. Optionally allow the read-only **synthetic mock MCP** context. Activity replays persisted SSE events and exposes tool arguments/observations. Pause/resume/cancel controls preserve cumulative budgets.

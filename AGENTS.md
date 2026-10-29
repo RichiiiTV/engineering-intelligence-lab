@@ -37,3 +37,5 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 
 ## Current milestone
 Milestone 4: React investigation workbench, fixed local read-only mock MCP integration, and explicit content-bound approval before saving report drafts. Preserve case/source isolation, read-only agent tools, and cumulative M2 budgets. Stop after M4 checks and reporting. Do not begin M5 evaluations, Langfuse, provider benchmarks, external MCP servers, or production integrations without another user request.
+
+The user approved a simpler default files/question/findings experience on 2026-10-29. Preserve the original interface under Advanced workspace, including draft approvals and full provenance. This is an M4 UX refinement, not M5. Use the approved mockups in `output/design/simple-user-flow-v1/` as the visual reference.

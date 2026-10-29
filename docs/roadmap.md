@@ -28,6 +28,7 @@
 - explicit human approvals for actions that change data
 - Acceptance: user can start case, inspect evidence, pause/resume and export report
 - Implemented: local React/TypeScript workbench, source charts/citations, persisted SSE timeline and tool detail, run controls, report exports and approved immutable drafts. Fixed in-process MCP mock uses the real SDK; the run must explicitly opt in. See `m4-results.md`. Stop after M4; M5 has not started.
+- User-approved M4 refinement: a simpler default files/question/results flow, with the original interface retained under Advanced workspace. See `simple-user-experience.md` and the approved mockups in `output/design/simple-user-flow-v1/`.
 
 ## M5 — Evaluation, observability and advanced agents
 - known-cause and ambiguous incident benchmark; tool selection, correct evidence, hallucinations

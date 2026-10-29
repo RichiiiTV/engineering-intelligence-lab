@@ -143,3 +143,12 @@ boundary. Unrelated browser origins cannot mutate the API; a self-only CSP appli
 workbench while the existing Swagger docs keep their normal assets. Keep loopback binding.
 M5 evaluation infrastructure, Langfuse, production MCP servers and equipment writes remain
 outside this milestone.
+
+## Approved simple user flow
+
+The default React entry now presents files, a question, progress and findings. The former UI
+is retained as `AdvancedApp` behind `?view=advanced`. Both modes use the same M4 APIs and
+durable state. User-facing source rows/charts are selected from the run export's immutable
+source snapshot; model notes are displayed separately from deterministic comparisons.
+The new report is a downloadable escaped HTML document, with original evidence metadata
+retained for review. It is not an alternative write/approval path. See `simple-user-experience.md`.
