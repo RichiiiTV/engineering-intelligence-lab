@@ -118,9 +118,14 @@ export function LibraryReferences({
         </p>
       )}
       {references.map((r, i) => (
-        <details key={r.citation_id}>
+        <details key={r.citation_id} id={"source-" + r.citation_id}>
           <summary>
-            Library source {i + 1}: {r.title} · page {r.page}
+            Library source {i + 1}: {r.title} ·{" "}
+            {r.line_start
+              ? `lines ${r.line_start}–${r.line_end}`
+              : r.pages?.length
+                ? `pages ${r.pages.join(", ")}`
+                : `page ${r.page}`}
           </summary>
           <p className="ux-small">
             {r.family} · {r.version} ·{" "}
@@ -137,10 +142,13 @@ export function LibraryReferences({
           </a>
         </details>
       ))}
-      {!!report.library_citation_checks?.unresolved.length && (
+      {!!(
+        report.library_citation_checks?.unresolved.length ||
+        report.library_citation_checks?.not_returned_by_tools.length
+      ) && (
         <p className="ux-caution">
-          Some library citations could not be resolved. Review the source
-          passages.
+          Some library citations were unresolved or were not returned by
+          retrieval. Review the source passages before relying on this answer.
         </p>
       )}
       <p className="ux-small">

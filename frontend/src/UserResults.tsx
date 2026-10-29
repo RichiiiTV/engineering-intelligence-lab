@@ -172,19 +172,27 @@ export default function UserResults({
             )}
             <span>
               {completed
-                ? run.chat_mode
-                  ? "Answer ready"
-                  : "Investigation complete"
+                ? run.result?.answer_contract?.outcome === "needs_review"
+                  ? "Review required"
+                  : run.result?.answer_contract?.outcome === "no_support"
+                    ? "More information needed"
+                    : run.chat_mode
+                      ? "Answer ready"
+                      : "Investigation complete"
                 : friendlyStatus(run.status)}
             </span>
           </div>
           <h1 className="ux-result-title">
             {completed
-              ? run.result?.capacity_limited
-                ? "Here's what we found so far."
-                : run.chat_mode
-                  ? "Here's your answer."
-                  : "Here's what changed."
+              ? run.result?.answer_contract?.outcome === "needs_review"
+                ? "Review the answer sources."
+                : run.result?.answer_contract?.outcome === "no_support"
+                  ? "The selected sources do not establish an answer."
+                  : run.result?.capacity_limited
+                    ? "Here's what we found so far."
+                    : run.chat_mode
+                      ? "Here's your answer."
+                      : "Here's what changed."
               : active
                 ? "Following the evidence."
                 : run.status === "paused"
@@ -192,6 +200,11 @@ export default function UserResults({
                   : "This investigation needs attention."}
           </h1>
           <p className="ux-result-question">{run.question}</p>
+          {!!run.result?.answer_contract?.issues.length && (
+            <div className="ux-caution" role="alert">
+              {run.result.answer_contract.issues.join(" ")}
+            </div>
+          )}
           {error && (
             <div className="ux-error" role="alert">
               {error}

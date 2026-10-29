@@ -91,6 +91,9 @@ def export_investigation(run_store, run_id):
                 if "citation_id" in observation:
                     supplied.add(observation["citation_id"])
     answer = (run.get("result") or {}).get("answer", "")
+    from .answer_contract import assess
+
+    answer_contract = assess(run, answer)
     cited, malformed = answer_citations(answer)
     siemens = reference_snapshot(run)
     public_cited = set(re.findall(r"\[(siemens:[^\]]+)\]", str(answer)))
@@ -145,6 +148,7 @@ def export_investigation(run_store, run_id):
             },
         },
         "answer": answer,
+        "answer_contract": answer_contract,
         "library_snapshot": [
             {
                 k: v

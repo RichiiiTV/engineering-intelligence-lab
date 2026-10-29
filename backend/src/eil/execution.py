@@ -19,6 +19,7 @@ from ollama import ResponseError
 from pydantic import ValidationError
 
 from .agent import MODEL_CONTEXT_TOKENS, ModelUnavailableError, build_agent
+from .answer_contract import assess
 from .database import configure
 from .runs import BudgetExceeded, RunStopped, RunStore
 
@@ -544,6 +545,10 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                 run_id,
                 "completed",
                 result={
+                    "answer_contract": assess(
+                        store.get(run_id),
+                        structured.model_dump_json() if structured is not None else last.content,
+                    ),
                     "answer": structured.model_dump_json()
                     if structured is not None
                     else last.content,

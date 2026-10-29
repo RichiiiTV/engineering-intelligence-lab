@@ -51,6 +51,11 @@ export interface Run {
     answer: string;
     warning: string;
     capacity_limited?: boolean;
+    answer_contract?: {
+      outcome: string;
+      issues: string[];
+      claim_entailment: string;
+    };
   } | null;
 }
 export interface RunEvent {
@@ -92,8 +97,17 @@ export interface Hit extends Citation {
   lexical_score: number;
 }
 export interface EvidenceReport {
+  answer_contract?: {
+    outcome: string;
+    issues: string[];
+    claim_entailment: string;
+  };
   library_snapshot?: { id: string; title: string; version: string }[];
   library_citations?: {
+    pages?: number[];
+    line_start?: number;
+    line_end?: number;
+    returned_by_tool?: boolean;
     id: string;
     citation_id: string;
     title: string;

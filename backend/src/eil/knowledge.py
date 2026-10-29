@@ -12,6 +12,7 @@ import sqlite_vec
 
 from .embeddings import EmbeddingUnavailable, embed
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore, checked_id
+from .passages import ProductContext, compatible, context_for, location
 from .pdf_ingest import MAX_PDF_BYTES, parse_pdf
 from .runs import now
 
@@ -33,11 +34,17 @@ class KnowledgeStore:
                 );
                 CREATE INDEX IF NOT EXISTS knowledge_document_passages ON knowledge_passages(document_id);
             """)
+            if "metadata" not in {
+                r[1] for r in conn.execute("PRAGMA table_info(knowledge_passages)")
+            }:
+                conn.execute(
+                    "ALTER TABLE knowledge_passages ADD COLUMN metadata TEXT NOT NULL DEFAULT '{}'"
+                )
 
     def list(self, *, all_documents=False):
         with self.evidence.connection() as conn:
             rows = conn.execute(
-                "SELECT d.*,count(p.vector) indexed_count,count(p.id) passages FROM knowledge_documents d LEFT JOIN knowledge_passages p ON p.document_id=d.id WHERE d.active=1 OR ? GROUP BY d.id ORDER BY json_extract(metadata,'$.title'),d.id",
+                "SELECT d.*,count(p.vector) indexed_count,count(p.id) passages FROM knowledge_documents d LEFT JOIN knowledge_passages p ON p.document_id=d.id WHERE d.active=1 OR ? GROUP BY d.id ORDER BY json_extract(d.metadata,'$.title'),d.id",
                 (all_documents,),
             ).fetchall()
         return [
@@ -74,6 +81,7 @@ class KnowledgeStore:
         actor,
         pdf_parser=parse_pdf,
         identity=None,
+        profile=None,
     ):
         if (
             not filename
@@ -96,7 +104,7 @@ class KnowledgeStore:
             if not content.startswith(b"%PDF-"):
                 raise ValueError("Invalid PDF signature")
             parsed = pdf_parser(content)
-            passages = [{"page": c["page"], "text": c["text"]} for c in parsed["chunks"]]
+            passages = parsed["chunks"]
         else:
             if len(content) > 1024**2:
                 raise ValueError("Text documents are limited to 1 MiB")
@@ -126,6 +134,7 @@ class KnowledgeStore:
             created_by=actor,
             kind=suffix[1:],
             size=len(content),
+            profile=ProductContext.model_validate(profile or {}).model_dump(exclude_defaults=True),
         )
         with self.evidence.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
@@ -147,9 +156,15 @@ class KnowledgeStore:
                 (identity, json.dumps(metadata), content),
             )
             conn.executemany(
-                "INSERT INTO knowledge_passages(id,document_id,page,text) VALUES (?,?,?,?)",
+                "INSERT INTO knowledge_passages(id,document_id,page,text,metadata) VALUES (?,?,?,?,?)",
                 [
-                    (f"kb:{identity}:p{p['page']}:c{i}", identity, p["page"], p["text"])
+                    (
+                        f"kb:{identity}:p{p['page']}:c{i}",
+                        identity,
+                        p["page"],
+                        p["text"],
+                        json.dumps(location(p)),
+                    )
                     for i, p in enumerate(passages)
                 ],
             )
@@ -189,7 +204,7 @@ class KnowledgeStore:
             )
 
     def index(self, identity):
-        self.document(identity)
+        document = self.document(identity)
         with self.evidence.connection() as conn:
             passages = conn.execute(
                 "SELECT id,text FROM knowledge_passages WHERE document_id=? ORDER BY id",
@@ -202,7 +217,10 @@ class KnowledgeStore:
                     "Indexing exceeded its deadline; no partial index was saved"
                 )
             batch = passages[start : start + 16]
-            current, vectors = embed([p["text"] for p in batch])
+            current, vectors = embed(
+                [f"title: {document['title']} | text: {p['text']}" for p in batch]
+            )
+            current += "|retrieval-v2"
             if key and key != current:
                 raise EmbeddingUnavailable("Embedding model changed while indexing")
             key = current
@@ -218,18 +236,19 @@ class KnowledgeStore:
         document = self.document(match[1], include_inactive=True)
         with self.evidence.connection() as conn:
             row = conn.execute(
-                "SELECT page,text FROM knowledge_passages WHERE id=? AND document_id=?",
+                "SELECT page,text,metadata FROM knowledge_passages WHERE id=? AND document_id=?",
                 (citation, match[1]),
             ).fetchone()
         if not row:
             raise EvidenceNotFound("Library citation not found")
         return (
             {k: v for k, v in document.items() if k not in {"raw", "active"}}
-            | dict(row)
+            | {k: v for k, v in dict(row).items() if k != "metadata"}
+            | json.loads(row["metadata"])
             | {"citation_id": citation}
         )
 
-    def search(self, query, allowed):
+    def search(self, query, allowed, *, product_context=None):
         if (
             not isinstance(query, str)
             or not query.strip()
@@ -241,6 +260,21 @@ class KnowledgeStore:
             return {"hits": [], "method": "empty-library", "semantic_available": False}
         for identity in allowed:
             checked_id(identity)
+        context = context_for(query, product_context)
+        excluded = [
+            identity
+            for identity in allowed
+            if not compatible(self.document(identity, include_inactive=True), context)[0]
+        ]
+        allowed = [i for i in allowed if i not in excluded]
+        if not allowed:
+            return {
+                "hits": [],
+                "method": "no-compatible-sources",
+                "excluded_document_ids": excluded,
+                "semantic_available": False,
+                "notice": "No selected source matches the requested product/version.",
+            }
         placeholders = ",".join("?" for _ in allowed)
         with self.evidence.connection() as conn:
             corpus = conn.execute(
@@ -265,7 +299,8 @@ class KnowledgeStore:
                 ]
             if any(p["vector"] for p in corpus):
                 try:
-                    key, vectors = embed([query])
+                    key, vectors = embed(["task: search result | query: " + query])
+                    key += "|retrieval-v2"
                     index.enable_load_extension(True)
                     try:
                         sqlite_vec.load(index)
@@ -315,6 +350,8 @@ class KnowledgeStore:
             "semantic_available": semantic_used,
             "embedding_model": key,
             "notice": notice,
+            "excluded_document_ids": excluded,
+            "product_context": context,
             "uncertainty": "Retrieval relevance does not prove a claim or exact product compatibility.",
         }
 
@@ -330,7 +367,9 @@ def library_tool(directory, run_id):
         if run.get("library_lookup") is not None:
             return json.dumps(run["library_lookup"])
         result = KnowledgeStore(directory).search(
-            run["question"], run.get("library_document_ids", [])
+            run["question"],
+            run.get("library_document_ids", []),
+            product_context=run.get("product_context"),
         )
         runs.change(run_id, lambda r, c: r.update(library_lookup=result))
         return json.dumps(result)

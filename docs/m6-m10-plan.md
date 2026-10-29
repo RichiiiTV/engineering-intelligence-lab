@@ -97,4 +97,9 @@ publish internal material, enable remote tracing or introduce production control
   — **34 passed in 31.03 seconds**. Archive quota: eight retained segments; history
   is retained and chain links verified, never silently purged. Backlog saturation
   blocks account-security changes explicitly while sign-in remains usable.
-- M7 in progress. Later stages start after preceding targeted acceptance passes.
+- M7 implemented: canonical passage metadata/page ranges, typed product context
+  and explicit edition exclusion, retrieval-specific embedding inputs, deterministic
+  citation/block-quotation contracts and visible review/unsupported outcomes.
+  Targeted backend acceptance: **28 passed in 12.46 seconds**. Frontend: **33
+  passed**, TypeScript/Vite build passed. General claim entailment remains unverified.
+- M8 in progress. Later stages start after preceding targeted acceptance passes.
