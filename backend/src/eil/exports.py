@@ -83,8 +83,9 @@ def export_investigation(run_store, run_id):
                         }
                     )
                 for hit in observation.get("hits", []):
-                    supplied.add(hit["citation_id"])
-                    supplied.update(c["citation_id"] for c in hit.get("context", []))
+                    if not hit["citation_id"].startswith("kb:"):
+                        supplied.add(hit["citation_id"])
+                        supplied.update(c["citation_id"] for c in hit.get("context", []))
                 for station in observation.get("ranking", []):
                     supplied.update(station["example_citations"])
                 if "citation_id" in observation:
@@ -98,6 +99,26 @@ def export_investigation(run_store, run_id):
         for r in (siemens or {}).get("references", [])
     ]
     resolved, unknown = [], []
+    from .knowledge import KnowledgeStore
+
+    library_ids = run.get("library_document_ids", [])
+    library_cited = set(re.findall(r"\[(kb:[^\]]+)\]", str(answer)))
+    library_supplied = {h["citation_id"] for h in (run.get("library_lookup") or {}).get("hits", [])}
+    library_resolved, library_unknown = [], []
+    if library_ids:
+        library = KnowledgeStore(run_store.directory)
+        for cid in sorted(library_cited | library_supplied):
+            try:
+                ref = library.resolve(cid, library_ids)
+                library_resolved.append(
+                    ref
+                    | {
+                        "cited_in_answer": cid in library_cited,
+                        "returned_by_tool": cid in library_supplied,
+                    }
+                )
+            except EvidenceNotFound:
+                library_unknown.append(cid)
     for cid in sorted(cited | supplied):
         try:
             citation = store.resolve(case_id, cid, allowed)
@@ -124,6 +145,28 @@ def export_investigation(run_store, run_id):
             },
         },
         "answer": answer,
+        "library_snapshot": [
+            {
+                k: v
+                for k, v in KnowledgeStore(run_store.directory)
+                .document(identity, include_inactive=True)
+                .items()
+                if k not in {"raw", "active"}
+            }
+            for identity in library_ids
+        ],
+        "library_citations": library_resolved,
+        "library_retrieval": {
+            k: v for k, v in (run.get("library_lookup") or {}).items() if k != "hits"
+        },
+        "library_citation_checks": {
+            "unresolved": sorted(
+                set(library_unknown)
+                | (library_cited - {r["citation_id"] for r in library_resolved})
+            ),
+            "not_returned_by_tools": sorted(library_cited - library_supplied),
+            "claim_entailment": "not_verified",
+        },
         "external_references": public_refs,
         "external_reference_checks": {
             "unresolved": sorted(public_cited - {r["citation_id"] for r in public_refs}),

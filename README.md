@@ -16,6 +16,8 @@ A local-first **agentic engineering investigation workbench** developed with Ope
 - Content-bound approval proposals before saving immutable report drafts
 - Versioned M5 evaluation scorecards, content-minimal local traces and bounded delegation/provider experiments
 - `AGENTS.md`, milestone-specific Codex tasks, evaluation fixture, and tests
+- Preloaded shared document library with local Ollama embeddings, SQLite vector + keyword retrieval, selected-source snapshots and passage citations
+- Administrator controls for documents, users/roles, account deactivation, session revocation and a paginated hash-chained audit trail
 
 M5 adds a separate synthetic benchmark workflow and local trace exports. See [M5 protocol](docs/m5-evaluation.md), [M5 results](docs/m5-results.md), [M4 results](docs/m4-results.md), [M3 evidence validation](docs/m3-results.md), and [M2 execution checks](docs/m2-results.md). The ordinary workbench retains its single-agent Ollama behavior.
 
@@ -53,6 +55,21 @@ For the full UI with local PDF parsing, run `.\scripts\start-workbench.cmd` from
 For UI development, run the backend on port 8000, then `cd frontend; npm.cmd run dev`. Open `http://127.0.0.1:5173`; Vite proxies `/api` to port 8000. The built application is served directly by FastAPI at port 8000 with no second server needed. Rebuild and reload after frontend edits.
 
 ## Using the workbench
+
+The normal question box searches the shared **Knowledge library** by default.
+Expand it to select documents or switch it off. Three generated CC0 starter
+guides are bundled; they are educational examples, not manufacturer manuals.
+Administrators can add explicitly licensed public PDF/Markdown/text sources,
+record product/edition/licence details, index them for semantic search and
+disable old editions. Install `embeddinggemma:300m` in the local Ollama service;
+keyword search remains available when embeddings are unavailable. New installs
+seed the documents automatically and require indexing in **Administration**.
+
+**Administration → Users** lists accounts and sessions and supports creating
+members/admins, changing roles, disabling accounts and signing out sessions.
+**Administration → Audit trail** shows content-free events with filtering,
+pagination, JSON page export and a local hash-chain integrity check. Existing
+case ownership is preserved. See [library and administration](docs/knowledge-library.md).
 
 Ask Siemens/SPS questions in the normal question box and click **Ask**; no upload
 or separate help page is required. Public Siemens questions select documentation

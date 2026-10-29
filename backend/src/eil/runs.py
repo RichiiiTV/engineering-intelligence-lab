@@ -155,10 +155,25 @@ class RunStore:
         owner_id=None,
         siemens=None,
         chat_mode=False,
+        use_library=False,
+        library_document_ids=None,
     ):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
         limits = RunLimits.model_validate(limits or {})
+        if not isinstance(use_library, bool) or (
+            library_document_ids is not None and not use_library
+        ):
+            raise ValueError("Enable the library before selecting documents")
+        library_ids = []
+        if use_library:
+            from .knowledge import KnowledgeStore
+
+            library = KnowledgeStore(self.directory)
+            library.seed()
+            library_ids = library.snapshot(library_document_ids)
+            if case_id is None:
+                chat_mode = True
         if not isinstance(chat_mode, bool) or (chat_mode and case_id is not None):
             raise ValueError("Chat without files cannot select a case")
         if siemens is not None:
@@ -188,6 +203,8 @@ class RunStore:
             question=question,
             chat_mode=chat_mode,
             siemens=siemens,
+            use_library=use_library,
+            library_document_ids=library_ids,
             use_mock_mcp=use_mock_mcp,
             status="queued",
             created_at=now(),
@@ -232,7 +249,29 @@ class RunStore:
                 (run_id, "queued", run["created_at"], json.dumps(run)),
             )
             self._event(conn, run_id, "queued", {"limits": run["limits"]})
+        self.audit(run, "investigation_submitted")
         return run
+
+    def audit(self, run, kind):
+        if run.get("owner_id") and (self.directory / "auth.sqlite3").is_file():
+            from .auth import AuthStore
+
+            auth = AuthStore(self.directory)
+            with auth.connection() as conn:
+                auth.audit(
+                    conn,
+                    run["owner_id"],
+                    kind,
+                    run["id"],
+                    {
+                        "status": run["status"],
+                        "case_id": run.get("case_id"),
+                        "library_documents": len(run.get("library_document_ids", [])),
+                        "model_calls": run["model_calls"],
+                        "tool_calls": run["tool_calls"],
+                        "tokens": run["tokens"],
+                    },
+                )
 
     def claim(self):
         with self.connection() as conn:
@@ -320,6 +359,7 @@ class RunStore:
                 worker_pid=None,
             )
             self._event(conn, run_id, status, {"error": error})
+            self.audit(run, "investigation_finished")
 
         return self.change(run_id, update)
 

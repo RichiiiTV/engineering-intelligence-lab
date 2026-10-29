@@ -104,6 +104,8 @@ class RunService:
         owner_id=None,
         siemens=None,
         chat_mode=False,
+        use_library=False,
+        library_document_ids=None,
     ):
         if self._stop.is_set() or self._fatal_error is not None:
             raise RunConflict("Run service is unavailable; restart the API")
@@ -115,6 +117,8 @@ class RunService:
             owner_id=owner_id,
             siemens=siemens,
             chat_mode=chat_mode,
+            use_library=use_library,
+            library_document_ids=library_document_ids,
         )
 
     def wait(self, run_id, timeout=610):

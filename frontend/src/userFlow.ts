@@ -1,6 +1,7 @@
 import { api, post } from "./api";
 import type { Case, CaseDetail, Run, Source } from "./types";
 import type { SiemensQuery } from "./siemens";
+import type { LibrarySelection } from "./KnowledgeLibrary";
 
 export interface Attachment {
   key: string;
@@ -58,6 +59,7 @@ export async function startUserInvestigation(options: {
   onProgress: (text: string) => void;
   onUploaded: (key: string, source: Source) => void;
   siemens?: SiemensQuery;
+  library?: LibrarySelection;
 }) {
   const { question, files, policy, onCase, onProgress, onUploaded } = options;
   let caseId = options.caseId;
@@ -66,6 +68,15 @@ export async function startUserInvestigation(options: {
     return post<Run>("/api/investigations", {
       question: question.trim(),
       chat_mode: true,
+      ...(options.library
+        ? {
+            use_library: options.library.enabled,
+            ...(options.library.enabled &&
+            options.library.documentIds !== undefined
+              ? { library_document_ids: options.library.documentIds }
+              : {}),
+          }
+        : {}),
       ...(options.siemens ? { siemens: options.siemens } : {}),
       limits: { max_output_tokens: 2048 },
     });
@@ -103,6 +114,15 @@ export async function startUserInvestigation(options: {
     case_id: caseId,
     question: question.trim(),
     use_mock_mcp: false,
+    ...(options.library
+      ? {
+          use_library: options.library.enabled,
+          ...(options.library.enabled &&
+          options.library.documentIds !== undefined
+            ? { library_document_ids: options.library.documentIds }
+            : {}),
+        }
+      : {}),
     limits: { max_output_tokens: 2048 },
     ...(options.siemens ? { siemens: options.siemens } : {}),
   });
@@ -129,8 +149,16 @@ export function readableAnswer(
   citations: { citation_id: string }[],
 ) {
   return answer.replace(
-    /(?:pdf:[0-9a-f-]{36}:p[0-9]+:c[0-9]+|csv:[0-9a-f-]{36}:r[0-9]+|siemens:[0-9a-f-]{36}:r[0-9]+)/g,
+    /(?:pdf:[0-9a-f-]{36}:p[0-9]+:c[0-9]+|csv:[0-9a-f-]{36}:r[0-9]+|siemens:[0-9a-f-]{36}:r[0-9]+|kb:[0-9a-f-]{36}:p[0-9]+:c[0-9]+)/g,
     (id) => {
+      if (id.startsWith("kb:")) {
+        const index = citations
+          .filter((c) => c.citation_id.startsWith("kb:"))
+          .findIndex((c) => c.citation_id === id);
+        return index < 0
+          ? "Unverified library reference"
+          : `Library source ${index + 1}`;
+      }
       if (id.startsWith("siemens:")) {
         const index = citations
           .filter((c) => c.citation_id.startsWith("siemens:"))

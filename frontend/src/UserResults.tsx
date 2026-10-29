@@ -18,6 +18,7 @@ import { friendlyStatus, readableAnswer } from "./userFlow";
 import { userReport } from "./userReport";
 import { tokenContinuation } from "./budgetRecovery";
 import SiemensReferences from "./SiemensReferences";
+import { LibraryReferences } from "./KnowledgeLibrary";
 import { advancedUrl, message } from "./UserApp";
 import type {
   CaseDetail,
@@ -31,6 +32,8 @@ function progressText(status: string, events: RunEvent[]) {
   if (status !== "running") return friendlyStatus(status);
   const last = events.at(-1);
   const name = String(last?.data.name || "");
+  if (name.includes("knowledge_library"))
+    return "Searching your knowledge library…";
   if (last?.type === "siemens_lookup_started")
     return "Checking Siemens documentation…";
   if (name.includes("siemens")) return "Checking Siemens documentation…";
@@ -213,7 +216,9 @@ export default function UserResults({
               <p>
                 {active
                   ? run.chat_mode
-                    ? "You can return to this question from My investigations. Any enabled lookup sends only your public query to Siemens."
+                    ? run.siemens
+                      ? "You can return to this question from My investigations. The enabled Siemens lookup sends only your public query."
+                      : "You can return to this question from My investigations. Your selected library is searched locally."
                     : "You can leave this page and return to the same investigation. Your files stay on this computer."
                   : run.status === "paused"
                     ? "Your progress is saved. Resume whenever you are ready."
@@ -414,6 +419,7 @@ export default function UserResults({
                       {readableAnswer(report.answer, [
                         ...report.citations,
                         ...(report.external_references || []),
+                        ...(report.library_citations || []),
                       ]) || "No final finding was returned."}
                     </p>
                     {compareError && (
@@ -456,6 +462,7 @@ export default function UserResults({
                     {readableAnswer(report.answer, [
                       ...report.citations,
                       ...(report.external_references || []),
+                      ...(report.library_citations || []),
                     ])}
                   </p>
                   <AnswerReferences report={report} onOpen={openCitation} />
@@ -463,6 +470,7 @@ export default function UserResults({
               )}
               {!report.citation_checks.has_answer_citations &&
                 !report.external_references?.some((r) => r.cited_in_answer) &&
+                !report.library_citations?.some((r) => r.cited_in_answer) &&
                 report.answer && (
                   <p className="ux-source-warning">
                     The assistant's notes need a source check. Use the source
@@ -470,6 +478,7 @@ export default function UserResults({
                   </p>
                 )}
               <SiemensReferences report={report} />
+              <LibraryReferences report={report} runId={id} />
               {!top && (
                 <AnswerReferences report={report} onOpen={openCitation} />
               )}

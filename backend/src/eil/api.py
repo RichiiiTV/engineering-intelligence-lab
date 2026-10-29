@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from contextlib import asynccontextmanager
 from typing import Literal
 from urllib.parse import quote
@@ -40,6 +41,7 @@ from .database import StorageFull
 from .drafts import DraftStore
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore
 from .exports import export_investigation
+from .library_api import router as library_router
 from .pdf_ingest import MAX_PDF_BYTES, PDFBusy, PDFUnavailable, parse_pdf
 from .runs import STOPPED, QueueFull, RunConflict, RunLimits, RunNotFound
 from .service import RunService
@@ -59,11 +61,15 @@ class InvestigationRequest(BaseModel):
     use_mock_mcp: bool = False
     siemens: PublicSiemensQuery | None = None
     chat_mode: bool = Field(default=False, strict=True)
+    use_library: bool = Field(default=False, strict=True)
+    library_document_ids: list[UUID] | None = Field(default=None, max_length=100)
 
     @model_validator(mode="after")
     def validate_chat_scope(self):
         if self.chat_mode and self.case_id is not None:
             raise ValueError("Use a case investigation when files are attached")
+        if self.library_document_ids is not None and not self.use_library:
+            raise ValueError("Enable the library to select library documents")
         return self
 
     @field_validator("question")
@@ -197,7 +203,7 @@ def investigate(payload: InvestigationRequest, request: Request):
         with CASE_LOCK:
             if payload.case_id:
                 owned_case(request, str(payload.case_id))
-            return service(request).submit(
+            run = service(request).submit(
                 payload.question,
                 payload.limits,
                 case_id=str(payload.case_id) if payload.case_id else None,
@@ -205,7 +211,12 @@ def investigate(payload: InvestigationRequest, request: Request):
                 owner_id=request.state.principal.id,
                 siemens=payload.siemens.model_dump() if payload.siemens else None,
                 chat_mode=payload.chat_mode,
+                use_library=payload.use_library,
+                library_document_ids=[str(i) for i in payload.library_document_ids]
+                if payload.library_document_ids is not None
+                else None,
             )
+            return run
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -515,12 +526,16 @@ def create_app(service_factory=RunService):
             owner = local_owner(runner.store.directory)
             if owner:
                 adopt_legacy(runner.store.directory, owner)
+            from .knowledge import KnowledgeStore
+
+            KnowledgeStore(runner.store.directory).seed()
             yield
 
     app = FastAPI(title="Engineering Intelligence Lab", version="0.5.0", lifespan=lifespan)
     app.add_middleware(UploadBodyLimit)
     app.include_router(router)
     app.include_router(auth_router)
+    app.include_router(library_router)
 
     @app.middleware("http")
     async def local_browser_origin(request, call_next):
@@ -571,12 +586,21 @@ def create_app(service_factory=RunService):
                     proposal = DraftStore(service(request).store).get(parts[2])
                     owned_case(request, proposal["case_id"])
             except AuthenticationError as exc:
+                with auth.connection() as conn:
+                    auth.audit(conn, None, "authorization_denied", details={"status": 401})
                 return JSONResponse(
                     status_code=401,
                     content={"detail": str(exc)},
                     headers={"Cache-Control": "no-store"},
                 )
             except (EvidenceNotFound, RunNotFound) as exc:
+                with auth.connection() as conn:
+                    auth.audit(
+                        conn,
+                        request.state.principal.id,
+                        "authorization_denied",
+                        details={"status": 404},
+                    )
                 return JSONResponse(status_code=404, content={"detail": str(exc)})
         mutating = request.method in {
             "POST",
@@ -611,6 +635,34 @@ def create_app(service_factory=RunService):
                         request.app.state.active_mutations -= 1
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
+            route = request.scope.get("route")
+            if (
+                mutating
+                or request.url.path.endswith(("/export", "/file"))
+                or response.status_code in {403, 404}
+            ) and request.url.path not in public:
+                auth = AuthStore(service(request).store.directory)
+                with auth.connection() as conn:
+                    auth.audit(
+                        conn,
+                        request.state.principal.id,
+                        "authorization_denied"
+                        if response.status_code in {403, 404}
+                        else "request_completed",
+                        next(
+                            (
+                                str(v)
+                                for v in request.path_params.values()
+                                if re.fullmatch(r"[0-9a-f]{8}-[0-9a-f-]{27}", str(v))
+                            ),
+                            None,
+                        ),
+                        details={
+                            "method": request.method,
+                            "route": getattr(route, "path", "unmatched"),
+                            "status": response.status_code,
+                        },
+                    )
         response.headers["X-Content-Type-Options"] = "nosniff"
         if request.url.path == "/":
             response.headers["Content-Security-Policy"] = (

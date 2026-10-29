@@ -16,7 +16,9 @@ class UploadBodyLimit:
             and scope["path"].startswith("/api/")
         ):
             return await self.app(scope, receive, send)
-        upload = scope["path"].startswith("/api/cases/") and scope["path"].endswith("/sources")
+        upload = (
+            scope["path"].startswith("/api/cases/") and scope["path"].endswith("/sources")
+        ) or scope["path"] == "/api/library/documents"
         cap = MAX_PDF_BYTES + 65536 if upload else 128 * 1024
         headers = dict(scope.get("headers", []))
         try:

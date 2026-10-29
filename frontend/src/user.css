@@ -1332,3 +1332,120 @@
     margin-top: 28px;
   }
 }
+
+.ux-library-options {
+  margin: 14px 0;
+  padding: 15px 18px;
+  background: #f8f6fc;
+  border-radius: 10px;
+}
+.ux-library-options summary {
+  cursor: pointer;
+  color: #65508f;
+  font-weight: 600;
+}
+.ux-library-options small {
+  display: block;
+  color: #787385;
+  font-size: 12px;
+}
+.admin-main {
+  max-width: 1080px;
+}
+.admin-main > nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 22px 0 32px;
+}
+.admin-main button {
+  cursor: pointer;
+  padding: 9px 14px;
+  border: 1px solid #ded9e9;
+  border-radius: 8px;
+  background: white;
+  color: #51406c;
+}
+.admin-main button[aria-pressed="true"] {
+  background: #6b4ce6;
+  color: white;
+}
+.admin-main button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.admin-main p {
+  line-height: 1.6;
+}
+.admin-list {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0;
+}
+.admin-list article,
+.admin-audit article {
+  background: white;
+  border: 1px solid #e9e5ef;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+.admin-list h3 {
+  margin: 0 0 8px;
+}
+.admin-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.admin-add {
+  padding: 20px;
+  border: 1px solid #e9e5ef;
+  border-radius: 12px;
+  margin: 25px 0;
+}
+.admin-add summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.admin-main .siemens-form {
+  max-width: 640px;
+}
+.admin-main label {
+  display: grid;
+  gap: 7px;
+}
+.admin-main label.ux-confirm {
+  display: flex;
+}
+.admin-main input,
+.admin-main select {
+  padding: 10px;
+  border: 1px solid #ddd5e9;
+  border-radius: 7px;
+  min-width: 0;
+}
+.admin-main .ux-confirm input {
+  width: auto;
+}
+.admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+.admin-audit {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+.admin-audit small {
+  display: block;
+  margin-top: 8px;
+}
+.admin-audit code,
+.admin-audit pre {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  font-size: 12px;
+}

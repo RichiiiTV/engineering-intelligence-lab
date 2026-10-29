@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { api, post } from "./api";
 import StorageSettings from "./StorageSettings";
+import AdminWorkspace from "./AdminWorkspace";
 import "./user.css";
 
 type User = { id: string; username: string; role: string };
@@ -14,6 +15,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [account, setAccount] = useState(false);
+  const [administration, setAdministration] = useState(false);
   useEffect(() => {
     let live = true;
     void api<{ configured: boolean }>("/api/auth/status")
@@ -36,6 +38,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       setUser(null);
       setPassword("");
       setAccount(false);
+      setAdministration(false);
     };
     window.addEventListener("eil-auth-expired", expired);
     return () => {
@@ -72,6 +75,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     setUser(null);
     setPassword("");
     setAccount(false);
+    setAdministration(false);
   }
   if (!user)
     return (
@@ -151,6 +155,16 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       <aside className="auth-strip">
         <span>Signed in as {user.username}</span>
         <button onClick={() => setAccount(!account)}>Account</button>
+        {user.role === "admin" && (
+          <button
+            onClick={() => {
+              setAdministration(!administration);
+              setAccount(false);
+            }}
+          >
+            Administration
+          </button>
+        )}
         <button onClick={() => void logout()}>Sign out</button>
         {error && <span role="alert">{error}</span>}
       </aside>
@@ -168,7 +182,14 @@ export default function AuthGate({ children }: { children: ReactNode }) {
           <StorageSettings admin={user.role === "admin"} />
         </section>
       )}
-      {children}
+      {administration && user.role === "admin" ? (
+        <AdminWorkspace
+          currentUserId={user.id}
+          onClose={() => setAdministration(false)}
+        />
+      ) : (
+        children
+      )}
     </>
   );
 }

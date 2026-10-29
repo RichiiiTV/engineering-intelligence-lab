@@ -30,6 +30,8 @@ export interface Run {
   id: string;
   case_id: string | null;
   chat_mode?: boolean;
+  use_library?: boolean;
+  library_document_ids?: string[];
   siemens?: SiemensQuery | null;
   question: string;
   status: string;
@@ -90,6 +92,29 @@ export interface Hit extends Citation {
   lexical_score: number;
 }
 export interface EvidenceReport {
+  library_snapshot?: { id: string; title: string; version: string }[];
+  library_citations?: {
+    id: string;
+    citation_id: string;
+    title: string;
+    filename: string;
+    page: number;
+    text: string;
+    family: string;
+    version: string;
+    license_note: string;
+    data_policy: string;
+    cited_in_answer: boolean;
+  }[];
+  library_retrieval?: {
+    method?: string;
+    notice?: string | null;
+    semantic_available?: boolean;
+  };
+  library_citation_checks?: {
+    unresolved: string[];
+    not_returned_by_tools: string[];
+  };
   integrations?: { siemens?: SiemensSnapshot | null };
   external_references?: PublicReference[];
   external_reference_checks?: {

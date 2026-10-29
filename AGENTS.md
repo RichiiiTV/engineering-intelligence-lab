@@ -36,6 +36,15 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized a preloaded document knowledge library, user management and
+an audit trail on 2026-10-29. Extend the existing app with bounded local hybrid
+retrieval, immutable source snapshots and citations. Shared uploads require
+administrator action and generated/explicitly licensed public content. Preserve
+owner isolation, cumulative budgets and the Siemens public-query boundary.
+Manage roles, account availability and revocable sessions through human admin
+controls; never give agents management tools. Record content-free administrative
+and application audit metadata. Stop after implementation and validation.
+
 The user authorized Siemens MCP inside the normal question/answer flow on
 2026-10-29, superseding the earlier separate-page restriction. The graph may
 use only a no-argument reference tool bound to the human's public query and

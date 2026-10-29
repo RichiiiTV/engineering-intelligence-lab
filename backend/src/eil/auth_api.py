@@ -1,9 +1,9 @@
 """Explicit account enrollment and session endpoints."""
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from .auth import COOKIE, SESSION_SECONDS, AuthStore
+from .auth import COOKIE, SESSION_SECONDS, AuthenticationError, AuthStore
 
 router = APIRouter(prefix="/api/auth")
 
@@ -88,16 +88,42 @@ def password(payload: NewPassword, request: Request, response: Response):
 
 
 @router.get("/users")
-def users(request: Request):
+def users(
+    request: Request,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=100),
+):
     if request.state.principal.role != "admin":
         raise HTTPException(status_code=403, detail="Administrator access is required")
-    with store(request).connection() as conn:
+    rows = store(request).users(offset=offset, limit=limit + 1)
+    return {"users": rows[:limit], "next_offset": offset + limit if len(rows) > limit else None}
+
+
+class UserChange(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    role: str | None = Field(default=None, pattern="^(admin|member)$")
+    active: bool | None = Field(default=None, strict=True)
+
+
+@router.post("/users/{user_id}/update")
+def update_user(user_id: str, payload: UserChange, request: Request):
+    if request.state.principal.role != "admin":
+        raise HTTPException(status_code=403, detail="Administrator access is required")
+    try:
         return {
-            "users": [
-                dict(r)
-                for r in conn.execute("SELECT id,username,role,active FROM users ORDER BY username")
-            ]
+            "user": store(request).manage_user(
+                request.state.principal, user_id, role=payload.role, active=payload.active
+            )
         }
+    except AuthenticationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/users/{user_id}/revoke-sessions")
+def revoke_sessions(user_id: str, request: Request):
+    if request.state.principal.role != "admin":
+        raise HTTPException(status_code=403, detail="Administrator access is required")
+    return {"user": store(request).manage_user(request.state.principal, user_id, revoke=True)}
 
 
 @router.post("/users", status_code=201)

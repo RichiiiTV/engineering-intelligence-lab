@@ -152,3 +152,27 @@ gaps. On MCP outage, matching local manual candidates are still shown with an
 outage label. Linked pages are not automatically fetched or executed.
 The old `/?page=siemens` link opens the normal composer. The independent protocol
 diagnostic view remains at `/?view=advanced&page=siemens`.
+
+## Shared library and administration
+
+The normal composer now searches selected shared library documents locally.
+Shared-library uploads require an administrator, explicit workspace-sharing
+confirmation, and generated or explicitly licensed public material. Keep private
+case uploads inside their existing owner boundary. Manufacturer documents require
+their own licence provenance and matching product/edition metadata.
+
+Administration provides document availability/indexing, paginated users, role
+changes, account deactivation and session revocation. Role changes/deactivation
+revoke sessions; self-demotion/deactivation and removal of the last active admin
+are rejected. There is no unauthenticated user-management or audit endpoint.
+
+Audit records are append-only through the app and locally hash-chained, with
+admin-only metadata views/export and integrity verification. They exclude question
+and document contents, credentials, tokens and raw URL/query strings. A database/OS
+administrator can replace the database; this is not an externally anchored
+compliance archive. Existing owner-scoped run events retain detailed provenance.
+
+Library vectors and documents are inside the existing evidence database and are
+included in verified backups. Local embeddings cannot select an external URL or
+cloud provider; outages use labelled keyword search. See
+[library architecture, limits and validation](knowledge-library.md).

@@ -20,6 +20,7 @@ dependencies = [
     "docling-core>=2.105,<3",
     "mcp>=1.28,<2",
     "pwdlib[argon2]>=0.3,<1",
+    "sqlite-vec>=0.1.9,<0.2",
 ]
 [project.optional-dependencies]
 documents = ["docling>=2.144,<3"]

@@ -17,6 +17,9 @@ export function userReport(
   filename: string,
 ) {
   const text = escapeHtml;
+  const librarySection = report.library_citations?.length
+    ? `<h2>Knowledge library passages</h2>${report.library_citations.map((r, i) => `<h3>Library source ${i + 1}: ${text(r.title)} · page ${r.page}</h3><p>${text(r.family)} · ${text(r.version)}</p><blockquote>${text(r.text)}</blockquote><small>${text(r.citation_id)} · ${text(r.license_note)}</small>`).join("")}`
+    : "";
   const publicReferences = (report.external_references || []).filter((r) =>
     siemensUrl(r.url),
   );
@@ -35,5 +38,5 @@ export function userReport(
 ${rows ? `<h2>Inspection comparison</h2><p>Source: ${text(filename)}. Rate = total false ejects / total inspected, grouped by station and period.</p><table><thead><tr><th>Station</th><th>Before</th><th>During incident</th><th>Change</th></tr></thead><tbody>${rows}</tbody></table>` : ""}
 <h2>Investigation notes</h2><p>${text(report.answer || "No final answer was produced.")}</p><p class="note">These findings require review. Correlation does not establish causation; statistical confidence and claim entailment have not been verified.</p>
 <h2>Sources</h2>${report.citations.map((c, i) => `<h3>Source ${i + 1}: ${text(c.filename)}</h3><p>${text(c.text || JSON.stringify(c.row))}</p><small>${text(c.citation_id)} · SHA-256 ${text(c.sha256)}</small>`).join("") || "<p>No source references were returned.</p>"}
-${externalSection}<h2>Limitations</h2><ul>${report.uncertainty.limitations.map((x) => `<li>${text(x)}</li>`).join("")}</ul><details><summary>Full evidence and calculation record</summary><pre>${text(JSON.stringify(report, null, 2))}</pre></details><p><small>Run ${text(run.id)}. Downloaded report; this does not save or approve a draft in the application.</small></p></body></html>`;
+${externalSection}${librarySection}<h2>Limitations</h2><ul>${report.uncertainty.limitations.map((x) => `<li>${text(x)}</li>`).join("")}</ul><details><summary>Full evidence and calculation record</summary><pre>${text(JSON.stringify(report, null, 2))}</pre></details><p><small>Run ${text(run.id)}. Downloaded report; this does not save or approve a draft in the application.</small></p></body></html>`;
 }

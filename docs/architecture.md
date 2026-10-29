@@ -1,5 +1,12 @@
 # EIL architecture decision record (ADR-001)
 
+Current implementation update (2026-10-29): authenticated owner-scoped work,
+normal-chat Siemens integration and the shared local hybrid knowledge library
+supersede the historical milestone limitations below. See
+[security operations](security-operations.md), [Siemens chat](siemens-chat.md) and
+[knowledge library, user management and audit](knowledge-library.md) for the
+current boundaries. Older milestone sections preserve their original decisions.
+
 ## Mission
 An agent-driven investigation system that uses evidence from structured measurements, manuals/PDFs, and authorized tools to answer engineering questions. The first supported scenario is manufacturing false-ejection analysis.
 

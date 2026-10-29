@@ -87,6 +87,9 @@ class AuthStore:
                 CREATE TABLE IF NOT EXISTS failures (key TEXT PRIMARY KEY, count INTEGER NOT NULL, until REAL NOT NULL);
                 CREATE TABLE IF NOT EXISTS auth_audit (id INTEGER PRIMARY KEY, at REAL, actor_id TEXT, kind TEXT, subject_id TEXT);
             """)
+            from .audit import migrate
+
+            migrate(conn)
 
     @contextmanager
     def connection(self):
@@ -104,11 +107,70 @@ class AuthStore:
             conn.close()
 
     @staticmethod
-    def audit(conn, actor, kind, subject=None):
-        conn.execute(
-            "INSERT INTO auth_audit(at,actor_id,kind,subject_id) VALUES (?,?,?,?)",
-            (time.time(), actor, kind, subject),
-        )
+    def audit(conn, actor, kind, subject=None, details=None):
+        from .audit import append
+
+        append(conn, actor, kind, subject, details)
+
+    def users(self, *, offset=0, limit=50):
+        with self.connection() as conn:
+            return [
+                dict(r)
+                for r in conn.execute(
+                    "SELECT id,username,role,active,(SELECT count(*) FROM sessions s WHERE s.user_id=users.id AND s.expires>? AND s.last_used>?) sessions FROM users ORDER BY username LIMIT ? OFFSET ?",
+                    (time.time(), time.time() - IDLE_SECONDS, limit, offset),
+                )
+            ]
+
+    def manage_user(self, actor, identity, *, role=None, active=None, revoke=False):
+        with self.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            current = conn.execute(
+                "SELECT role,active FROM users WHERE id=?", (actor.id,)
+            ).fetchone()
+            if not current or current["role"] != "admin" or not current["active"]:
+                raise AuthenticationError("Administrator access is required")
+            target = conn.execute("SELECT * FROM users WHERE id=?", (identity,)).fetchone()
+            if not target:
+                raise AuthenticationError("User not found")
+            new_role = role if role is not None else target["role"]
+            new_active = active if active is not None else bool(target["active"])
+            if new_role not in {"member", "admin"}:
+                raise AuthenticationError("Invalid role")
+            if identity == actor.id and (new_role != "admin" or not new_active):
+                raise AuthenticationError(
+                    "You cannot disable or demote your own administrator account"
+                )
+            if (
+                target["role"] == "admin"
+                and target["active"]
+                and (new_role != "admin" or not new_active)
+            ):
+                if (
+                    conn.execute(
+                        "SELECT count(*) FROM users WHERE role='admin' AND active=1"
+                    ).fetchone()[0]
+                    <= 1
+                ):
+                    raise AuthenticationError("At least one active administrator must remain")
+            conn.execute(
+                "UPDATE users SET role=?,active=? WHERE id=?", (new_role, int(new_active), identity)
+            )
+            if revoke or new_role != target["role"] or not new_active:
+                conn.execute("DELETE FROM sessions WHERE user_id=?", (identity,))
+            self.audit(
+                conn,
+                actor.id,
+                "sessions_revoked" if revoke else "user_updated",
+                identity,
+                {"old_role": target["role"], "role": new_role, "active": bool(new_active)},
+            )
+        return {
+            "id": identity,
+            "username": target["username"],
+            "role": new_role,
+            "active": bool(new_active),
+        }
 
     def configured(self):
         with self.connection() as conn:
@@ -157,6 +219,14 @@ class AuthStore:
         credentials(username, password)
         user = Principal(str(uuid.uuid4()), username, role)
         with self.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            current = conn.execute(
+                "SELECT role,active FROM users WHERE id=?", (actor.id,)
+            ).fetchone()
+            if not current or current["role"] != "admin" or not current["active"]:
+                raise AuthenticationError("Administrator access is required")
+            if conn.execute("SELECT count(*) FROM users").fetchone()[0] >= 1000:
+                raise AuthenticationError("Workspace account limit reached (1000)")
             try:
                 conn.execute(
                     "INSERT INTO users(id,username,password_hash,role) VALUES (?,?,?,?)",

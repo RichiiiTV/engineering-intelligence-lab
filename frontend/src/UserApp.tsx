@@ -23,6 +23,7 @@ import {
 import type { Case, CaseDetail, Run } from "./types";
 import UserResults from "./UserResults";
 import { isSiemensQuestion } from "./siemens";
+import { LibraryChooser, type LibrarySelection } from "./KnowledgeLibrary";
 import "./user.css";
 
 type Route = { page: string; caseId: string; runId: string };
@@ -396,6 +397,7 @@ function QuestionForm({
     [progress, setProgress] = useState(""),
     [error, setError] = useState("");
   const hasNewFiles = files.some((f) => !f.source);
+  const [library, setLibrary] = useState<LibrarySelection>({ enabled: true });
   const [siemensChoice, setSiemensChoice] = useState<"auto" | "on" | "off">(
     new URLSearchParams(location.search).get("page") === "siemens"
       ? "on"
@@ -478,6 +480,7 @@ function QuestionForm({
         files,
         caseId,
         policy,
+        library,
         ...(useSiemens
           ? { siemens: { question: siemensQuestion.trim(), ...product } }
           : {}),
@@ -540,6 +543,7 @@ function QuestionForm({
           rows={3}
           disabled={busy}
         />
+        <LibraryChooser value={library} onChange={setLibrary} busy={busy} />
         <details
           className="ux-siemens-options"
           open={useSiemens || isSiemensQuestion(question)}
