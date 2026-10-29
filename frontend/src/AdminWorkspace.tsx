@@ -20,6 +20,7 @@ type AuditEvent = {
   entry_hash: string;
 };
 type AuditPage = {
+  delivery?: {pending:number;overflow_events:number;healthy:boolean};
   events: AuditEvent[];
   next_after: number | null;
   integrity: {
@@ -451,6 +452,9 @@ function Audit() {
       <a href="/api/admin/audit/export">
         Download first audit page (JSON, up to 100 events)
       </a>
+      <p><a href="/api/admin/audit/complete">Download complete audit history (JSONL)</a></p>
+      <button onClick={()=>void post('/api/admin/audit/archive').then(()=>refresh()).catch(e=>setError(String(e)))}>Archive current segment (history retained)</button>
+      {page?.delivery && (!page.delivery.healthy || page.delivery.pending>0) && <p role="alert">Audit delivery needs attention: {page.delivery.pending} pending events; {page.delivery.overflow_events} aggregated overflow events. Sign-in remains available.</p>}
       <div className="admin-audit">
         {events.map((e) => (
           <article key={e.id}>

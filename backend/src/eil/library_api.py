@@ -8,7 +8,8 @@ from fastapi import APIRouter, File, Form, HTTPException, Query, Request, Upload
 from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from .audit import verify
+from .audit import AuditStore
+from .audit import status as audit_status
 from .auth import AuthStore
 from .embeddings import EmbeddingUnavailable
 from .evidence import EvidenceNotFound
@@ -144,16 +145,18 @@ def audit(
 ):
     admin(request)
     auth = AuthStore(request.app.state.runs.store.directory)
-    with auth.connection() as conn:
-        rows = conn.execute(
-            "SELECT a.*,u.username actor FROM auth_audit a LEFT JOIN users u ON u.id=a.actor_id WHERE a.id>? AND (?='' OR a.actor_id=?) AND (?='' OR a.kind=?) ORDER BY a.id LIMIT ?",
-            (after, actor, actor, kind, kind, limit + 1),
-        ).fetchall()
-        integrity = verify(conn)
+    names = {u["id"]: u["username"] for u in auth.users(limit=1000)}
+    audit_store = AuditStore(auth.directory)
+    rows = audit_store.events(after, limit + 1, actor, kind)
+    integrity = audit_store.integrity()
     return {
-        "events": [dict(r) | {"details": json.loads(r["details"])} for r in rows[:limit]],
+        "events": [
+            dict(r) | {"details": json.loads(r["details"]), "actor": names.get(r["actor_id"])}
+            for r in rows[:limit]
+        ],
         "next_after": rows[limit - 1]["id"] if len(rows) > limit else None,
         "integrity": integrity,
+        "delivery": audit_status(auth.directory),
     }
 
 
@@ -165,4 +168,38 @@ def audit_export(request: Request, after: int = Query(default=0, ge=0)):
         json.dumps(result, indent=2),
         media_type="application/json",
         headers={"Content-Disposition": 'attachment; filename="eil-audit-page.json"'},
+    )
+
+
+@router.post("/api/admin/audit/archive")
+def audit_archive(request: Request):
+    admin(request)
+    from .api import maintenance
+
+    maintenance(request)
+    result = AuditStore(request.app.state.runs.store.directory).archive()
+    record(request, "audit_archived", None, result)
+    return result
+
+
+@router.get("/api/admin/audit/complete")
+def audit_complete(request: Request):
+    admin(request)
+    from fastapi.responses import StreamingResponse
+
+    directory = request.app.state.runs.store.directory
+
+    def stream():
+        audit_store = AuditStore(directory)
+        yield json.dumps({"integrity": audit_store.integrity()}) + "\n"
+        after = 0
+        while rows := audit_store.events(after, 500):
+            for row in rows:
+                yield json.dumps(row) + "\n"
+            after = rows[-1]["id"]
+
+    return StreamingResponse(
+        stream(),
+        media_type="application/x-ndjson",
+        headers={"Content-Disposition": 'attachment; filename="eil-complete-audit.jsonl"'},
     )

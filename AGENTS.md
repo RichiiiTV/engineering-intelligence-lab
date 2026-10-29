@@ -36,6 +36,17 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized planning and sequential implementation of M6–M10 on
+2026-10-29, including the whole-project review fixes. The clarified product goal
+is private machine workspaces containing manuals, documentation and internal
+source code, grouped by machine family with machine-specific investigations and
+notebook follow-ups. Internal material is authorized only in these owner-scoped
+local machine workspaces, never the shared public library or committed fixtures.
+Uploaded code is untrusted data: search/read/static inspection only, no execution,
+PLC connection or writes. Machine context must never automatically enter Siemens
+queries. Implement one milestone at a time, validate it, then continue through
+the authorized plan. Hosted validation stays deferred. Record remaining limits.
+
 The user authorized a preloaded document knowledge library, user management and
 an audit trail on 2026-10-29. Extend the existing app with bounded local hybrid
 retrieval, immutable source snapshots and citations. Shared uploads require

@@ -11,7 +11,7 @@ from langchain_core.tools import StructuredTool
 from langchain_ollama import ChatOllama
 
 from eil.api import create_app
-from eil.audit import verify
+from eil.audit import AuditStore, verify
 from eil.auth import COOKIE, AuthenticationError, AuthStore
 from eil.embeddings import EmbeddingUnavailable
 from eil.evidence import EvidenceConflict, EvidenceNotFound
@@ -310,7 +310,7 @@ def test_audit_append_only_concurrent_chain_and_legacy_migration(tmp_path):
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         list(pool.map(record, range(12)))
-    with auth.connection() as conn:
+    with AuditStore(tmp_path).connection() as conn:
         assert verify(conn)["valid"]
         with pytest.raises(sqlite3.IntegrityError):
             conn.execute("DELETE FROM auth_audit")
@@ -323,7 +323,7 @@ def test_audit_append_only_concurrent_chain_and_legacy_migration(tmp_path):
         )
         conn.execute("INSERT INTO auth_audit VALUES (1,1,'operator','legacy_event',NULL)")
     migrated = AuthStore(legacy)
-    with migrated.connection() as conn:
+    with AuditStore(migrated.directory).connection() as conn:
         assert verify(conn)["valid"]
         assert conn.execute("SELECT kind FROM auth_audit").fetchone()[0] == "legacy_event"
 
@@ -344,7 +344,7 @@ def test_backup_preserves_library_vectors_and_audit_but_revokes_sessions(tmp_pat
     restored = KnowledgeStore(target)
     assert restored.list()[0]["indexed_passages"] == 1
     assert restored.search("brightness", [doc["id"]])["hits"]
-    with AuthStore(target).connection() as conn:
+    with AuditStore(target).connection() as conn:
         assert verify(conn)["valid"]
     with pytest.raises(AuthenticationError):
         AuthStore(target).authenticate(token)
@@ -367,6 +367,7 @@ def test_failed_reindex_is_atomic_and_tampering_is_detected(tmp_path, monkeypatc
     auth = AuthStore(tmp_path)
     with auth.connection() as conn:
         auth.audit(conn, "operator", "test")
+    with AuditStore(tmp_path).connection() as conn:
         conn.execute("DROP TRIGGER audit_no_update")
         conn.execute("UPDATE auth_audit SET details='{} tampered' WHERE id=1")
         assert not verify(conn)["valid"]

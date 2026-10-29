@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 import tempfile
 import threading
@@ -24,10 +25,30 @@ DATABASES = {
     "data/evidence.sqlite3": "evidence",
     "checkpoints.sqlite3": "checkpoints",
     "auth.sqlite3": "auth",
+    "audit.sqlite3": "audit",
 }
 BACKUP_COUNT = 3
 BACKUP_BYTES = 2 * 1024**3
 TRASH_DAYS = 90
+
+
+def database_files(directory):
+    result = dict(DATABASES)
+    folder = Path(directory) / "audit-archives"
+    for path in sorted(folder.glob("audit-*.sqlite3")):
+        if re.fullmatch(r"audit-\d{12}\.sqlite3", path.name):
+            result["audit-archives/" + path.name] = "audit"
+    if len(result) > len(DATABASES) + 8:
+        raise RunConflict("Audit archive quota exceeded")
+    return result
+
+
+def database_kind(name):
+    if name in DATABASES:
+        return DATABASES[name]
+    if re.fullmatch(r"audit-archives/audit-\d{12}\.sqlite3", name):
+        return "audit"
+    raise RunConflict("Unapproved backup path")
 
 
 def checksum(path):
@@ -59,7 +80,7 @@ class StorageManager:
 
     def status(self):
         databases = []
-        for name, kind in DATABASES.items():
+        for name, kind in database_files(self.directory).items():
             path = self.directory / name
             if path.exists():
                 with closing(sqlite3.connect(path)) as conn:
@@ -124,7 +145,7 @@ class StorageManager:
             if not work.is_relative_to(self.backups.resolve()):
                 raise RunConflict("Invalid backup workspace")
             entries = {}
-            for name, kind in DATABASES.items():
+            for name, kind in database_files(self.directory).items():
                 source = self.directory / name
                 if not source.exists():
                     continue
@@ -308,7 +329,13 @@ def restore_backup(archive, destination):
             len(names) != len(set(names))
             or not {"manifest.json", "runs.sqlite3", "data/evidence.sqlite3", "auth.sqlite3"}
             <= set(names)
-            or set(names) - {*DATABASES, "manifest.json"}
+            or any(
+                name != "manifest.json"
+                and name not in DATABASES
+                and not re.fullmatch(r"audit-archives/audit-\d{12}\.sqlite3", name)
+                for name in names
+            )
+            or len(names) > len(DATABASES) + 9
         ):
             raise RunConflict("Backup contains unapproved or duplicate paths")
         if bundle.getinfo("manifest.json").file_size > 65536:
@@ -321,7 +348,7 @@ def restore_backup(archive, destination):
         for name, entry in manifest["files"].items():
             if (
                 bundle.getinfo(name).file_size != entry["size"]
-                or entry["size"] > DATABASE_BYTES[DATABASES[name]]
+                or entry["size"] > DATABASE_BYTES[database_kind(name)]
             ):
                 raise RunConflict("Backup database exceeds its size envelope")
         destination.mkdir()
@@ -342,7 +369,7 @@ def restore_backup(archive, destination):
             with closing(sqlite3.connect(path)) as conn:
                 if conn.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
                     raise RunConflict("Restored database integrity check failed")
-                if DATABASES[name] == "auth":
+                if database_kind(name) == "auth":
                     conn.execute("DELETE FROM sessions")
                     conn.execute("DELETE FROM bootstrap")
                     conn.commit()

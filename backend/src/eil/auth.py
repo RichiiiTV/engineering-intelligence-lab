@@ -90,6 +90,21 @@ class AuthStore:
             from .audit import migrate
 
             migrate(conn)
+            columns = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
+            if "auth_version" not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN auth_version INTEGER NOT NULL DEFAULT 0")
+            columns = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
+            if "auth_version" not in columns:
+                conn.execute(
+                    "ALTER TABLE sessions ADD COLUMN auth_version INTEGER NOT NULL DEFAULT 0"
+                )
+            conn.executescript("""
+                CREATE TABLE IF NOT EXISTS audit_outbox(id TEXT PRIMARY KEY,at REAL,actor TEXT,kind TEXT,subject TEXT,details TEXT);
+                CREATE TABLE IF NOT EXISTS audit_counters(kind TEXT PRIMARY KEY,count INTEGER NOT NULL,first REAL,last REAL);
+            """)
+        from .audit import migrate_history
+
+        migrate_history(self.directory)
 
     @contextmanager
     def connection(self):
@@ -105,12 +120,15 @@ class AuthStore:
             raise
         finally:
             conn.close()
+        from .audit import flush
+
+        flush(self.directory)
 
     @staticmethod
     def audit(conn, actor, kind, subject=None, details=None):
-        from .audit import append
+        from .audit import enqueue
 
-        append(conn, actor, kind, subject, details)
+        enqueue(conn, actor, kind, subject, details)
 
     def users(self, *, offset=0, limit=50):
         with self.connection() as conn:
@@ -157,6 +175,7 @@ class AuthStore:
                 "UPDATE users SET role=?,active=? WHERE id=?", (new_role, int(new_active), identity)
             )
             if revoke or new_role != target["role"] or not new_active:
+                conn.execute("UPDATE users SET auth_version=auth_version+1 WHERE id=?", (identity,))
                 conn.execute("DELETE FROM sessions WHERE user_id=?", (identity,))
             self.audit(
                 conn,
@@ -271,6 +290,15 @@ class AuthStore:
             raise AuthenticationError("Invalid username or password")
         token = secrets.token_urlsafe(32)
         with self.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            latest = conn.execute("SELECT * FROM users WHERE id=?", (user["id"],)).fetchone()
+            if (
+                not latest
+                or not latest["active"]
+                or latest["auth_version"] != user["auth_version"]
+                or not hmac.compare_digest(latest["password_hash"], user["password_hash"])
+            ):
+                raise AuthenticationError("Credentials changed during sign-in. Try again.")
             conn.execute("DELETE FROM failures WHERE key=?", (key,))
             conn.execute(
                 "DELETE FROM sessions WHERE expires<? OR last_used<?",
@@ -282,8 +310,15 @@ class AuthStore:
                 (user["id"],),
             )
             conn.execute(
-                "INSERT INTO sessions VALUES (?,?,?,?,?)",
-                (digest(token), user["id"], current, current + SESSION_SECONDS, current),
+                "INSERT INTO sessions(token_hash,user_id,created,expires,last_used,auth_version) VALUES (?,?,?,?,?,?)",
+                (
+                    digest(token),
+                    user["id"],
+                    current,
+                    current + SESSION_SECONDS,
+                    current,
+                    user["auth_version"],
+                ),
             )
             self.audit(conn, user["id"], "login")
         return token, Principal(user["id"], user["username"], user["role"])
@@ -293,13 +328,14 @@ class AuthStore:
             raise AuthenticationError("Sign in to continue")
         with self.connection() as conn:
             row = conn.execute(
-                "SELECT u.*,s.expires,s.last_used FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?",
+                "SELECT u.*,s.expires,s.last_used,s.auth_version session_version FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?",
                 (digest(token),),
             ).fetchone()
             current = time.time()
             if (
                 not row
                 or not row["active"]
+                or row["auth_version"] != row["session_version"]
                 or row["expires"] <= current
                 or row["last_used"] + IDLE_SECONDS <= current
             ):
@@ -321,11 +357,13 @@ class AuthStore:
     def change_password(self, actor, old, new):
         credentials(actor.username, new)
         with self.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
             row = conn.execute("SELECT password_hash FROM users WHERE id=?", (actor.id,)).fetchone()
             if not row or not _passwords.verify(old, row[0]):
                 raise AuthenticationError("Invalid current password")
             conn.execute(
-                "UPDATE users SET password_hash=? WHERE id=?", (_passwords.hash(new), actor.id)
+                "UPDATE users SET password_hash=?,auth_version=auth_version+1 WHERE id=?",
+                (_passwords.hash(new), actor.id),
             )
             conn.execute("DELETE FROM sessions WHERE user_id=?", (actor.id,))
             self.audit(conn, actor.id, "password_changed", actor.id)

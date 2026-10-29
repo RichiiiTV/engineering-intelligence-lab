@@ -40,3 +40,11 @@
 
 ## Out of scope initially
 - GMP claims, production equipment control, Veeva/SAP/Siemens integrations, unconstrained code execution
+
+## M6–M10 — Machine investigation product refinements
+
+The user authorized sequential implementation on 2026-10-29. See
+[the implementation plan and acceptance criteria](m6-m10-plan.md).
+M6 hardens authentication/audits; M7 validates knowledge answers; M8 introduces
+private machine manuals/documentation/code and ingestion jobs; M9 adds machine
+notebooks and follow-ups; M10 evaluates and validates the complete local workflow.

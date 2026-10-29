@@ -85,6 +85,14 @@ def health():
     return {"status": "ok", "mode": "synthetic-read-only"}
 
 
+@router.get("/api/ready")
+def ready(request: Request):
+    from .readiness import readiness
+
+    result = readiness(service(request).store.directory)
+    return JSONResponse(result, status_code=200 if result["ready"] else 503)
+
+
 @router.get("/api/datasets")
 def datasets():
     return {"datasets": [{"id": DATASET_NAME, "type": "synthetic-inspection-csv"}]}
@@ -608,7 +616,11 @@ def create_app(service_factory=RunService):
             "PATCH",
             "DELETE",
         } and request.url.path.startswith("/api/")
-        exclusive = request.url.path in {"/api/admin/backups", "/api/retention/apply"}
+        exclusive = request.url.path in {
+            "/api/admin/backups",
+            "/api/retention/apply",
+            "/api/admin/audit/archive",
+        }
         if mutating:
             async with request.app.state.mutation_guard:
                 if request.app.state.maintenance_active or (

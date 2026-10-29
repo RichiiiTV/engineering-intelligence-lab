@@ -7,6 +7,7 @@ DATABASE_BYTES = {
     "runs": 128 * 1024**2,
     "checkpoints": 512 * 1024**2,
     "auth": 16 * 1024**2,
+    "audit": 64 * 1024**2,
 }
 MAX_CASES = 500
 MAX_RUNS = 5000
