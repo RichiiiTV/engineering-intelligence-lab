@@ -1,0 +1,42 @@
+[
+  {
+    "question": "Where is OB1 cycle time documented?",
+    "outbound_query": "Where is OB1 cycle time documented? Product context: family=S7-1500; tia_version=V20",
+    "product_context": {
+      "family": "S7-1500",
+      "cpu": "",
+      "firmware": "",
+      "tia_version": "V20"
+    },
+    "connection_verified": true,
+    "server_version": "2026-03-30",
+    "retrieved_at": "2026-10-29T15:33:24.432628+00:00",
+    "duration_ms": 4431.051,
+    "coverage_status": "reviewed_manual_candidates",
+    "technical_answer_verified": false,
+    "remote_source_count": 6,
+    "reviewed_manual_ids": [
+      "1500-cycle-v20"
+    ]
+  },
+  {
+    "question": "Where is UMAC access control documented?",
+    "outbound_query": "Where is UMAC access control documented? Product context: family=S7-1200; tia_version=V20",
+    "product_context": {
+      "family": "S7-1200",
+      "cpu": "",
+      "firmware": "",
+      "tia_version": "V20"
+    },
+    "connection_verified": true,
+    "server_version": "2026-03-30",
+    "retrieved_at": "2026-10-29T15:33:30.772156+00:00",
+    "duration_ms": 4330.838,
+    "coverage_status": "reviewed_manual_candidates",
+    "technical_answer_verified": false,
+    "remote_source_count": 8,
+    "reviewed_manual_ids": [
+      "1200-configuration-v20"
+    ]
+  }
+]

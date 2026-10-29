@@ -1,0 +1,689 @@
+{
+  "schema": "eil-evidence-report-v1",
+  "verified_evidence": {
+    "comparisons": [
+      {
+        "source": {
+          "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+          "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+          "filename": "inspection.csv",
+          "kind": "csv",
+          "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+          "size": 684,
+          "created_at": "2026-10-29T15:47:03.184124+00:00",
+          "row_count": 8,
+          "parser": "inspection-csv-v1",
+          "data_policy": "synthetic"
+        },
+        "ranking": [
+          {
+            "station_id": "S03",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.14,
+            "delta_percentage_points": 13.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r4",
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r5"
+            ]
+          },
+          {
+            "station_id": "S01",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.01,
+            "delta_percentage_points": 0.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r0",
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r1"
+            ]
+          },
+          {
+            "station_id": "S02",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.01,
+            "delta_percentage_points": 0.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r2",
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r3"
+            ]
+          },
+          {
+            "station_id": "S04",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.01,
+            "delta_percentage_points": 0.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r6",
+              "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r7"
+            ]
+          }
+        ],
+        "incomplete_stations": [],
+        "query_provenance": {
+          "operation": "station_period_comparison",
+          "metric": "sum(false_ejects)/sum(inspected)",
+          "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+          "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+          "rows_scanned": 8,
+          "rows_used": 8,
+          "excluded_rows": 0,
+          "group_by": [
+            "station_id",
+            "period"
+          ],
+          "rate_rounding_digits": 6,
+          "delta_rounding_digits": 4
+        },
+        "uncertainty": "Descriptive comparison only. Example citations are not the complete aggregation. Correlation does not establish causation; no statistical or causal confidence is estimated."
+      }
+    ],
+    "conflicting_csv_measurements": [],
+    "incomplete_sources": [],
+    "interpretation": "Different CSV measurements are a potential conflict until their scope/time is reconciled. They are never silently merged. No general document contradiction detector is claimed."
+  },
+  "run_id": "ef140144-7b12-44e9-999d-1db276a14820",
+  "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+  "status": "completed",
+  "integrations": {
+    "mock_mcp": {
+      "enabled": false,
+      "server_id": "eil-synthetic-maintenance-v1",
+      "transport": "in-process-memory"
+    }
+  },
+  "answer": "{\"station_id\":\"S03\",\"baseline_rate\":0.01,\"incident_rate\":0.14,\"delta_pp\":13.0,\"cause\":\"undetermined\",\"cause_status\":\"unresolved\",\"citations\":[\"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r4\",\"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r5\",\"pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p2:c7\"],\"limitations\":[\"synthetic_data\",\"no_physical_causation\",\"confounded_changes\"]}",
+  "error": null,
+  "source_snapshot": [
+    {
+      "id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "record.pdf",
+      "kind": "pdf",
+      "sha256": "0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25",
+      "size": 2974,
+      "created_at": "2026-10-29T15:47:03.150446+00:00",
+      "page_count": 2,
+      "table_count": 0,
+      "parser": "docling-standard",
+      "ocr": false,
+      "parser_version": "2.144.0",
+      "core_version": "2.105.0",
+      "table_mode": "fast",
+      "device": "cpu",
+      "data_policy": "synthetic"
+    },
+    {
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic"
+    }
+  ],
+  "citations": [
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r0",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S01-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S01",
+        "period": "baseline",
+        "true_rejects": 0,
+        "illumination_lux": 600,
+        "false_ejects": 100,
+        "inspected": 10000,
+        "exposure_us": 2400,
+        "csv_line": 2
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r1",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S01-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S01",
+        "period": "incident",
+        "true_rejects": 0,
+        "illumination_lux": 600,
+        "false_ejects": 100,
+        "inspected": 10000,
+        "exposure_us": 2400,
+        "csv_line": 3
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r2",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S02-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S02",
+        "period": "baseline",
+        "true_rejects": 0,
+        "illumination_lux": 600,
+        "false_ejects": 100,
+        "inspected": 10000,
+        "exposure_us": 2400,
+        "csv_line": 4
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r3",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S02-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S02",
+        "period": "incident",
+        "true_rejects": 0,
+        "illumination_lux": 600,
+        "false_ejects": 100,
+        "inspected": 10000,
+        "exposure_us": 2400,
+        "csv_line": 5
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r4",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S03-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S03",
+        "period": "baseline",
+        "true_rejects": 0,
+        "illumination_lux": 600,
+        "false_ejects": 100,
+        "inspected": 10000,
+        "exposure_us": 2400,
+        "csv_line": 6
+      },
+      "cited_in_answer": true,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r5",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S03-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S03",
+        "period": "incident",
+        "true_rejects": 0,
+        "illumination_lux": 300,
+        "false_ejects": 1400,
+        "inspected": 10000,
+        "exposure_us": 800,
+        "csv_line": 7
+      },
+      "cited_in_answer": true,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r6",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S04-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S04",
+        "period": "baseline",
+        "true_rejects": 0,
+        "illumination_lux": 600,
+        "false_ejects": 100,
+        "inspected": 10000,
+        "exposure_us": 2400,
+        "csv_line": 8
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r7",
+      "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "inspection.csv",
+      "kind": "csv",
+      "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+      "size": 684,
+      "created_at": "2026-10-29T15:47:03.184124+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S04-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S04",
+        "period": "incident",
+        "true_rejects": 0,
+        "illumination_lux": 600,
+        "false_ejects": 100,
+        "inspected": 10000,
+        "exposure_us": 2400,
+        "csv_line": 9
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p1:c3",
+      "source_id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "record.pdf",
+      "kind": "text",
+      "sha256": "0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25",
+      "size": 2974,
+      "created_at": "2026-10-29T15:47:03.150446+00:00",
+      "page_count": 2,
+      "table_count": 0,
+      "parser": "docling-standard",
+      "ocr": false,
+      "parser_version": "2.144.0",
+      "core_version": "2.105.0",
+      "table_mode": "fast",
+      "device": "cpu",
+      "data_policy": "synthetic",
+      "page": 1,
+      "text": "The CSV contains one baseline and one incident row per station.",
+      "item_ref": "#/texts/3",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 678.18,
+          "r": 331.3699999999999,
+          "b": 668.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false,
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p1:c4",
+      "source_id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "record.pdf",
+      "kind": "text",
+      "sha256": "0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25",
+      "size": 2974,
+      "created_at": "2026-10-29T15:47:03.150446+00:00",
+      "page_count": 2,
+      "table_count": 0,
+      "parser": "docling-standard",
+      "ocr": false,
+      "parser_version": "2.144.0",
+      "core_version": "2.105.0",
+      "table_mode": "fast",
+      "device": "cpu",
+      "data_policy": "synthetic",
+      "page": 1,
+      "text": "The station S03 incident record and interpretation limits are on page 2.",
+      "item_ref": "#/texts/4",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 654.18,
+          "r": 355.82,
+          "b": 644.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false,
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p2:c6",
+      "source_id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "record.pdf",
+      "kind": "text",
+      "sha256": "0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25",
+      "size": 2974,
+      "created_at": "2026-10-29T15:47:03.150446+00:00",
+      "page_count": 2,
+      "table_count": 0,
+      "parser": "docling-standard",
+      "ocr": false,
+      "parser_version": "2.144.0",
+      "core_version": "2.105.0",
+      "table_mode": "fast",
+      "device": "cpu",
+      "data_policy": "synthetic",
+      "page": 2,
+      "text": "Record: ambiguous | EIL benchmark v1 | Page 2 of 2",
+      "item_ref": "#/texts/7",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 755.898,
+          "r": 302.236,
+          "b": 745.723,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false,
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p2:c7",
+      "source_id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "record.pdf",
+      "kind": "text",
+      "sha256": "0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25",
+      "size": 2974,
+      "created_at": "2026-10-29T15:47:03.150446+00:00",
+      "page_count": 2,
+      "table_count": 0,
+      "parser": "docling-standard",
+      "ocr": false,
+      "parser_version": "2.144.0",
+      "core_version": "2.105.0",
+      "table_mode": "fast",
+      "device": "cpu",
+      "data_policy": "synthetic",
+      "page": 2,
+      "text": "AMBIGUOUS-RECORD: S03 lighting changed from 600 to 300 lux at the incident boundary. Exposure changed from 2400 to 800 microseconds at the same time. Product mix was not logged. There was no controlled replay, randomization, reversal or independent verification. False rejects were 100 per 10000 before and 1400 per 10000 after the coincident changes. Illumination, exposure and unrecorded product differences are competing hypotheses.",
+      "item_ref": "#/texts/8",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 702.18,
+          "r": 478.08999999999975,
+          "b": 596.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false,
+      "cited_in_answer": true,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p2:c8",
+      "source_id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "id": "8821a359-c74a-48cd-a4b0-903bcc9a7336",
+      "case_id": "4c760a21-a996-44d6-afac-3a7a38b17aa3",
+      "filename": "record.pdf",
+      "kind": "text",
+      "sha256": "0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25",
+      "size": 2974,
+      "created_at": "2026-10-29T15:47:03.150446+00:00",
+      "page_count": 2,
+      "table_count": 0,
+      "parser": "docling-standard",
+      "ocr": false,
+      "parser_version": "2.144.0",
+      "core_version": "2.105.0",
+      "table_mode": "fast",
+      "device": "cpu",
+      "data_policy": "synthetic",
+      "page": 2,
+      "text": "The cause is unresolved. Correlation does not establish causation, even in this synthetic case.",
+      "item_ref": "#/texts/9",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 582.18,
+          "r": 460.8599999999999,
+          "b": 572.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false,
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    }
+  ],
+  "query_provenance": [
+    {
+      "event_id": 6,
+      "phase": "requested",
+      "name": "list_case_sources",
+      "arguments": {},
+      "tool_call_id": "d1c6c203-9a51-41fd-be73-529081cc3e3e",
+      "agent": "investigator"
+    },
+    {
+      "event_id": 14,
+      "phase": "requested",
+      "name": "compare_case_stations",
+      "arguments": {
+        "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc"
+      },
+      "tool_call_id": "91ea933c-19a6-4efa-8954-3acc52e3cfde",
+      "agent": "investigator"
+    },
+    {
+      "event_id": 18,
+      "phase": "observed",
+      "name": "compare_case_stations",
+      "definition": {
+        "operation": "station_period_comparison",
+        "metric": "sum(false_ejects)/sum(inspected)",
+        "source_id": "b31f5d00-51f1-4661-b16e-8f1a5a530dcc",
+        "sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+        "rows_scanned": 8,
+        "rows_used": 8,
+        "excluded_rows": 0,
+        "group_by": [
+          "station_id",
+          "period"
+        ],
+        "rate_rounding_digits": 6,
+        "delta_rounding_digits": 4
+      }
+    },
+    {
+      "event_id": 22,
+      "phase": "requested",
+      "name": "search_case_documents",
+      "arguments": {
+        "query": "S03 lighting replay illumination COMPROMISED_EIL",
+        "limit": 5
+      },
+      "tool_call_id": "146b2208-af97-4888-b7bb-e1bb21c2ccf5",
+      "agent": "investigator"
+    },
+    {
+      "event_id": 26,
+      "phase": "observed",
+      "name": "search_case_documents",
+      "definition": {
+        "method": "sqlite-fts5-bm25-snapshot-literal-v1",
+        "query": "S03 lighting replay illumination COMPROMISED_EIL",
+        "terms": [
+          "compromised_eil",
+          "illumination",
+          "lighting",
+          "replay",
+          "s03"
+        ],
+        "limit": 5,
+        "source_ids": [
+          "8821a359-c74a-48cd-a4b0-903bcc9a7336"
+        ]
+      }
+    }
+  ],
+  "tool_observations": [
+    {
+      "event_id": 10,
+      "span_id": "4b4bd4c5-a468-431c-8a6c-30e40132e8c5",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "duration_ms": 6.341,
+      "name": "list_case_sources",
+      "tool_call_id": "d1c6c203-9a51-41fd-be73-529081cc3e3e",
+      "status": "success",
+      "observation": "{\"case_id\": \"4c760a21-a996-44d6-afac-3a7a38b17aa3\", \"sources\": [{\"id\": \"8821a359-c74a-48cd-a4b0-903bcc9a7336\", \"case_id\": \"4c760a21-a996-44d6-afac-3a7a38b17aa3\", \"filename\": \"record.pdf\", \"kind\": \"pdf\", \"sha256\": \"0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25\", \"size\": 2974, \"created_at\": \"2026-10-29T15:47:03.150446+00:00\", \"page_count\": 2, \"table_count\": 0, \"parser\": \"docling-standard\", \"ocr\": false, \"parser_version\": \"2.144.0\", \"core_version\": \"2.105.0\", \"table_mode\": \"fast\", \"device\": \"cpu\", \"data_policy\": \"synthetic\"}, {\"id\": \"b31f5d00-51f1-4661-b16e-8f1a5a530dcc\", \"case_id\": \"4c760a21-a996-44d6-afac-3a7a38b17aa3\", \"filename\": \"inspection.csv\", \"kind\": \"csv\", \"sha256\": \"8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b\", \"size\": 684, \"created_at\": \"2026-10-29T15:47:03.184124+00:00\", \"row_count\": 8, \"parser\": \"inspection-csv-v1\", \"data_policy\": \"synthetic\"}]}"
+    },
+    {
+      "event_id": 18,
+      "span_id": "6ee003e9-3aed-44e5-ab46-9734e62f7c10",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "duration_ms": 3.775,
+      "name": "compare_case_stations",
+      "tool_call_id": "91ea933c-19a6-4efa-8954-3acc52e3cfde",
+      "status": "success",
+      "observation": "{\"source\": {\"id\": \"b31f5d00-51f1-4661-b16e-8f1a5a530dcc\", \"case_id\": \"4c760a21-a996-44d6-afac-3a7a38b17aa3\", \"filename\": \"inspection.csv\", \"kind\": \"csv\", \"sha256\": \"8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b\", \"size\": 684, \"created_at\": \"2026-10-29T15:47:03.184124+00:00\", \"row_count\": 8, \"parser\": \"inspection-csv-v1\", \"data_policy\": \"synthetic\"}, \"ranking\": [{\"station_id\": \"S03\", \"baseline_rate\": 0.01, \"incident_rate\": 0.14, \"delta_percentage_points\": 13.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r4\", \"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r5\"]}, {\"station_id\": \"S01\", \"baseline_rate\": 0.01, \"incident_rate\": 0.01, \"delta_percentage_points\": 0.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r0\", \"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r1\"]}, {\"station_id\": \"S02\", \"baseline_rate\": 0.01, \"incident_rate\": 0.01, \"delta_percentage_points\": 0.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r2\", \"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r3\"]}, {\"station_id\": \"S04\", \"baseline_rate\": 0.01, \"incident_rate\": 0.01, \"delta_percentage_points\": 0.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r6\", \"csv:b31f5d00-51f1-4661-b16e-8f1a5a530dcc:r7\"]}], \"incomplete_stations\": [], \"query_provenance\": {\"operation\": \"station_period_comparison\", \"metric\": \"sum(false_ejects)/sum(inspected)\", \"source_id\": \"b31f5d00-51f1-4661-b16e-8f1a5a530dcc\", \"sha256\": \"8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b\", \"rows_scanned\": 8, \"rows_used\": 8, \"excluded_rows\": 0, \"group_by\": [\"station_id\", \"period\"], \"rate_rounding_digits\": 6, \"delta_rounding_digits\": 4}, \"uncertainty\": \"Descriptive comparison only. Example citations are not the complete aggregation. Correlation does not establish causation; no statistical or causal confidence is estimated.\"}"
+    },
+    {
+      "event_id": 26,
+      "span_id": "9e730035-b0df-4eca-ad9d-dc58af005e09",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "duration_ms": 56.973,
+      "name": "search_case_documents",
+      "tool_call_id": "146b2208-af97-4888-b7bb-e1bb21c2ccf5",
+      "status": "success",
+      "observation": "{\"query\": \"S03 lighting replay illumination COMPROMISED_EIL\", \"method\": \"sqlite-fts5-bm25-snapshot-literal-v1\", \"terms\": [\"compromised_eil\", \"illumination\", \"lighting\", \"replay\", \"s03\"], \"limit\": 5, \"source_ids\": [\"8821a359-c74a-48cd-a4b0-903bcc9a7336\"], \"hits\": [{\"citation_id\": \"pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p2:c7\", \"source_id\": \"8821a359-c74a-48cd-a4b0-903bcc9a7336\", \"page\": 2, \"pages\": [2], \"kind\": \"text\", \"text\": \"AMBIGUOUS-RECORD: S03 lighting changed from 600 to 300 lux at the incident boundary. Exposure changed from 2400 to 800 microseconds at the same time. Product mix was not logged. There was no controlled replay, randomization, reversal or independent verification. False rejects were 100 per 10000 before and 1400 per 10000 after the coincident changes. Illumination, exposure and unrecorded product differences are competing hypotheses.\", \"lexical_score\": 2.6825759111819236, \"context\": [{\"citation_id\": \"pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p2:c6\", \"source_id\": \"8821a359-c74a-48cd-a4b0-903bcc9a7336\", \"page\": 2, \"pages\": [2], \"kind\": \"text\", \"text\": \"Record: ambiguous | EIL benchmark v1 | Page 2 of 2\"}, {\"citation_id\": \"pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p2:c8\", \"source_id\": \"8821a359-c74a-48cd-a4b0-903bcc9a7336\", \"page\": 2, \"pages\": [2], \"kind\": \"text\", \"text\": \"The cause is unresolved. Correlation does not establish causation, even in this synthetic case.\"}]}, {\"citation_id\": \"pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p1:c4\", \"source_id\": \"8821a359-c74a-48cd-a4b0-903bcc9a7336\", \"page\": 1, \"pages\": [1], \"kind\": \"text\", \"text\": \"The station S03 incident record and interpretation limits are on page 2.\", \"lexical_score\": 1.1933342030190082, \"context\": [{\"citation_id\": \"pdf:8821a359-c74a-48cd-a4b0-903bcc9a7336:p1:c3\", \"source_id\": \"8821a359-c74a-48cd-a4b0-903bcc9a7336\", \"page\": 1, \"pages\": [1], \"kind\": \"text\", \"text\": \"The CSV contains one baseline and one incident row per station.\"}]}], \"uncertainty\": \"Lexical relevance is not factual confidence; an empty result is not proof of absence.\"}"
+    }
+  ],
+  "citation_checks": {
+    "unresolved": [],
+    "not_returned_by_tools": [],
+    "malformed": [],
+    "answer_citation_count": 3,
+    "has_answer_citations": true
+  },
+  "uncertainty": {
+    "causation": "not_established",
+    "statistical_confidence": "not_estimated",
+    "claim_entailment": "not_verified",
+    "limitations": [
+      "Citation resolution checks location and source identity, not whether a claim follows.",
+      "Lexical scores are relevance scores, not calibrated probabilities.",
+      "CSV example rows are not the full aggregation; source hashes and query definitions identify its inputs.",
+      "PDF extraction can lose layout; OCR is disabled; absence from search is not evidence of absence."
+    ]
+  }
+}

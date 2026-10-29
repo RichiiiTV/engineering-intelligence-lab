@@ -1,0 +1,33 @@
+{
+  "passed": false,
+  "checks": {
+    "completed": true,
+    "contract": true,
+    "metrics": false,
+    "causal_calibration": false,
+    "citations": false,
+    "tools": true,
+    "budgets": true
+  },
+  "failed_checks": [
+    "metrics",
+    "causal_calibration",
+    "citations"
+  ],
+  "finding": {
+    "station_id": "S03",
+    "baseline_rate": 0.01,
+    "incident_rate": 0.14,
+    "delta_pp": 0.13,
+    "cause": "illumination",
+    "cause_status": "supported_in_simulator",
+    "citations": [
+      "pdf:efb72458-355b-47aa-858c-1e0242630158:p2:c6",
+      "pdf:efb72458-355b-47aa-858c-1e0242630158:p2:c7"
+    ],
+    "limitations": [
+      "synthetic_data",
+      "no_physical_causation"
+    ]
+  }
+}

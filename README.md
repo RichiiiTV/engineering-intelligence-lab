@@ -19,6 +19,11 @@ A local-first **agentic engineering investigation workbench** developed with Ope
 
 M5 adds a separate synthetic benchmark workflow and local trace exports. See [M5 protocol](docs/m5-evaluation.md), [M5 results](docs/m5-results.md), [M4 results](docs/m4-results.md), [M3 evidence validation](docs/m3-results.md), and [M2 execution checks](docs/m2-results.md). The ordinary workbench retains its single-agent Ollama behavior.
 
+Review remediation adds local accounts/case authorization, authenticated approvals,
+isolated PDF conversion, storage/backup/Trash operations, typed claim checks,
+version-aware Siemens manual candidates, expanded evaluations and CI. See
+[current results](docs/gap-remediation-results.md) and [operator guide](docs/security-operations.md).
+
 ## Quick start (Windows PowerShell)
 
 ```powershell
@@ -37,6 +42,11 @@ Pop-Location
 uv run uvicorn eil.api:app --host 127.0.0.1 --timeout-graceful-shutdown 5
 # Workbench: http://127.0.0.1:8000/    API docs: http://127.0.0.1:8000/docs
 ```
+
+On first use, run `uv run python -m eil.cli auth-bootstrap` in another terminal.
+Enter its one-time code on the setup page and choose your own password. Existing
+local cases belong to the first account. Case APIs and API documentation now
+require sign-in; there is no default account/password.
 
 For the full UI with local PDF parsing, run `.\scripts\start-workbench.cmd` from this folder. It installs locked frontend dependencies if missing, builds the UI, and starts the loopback API with the `documents` extra. The CMD launcher works without changing PowerShell execution policy. Prefetch Docling models as described below before uploading PDFs. It does not start or download Ollama models.
 
@@ -115,29 +125,39 @@ The deterministic baseline report tells you *which station* changed and how stro
 ## M3 PDF and CSV cases
 
 Ordinary offline tests and CSV uploads need only `uv sync --locked --extra dev`. Real PDF
-conversion additionally needs Docling and its explicitly prefetched layout/table assets:
+conversion requires Docker Desktop's Linux engine, the fixed worker image and
+explicitly prefetched layout/table assets:
 
 ```powershell
 uv sync --locked --extra dev --extra documents
 uv run --extra documents docling-tools models download layout tableformer --output-dir .eil/docling-models --quiet
+docker build -f containers/pdf/Dockerfile -t eil-pdf-worker:1 .
+uv run python scripts/verify_pdf_isolation.py
 uv run --extra documents python scripts/verify_m3_golden.py
 uv run --extra documents uvicorn eil.api:app --host 127.0.0.1 --timeout-graceful-shutdown 5
 ```
 
 Conversion uses local CPU models, with OCR, remote services and external plugins disabled.
-No model download happens during ingestion. Missing dependencies/assets return actionable
-503 errors. Use `EIL_DOCLING_ARTIFACTS` for another trusted local model folder.
+No model download happens during ingestion. Missing Docker/image/assets return actionable
+503 errors. Model mounts must stay inside the approved `.eil/docling-models` directory.
+There is no host-process upload fallback. See the operator guide for resource limits.
 
-Create a case and upload generated or explicitly licensed public demo evidence:
+Sign in through the workbench to create a case and upload generated or explicitly
+licensed public demo evidence. For a native PowerShell client, authenticate first
+and preserve its cookie session (PowerShell 7 supports multipart `-Form`):
 
 ```powershell
-$case = Invoke-RestMethod http://127.0.0.1:8000/api/cases -Method Post -ContentType application/json -Body '{"title":"Synthetic inspection evidence"}'
-curl.exe -sS -F "data_policy=synthetic" -F "file=@output/pdf/synthetic-maintenance-note.pdf;type=application/pdf" "http://127.0.0.1:8000/api/cases/$($case.id)/sources"
-curl.exe -sS -F "data_policy=synthetic" -F "file=@data/synthetic_inspection_v1.csv;type=text/csv" "http://127.0.0.1:8000/api/cases/$($case.id)/sources"
+$eilCredential = Get-Credential
+$eilLogin = @{username=$eilCredential.UserName;password=$eilCredential.GetNetworkCredential().Password} | ConvertTo-Json
+Invoke-RestMethod http://127.0.0.1:8000/api/auth/login -Method Post -ContentType application/json -Body $eilLogin -SessionVariable eilSession
+$eilLogin = $null; $eilCredential = $null
+$case = Invoke-RestMethod http://127.0.0.1:8000/api/cases -Method Post -ContentType application/json -Body '{"title":"Synthetic inspection evidence"}' -WebSession $eilSession
+Invoke-RestMethod "http://127.0.0.1:8000/api/cases/$($case.id)/sources" -Method Post -Form @{data_policy='synthetic';file=(Get-Item output/pdf/synthetic-maintenance-note.pdf)} -WebSession $eilSession
+Invoke-RestMethod "http://127.0.0.1:8000/api/cases/$($case.id)/sources" -Method Post -Form @{data_policy='synthetic';file=(Get-Item data/synthetic_inspection_v1.csv)} -WebSession $eilSession
 $body = @{case_id=$case.id; question="Which station changed most? Use CSV metrics and the PDF, cite evidence and distinguish hypotheses."} | ConvertTo-Json
-$job = Invoke-RestMethod http://127.0.0.1:8000/api/investigations -Method Post -ContentType application/json -Body $body
-Invoke-RestMethod "http://127.0.0.1:8000/api/investigations/$($job.id)"
-Invoke-RestMethod "http://127.0.0.1:8000/api/investigations/$($job.id)/export"
+$job = Invoke-RestMethod http://127.0.0.1:8000/api/investigations -Method Post -ContentType application/json -Body $body -WebSession $eilSession
+Invoke-RestMethod "http://127.0.0.1:8000/api/investigations/$($job.id)" -WebSession $eilSession
+Invoke-RestMethod "http://127.0.0.1:8000/api/investigations/$($job.id)/export" -WebSession $eilSession
 ```
 
 The required upload `data_policy` is `synthetic` or `licensed-public`; it is the uploader's

@@ -1,0 +1,429 @@
+{
+  "schema": "eil-evidence-report-v1",
+  "verified_evidence": {
+    "comparisons": [
+      {
+        "source": {
+          "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+          "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+          "filename": "missing-document.csv",
+          "kind": "csv",
+          "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+          "size": 685,
+          "created_at": "2026-10-29T15:45:20.344160+00:00",
+          "row_count": 8,
+          "parser": "inspection-csv-v1",
+          "data_policy": "synthetic"
+        },
+        "ranking": [
+          {
+            "station_id": "S03",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.14,
+            "delta_percentage_points": 13.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r4",
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r5"
+            ]
+          },
+          {
+            "station_id": "S01",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.01,
+            "delta_percentage_points": 0.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r0",
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r1"
+            ]
+          },
+          {
+            "station_id": "S02",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.01,
+            "delta_percentage_points": 0.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r2",
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r3"
+            ]
+          },
+          {
+            "station_id": "S04",
+            "baseline_rate": 0.01,
+            "incident_rate": 0.01,
+            "delta_percentage_points": 0.0,
+            "baseline_inspected": 10000,
+            "incident_inspected": 10000,
+            "supporting_row_count": 2,
+            "example_citations": [
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r6",
+              "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r7"
+            ]
+          }
+        ],
+        "incomplete_stations": [],
+        "query_provenance": {
+          "operation": "station_period_comparison",
+          "metric": "sum(false_ejects)/sum(inspected)",
+          "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+          "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+          "rows_scanned": 8,
+          "rows_used": 8,
+          "excluded_rows": 0,
+          "group_by": [
+            "station_id",
+            "period"
+          ],
+          "rate_rounding_digits": 6,
+          "delta_rounding_digits": 4
+        },
+        "uncertainty": "Descriptive comparison only. Example citations are not the complete aggregation. Correlation does not establish causation; no statistical or causal confidence is estimated."
+      }
+    ],
+    "conflicting_csv_measurements": [],
+    "incomplete_sources": [],
+    "interpretation": "Different CSV measurements are a potential conflict until their scope/time is reconciled. They are never silently merged. No general document contradiction detector is claimed."
+  },
+  "run_id": "8983fb28-e722-4883-bda8-995d448e2e1f",
+  "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+  "status": "completed",
+  "integrations": {
+    "mock_mcp": {
+      "enabled": false,
+      "server_id": "eil-synthetic-maintenance-v1",
+      "transport": "in-process-memory"
+    }
+  },
+  "answer": "{\"station_id\":\"S03\",\"baseline_rate\":0.01,\"incident_rate\":0.14,\"delta_pp\":13.0,\"cause\":\"undetermined\",\"cause_status\":\"unresolved\",\"citations\":[\"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r4\",\"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r5\"],\"limitations\":[\"synthetic_data\",\"no_physical_causation\"]}",
+  "error": null,
+  "source_snapshot": [
+    {
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic"
+    }
+  ],
+  "citations": [
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r0",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S01-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S01",
+        "period": "baseline",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 100,
+        "illumination_lux": 600,
+        "inspected": 10000,
+        "csv_line": 2
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r1",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S01-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S01",
+        "period": "incident",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 100,
+        "illumination_lux": 600,
+        "inspected": 10000,
+        "csv_line": 3
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r2",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S02-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S02",
+        "period": "baseline",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 100,
+        "illumination_lux": 600,
+        "inspected": 10000,
+        "csv_line": 4
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r3",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S02-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S02",
+        "period": "incident",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 100,
+        "illumination_lux": 600,
+        "inspected": 10000,
+        "csv_line": 5
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r4",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S03-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S03",
+        "period": "baseline",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 100,
+        "illumination_lux": 600,
+        "inspected": 10000,
+        "csv_line": 6
+      },
+      "cited_in_answer": true,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r5",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S03-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S03",
+        "period": "incident",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 1400,
+        "illumination_lux": 300,
+        "inspected": 10000,
+        "csv_line": 7
+      },
+      "cited_in_answer": true,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r6",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S04-baseline",
+        "timestamp": "2026-10-09T00:00:00",
+        "station_id": "S04",
+        "period": "baseline",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 100,
+        "illumination_lux": 600,
+        "inspected": 10000,
+        "csv_line": 8
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    },
+    {
+      "citation_id": "csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r7",
+      "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+      "case_id": "b22d0b73-2dcc-49d4-a0e0-17232cce743a",
+      "filename": "missing-document.csv",
+      "kind": "csv",
+      "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "size": 685,
+      "created_at": "2026-10-29T15:45:20.344160+00:00",
+      "row_count": 8,
+      "parser": "inspection-csv-v1",
+      "data_policy": "synthetic",
+      "row": {
+        "row_id": "BENCH-S04-incident",
+        "timestamp": "2026-10-10T00:00:00",
+        "station_id": "S04",
+        "period": "incident",
+        "exposure_us": 2400,
+        "true_rejects": 0,
+        "false_ejects": 100,
+        "illumination_lux": 600,
+        "inspected": 10000,
+        "csv_line": 9
+      },
+      "cited_in_answer": false,
+      "returned_by_tool": true
+    }
+  ],
+  "query_provenance": [
+    {
+      "event_id": 6,
+      "phase": "requested",
+      "name": "list_case_sources",
+      "arguments": {},
+      "tool_call_id": "83b3e86a-e5b9-49df-9e1f-61b8cc1a1915",
+      "agent": "investigator"
+    },
+    {
+      "event_id": 14,
+      "phase": "requested",
+      "name": "compare_case_stations",
+      "arguments": {
+        "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a"
+      },
+      "tool_call_id": "bf1ad0a3-1c06-4301-9282-26676414c18e",
+      "agent": "investigator"
+    },
+    {
+      "event_id": 18,
+      "phase": "observed",
+      "name": "compare_case_stations",
+      "definition": {
+        "operation": "station_period_comparison",
+        "metric": "sum(false_ejects)/sum(inspected)",
+        "source_id": "69f376f1-b479-4dc3-9030-b9a3e762562a",
+        "sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+        "rows_scanned": 8,
+        "rows_used": 8,
+        "excluded_rows": 0,
+        "group_by": [
+          "station_id",
+          "period"
+        ],
+        "rate_rounding_digits": 6,
+        "delta_rounding_digits": 4
+      }
+    }
+  ],
+  "tool_observations": [
+    {
+      "event_id": 10,
+      "span_id": "40d2310a-2b0d-49e2-a298-bac9d731d7b6",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "duration_ms": 6.612,
+      "name": "list_case_sources",
+      "tool_call_id": "83b3e86a-e5b9-49df-9e1f-61b8cc1a1915",
+      "status": "success",
+      "observation": "{\"case_id\": \"b22d0b73-2dcc-49d4-a0e0-17232cce743a\", \"sources\": [{\"id\": \"69f376f1-b479-4dc3-9030-b9a3e762562a\", \"case_id\": \"b22d0b73-2dcc-49d4-a0e0-17232cce743a\", \"filename\": \"missing-document.csv\", \"kind\": \"csv\", \"sha256\": \"8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89\", \"size\": 685, \"created_at\": \"2026-10-29T15:45:20.344160+00:00\", \"row_count\": 8, \"parser\": \"inspection-csv-v1\", \"data_policy\": \"synthetic\"}]}"
+    },
+    {
+      "event_id": 18,
+      "span_id": "8786bee8-a1dd-4c76-9ee8-7985b3917c3e",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "duration_ms": 3.376,
+      "name": "compare_case_stations",
+      "tool_call_id": "bf1ad0a3-1c06-4301-9282-26676414c18e",
+      "status": "success",
+      "observation": "{\"source\": {\"id\": \"69f376f1-b479-4dc3-9030-b9a3e762562a\", \"case_id\": \"b22d0b73-2dcc-49d4-a0e0-17232cce743a\", \"filename\": \"missing-document.csv\", \"kind\": \"csv\", \"sha256\": \"8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89\", \"size\": 685, \"created_at\": \"2026-10-29T15:45:20.344160+00:00\", \"row_count\": 8, \"parser\": \"inspection-csv-v1\", \"data_policy\": \"synthetic\"}, \"ranking\": [{\"station_id\": \"S03\", \"baseline_rate\": 0.01, \"incident_rate\": 0.14, \"delta_percentage_points\": 13.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r4\", \"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r5\"]}, {\"station_id\": \"S01\", \"baseline_rate\": 0.01, \"incident_rate\": 0.01, \"delta_percentage_points\": 0.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r0\", \"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r1\"]}, {\"station_id\": \"S02\", \"baseline_rate\": 0.01, \"incident_rate\": 0.01, \"delta_percentage_points\": 0.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r2\", \"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r3\"]}, {\"station_id\": \"S04\", \"baseline_rate\": 0.01, \"incident_rate\": 0.01, \"delta_percentage_points\": 0.0, \"baseline_inspected\": 10000, \"incident_inspected\": 10000, \"supporting_row_count\": 2, \"example_citations\": [\"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r6\", \"csv:69f376f1-b479-4dc3-9030-b9a3e762562a:r7\"]}], \"incomplete_stations\": [], \"query_provenance\": {\"operation\": \"station_period_comparison\", \"metric\": \"sum(false_ejects)/sum(inspected)\", \"source_id\": \"69f376f1-b479-4dc3-9030-b9a3e762562a\", \"sha256\": \"8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89\", \"rows_scanned\": 8, \"rows_used\": 8, \"excluded_rows\": 0, \"group_by\": [\"station_id\", \"period\"], \"rate_rounding_digits\": 6, \"delta_rounding_digits\": 4}, \"uncertainty\": \"Descriptive comparison only. Example citations are not the complete aggregation. Correlation does not establish causation; no statistical or causal confidence is estimated.\"}"
+    }
+  ],
+  "citation_checks": {
+    "unresolved": [],
+    "not_returned_by_tools": [],
+    "malformed": [],
+    "answer_citation_count": 2,
+    "has_answer_citations": true
+  },
+  "uncertainty": {
+    "causation": "not_established",
+    "statistical_confidence": "not_estimated",
+    "claim_entailment": "not_verified",
+    "limitations": [
+      "Citation resolution checks location and source identity, not whether a claim follows.",
+      "Lexical scores are relevance scores, not calibrated probabilities.",
+      "CSV example rows are not the full aggregation; source hashes and query definitions identify its inputs.",
+      "PDF extraction can lose layout; OCR is disabled; absence from search is not evidence of absence."
+    ]
+  }
+}

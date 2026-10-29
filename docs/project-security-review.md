@@ -1,5 +1,9 @@
 # Project gaps, security review and Siemens SPS connection
 
+This is the original review snapshot. The user subsequently authorized fixing
+the findings. See [remediation results](gap-remediation-results.md) and the
+[operator guide](security-operations.md) for current behavior and validation.
+
 Reviewed 2026-10-29, after M5. This is a code/configuration review, dependency
 audit, failure-case testing and a real public MCP integration check. It is not
 a penetration-test certification or approval for production equipment use.

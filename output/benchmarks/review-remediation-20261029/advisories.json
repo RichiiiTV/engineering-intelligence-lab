@@ -1,0 +1,16 @@
+{
+  "python_packages_scanned": 166,
+  "python_packages_skipped": [
+    "engineering-intelligence-lab"
+  ],
+  "python_known_vulnerabilities": 0,
+  "npm": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "date": "2026-10-29"
+}

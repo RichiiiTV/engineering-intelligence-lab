@@ -1,0 +1,20 @@
+{
+  "passed": false,
+  "checks": {
+    "completed": false,
+    "contract": false,
+    "metrics": false,
+    "causal_calibration": false,
+    "citations": false,
+    "tools": true,
+    "budgets": true
+  },
+  "failed_checks": [
+    "completed",
+    "contract",
+    "metrics",
+    "causal_calibration",
+    "citations"
+  ],
+  "finding": null
+}

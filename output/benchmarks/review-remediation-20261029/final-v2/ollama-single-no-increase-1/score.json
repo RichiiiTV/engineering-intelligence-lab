@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "checks": {
+    "completed": true,
+    "contract": true,
+    "metrics": true,
+    "causal_calibration": true,
+    "citations": true,
+    "tools": true,
+    "budgets": true
+  },
+  "failed_checks": [],
+  "finding": {
+    "station_id": "S01",
+    "baseline_rate": 0.01,
+    "incident_rate": 0.01,
+    "delta_pp": 0.0,
+    "cause": "undetermined",
+    "cause_status": "unresolved",
+    "citations": [
+      "csv:89634428-f0ee-460f-9c75-8507923f2054:r0",
+      "csv:89634428-f0ee-460f-9c75-8507923f2054:r1",
+      "pdf:1f13598e-ef61-4752-918f-26db5b1c2b6a:p2:c6",
+      "pdf:1f13598e-ef61-4752-918f-26db5b1c2b6a:p2:c7"
+    ],
+    "limitations": [
+      "synthetic_data",
+      "no_physical_causation"
+    ]
+  }
+}

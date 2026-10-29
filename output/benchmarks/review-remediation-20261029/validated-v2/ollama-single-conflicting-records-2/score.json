@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "checks": {
+    "completed": true,
+    "contract": true,
+    "metrics": true,
+    "causal_calibration": true,
+    "citations": true,
+    "tools": true,
+    "budgets": true
+  },
+  "failed_checks": [],
+  "finding": {
+    "station_id": "S03",
+    "baseline_rate": 0.01,
+    "incident_rate": 0.14,
+    "delta_pp": 13.0,
+    "cause": "undetermined",
+    "cause_status": "unresolved",
+    "citations": [
+      "csv:ba2c4fc1-0678-49fd-b094-ba832bbf6b17:r4",
+      "csv:ba2c4fc1-0678-49fd-b094-ba832bbf6b17:r5",
+      "pdf:be659462-582a-498b-bb98-f1d9fc0d2604:p2:c6",
+      "pdf:be659462-582a-498b-bb98-f1d9fc0d2604:p2:c7",
+      "pdf:6d174c33-7a10-484b-baa4-79ebba54dd98:p2:c6",
+      "pdf:6d174c33-7a10-484b-baa4-79ebba54dd98:p2:c7"
+    ],
+    "limitations": [
+      "synthetic_data",
+      "no_physical_causation"
+    ]
+  }
+}

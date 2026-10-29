@@ -1,0 +1,111 @@
+{
+  "schema": "eil-local-trace-v1",
+  "run_id": "cf728647-79b1-4166-941c-3ef1f8487392",
+  "status": "completed",
+  "model": "offline-calibration",
+  "experiment": {
+    "provider": "offline",
+    "agent_mode": "single",
+    "suite": "eil-benchmark-v1",
+    "structured_output": true
+  },
+  "elapsed_seconds": 4.592999999993481,
+  "charged_tokens": 3300,
+  "model_calls": 3,
+  "tool_calls": 3,
+  "steps": 11,
+  "usage_complete": true,
+  "traced_model_calls": 3,
+  "input_tokens": 3000,
+  "output_tokens": 300,
+  "cost": {
+    "estimated_usd": null,
+    "input_usd_per_million": null,
+    "output_usd_per_million": null,
+    "basis": "operator-supplied token rates; excludes hardware, energy and taxes"
+  },
+  "spans": [
+    {
+      "span_id": "1592af5c-ebf5-49a5-aeba-db81de423518",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "kind": "model",
+      "name": "model",
+      "started_at": "2026-10-29T15:48:40.052896+00:00",
+      "finished_at": "2026-10-29T15:48:40.105435+00:00",
+      "status": "success",
+      "duration_ms": 36.904,
+      "reserved_tokens": 10240,
+      "tokens": 1100,
+      "input_tokens": 1000,
+      "output_tokens": 100,
+      "usage_known": true
+    },
+    {
+      "span_id": "19c7e81e-6fab-4c96-a714-b396d1cc2288",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "kind": "tool",
+      "name": "list_case_sources",
+      "started_at": "2026-10-29T15:48:40.267409+00:00",
+      "finished_at": "2026-10-29T15:48:40.282408+00:00",
+      "status": "success",
+      "duration_ms": 5.052
+    },
+    {
+      "span_id": "58cfd93b-cfc1-465a-aef6-3ab505efe9a1",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "kind": "model",
+      "name": "model",
+      "started_at": "2026-10-29T15:48:40.369368+00:00",
+      "finished_at": "2026-10-29T15:48:40.390879+00:00",
+      "status": "success",
+      "duration_ms": 10.425,
+      "reserved_tokens": 10240,
+      "tokens": 1100,
+      "input_tokens": 1000,
+      "output_tokens": 100,
+      "usage_known": true
+    },
+    {
+      "span_id": "633e6d9d-f4dc-4dac-bfd3-ccf826293e5a",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "kind": "tool",
+      "name": "compare_case_stations",
+      "started_at": "2026-10-29T15:48:40.570323+00:00",
+      "finished_at": "2026-10-29T15:48:40.587328+00:00",
+      "status": "success",
+      "duration_ms": 2.963
+    },
+    {
+      "span_id": "d7ee1e84-b4c9-45ed-a096-5eaa2c516d59",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "kind": "tool",
+      "name": "search_case_documents",
+      "started_at": "2026-10-29T15:48:40.614842+00:00",
+      "finished_at": "2026-10-29T15:48:40.684642+00:00",
+      "status": "success",
+      "duration_ms": 54.112
+    },
+    {
+      "span_id": "cca5b78a-fdf0-4c3b-a9a0-32786dc94d4d",
+      "parent_span_id": null,
+      "agent": "investigator",
+      "kind": "model",
+      "name": "model",
+      "started_at": "2026-10-29T15:48:40.789008+00:00",
+      "finished_at": "2026-10-29T15:48:40.839651+00:00",
+      "status": "success",
+      "duration_ms": 15.273,
+      "reserved_tokens": 10240,
+      "tokens": 1100,
+      "input_tokens": 1000,
+      "output_tokens": 100,
+      "usage_known": true
+    }
+  ],
+  "content_policy": "No prompts, answers, arguments, observations, credentials or reasoning in trace spans. Full evidence remains in the local audit/export."
+}

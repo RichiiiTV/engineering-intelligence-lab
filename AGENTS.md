@@ -36,6 +36,14 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized fixing all review gaps on 2026-10-29. Implement the scoped
+remediation, maintain its acceptance checks and report limitations honestly.
+Preserve authenticated case ownership and reviewer identity, recoverable
+retention/backup approvals, isolated container-only PDF uploads, actual usage
+overage accounting and immutable evaluation baselines. No default credentials,
+automatic paid provider runs, equipment access or production deployment. Stop
+after remediation validation/reporting; do not begin another milestone.
+
 The user authorized a project/security review and Siemens MCP for SPS questions after M5 on 2026-10-29. The approved external integration is the fixed public knowledge endpoint `https://mcp.siemens.com/mcp`, exposed through a separate explicit-question search page. Only the reviewed `siemens_search` tool is allowed. Do not expose arbitrary MCP URLs, web fetching, remote tool catalogs, case uploads/history, credentials, PLC access or production writes. Search results are untrusted public reference material, not immutable case evidence or validated engineering advice. Preserve the M5 quality-gate failures and remaining review findings in `docs/project-security-review.md`.
 
 Milestone 5 was authorized by the user on 2026-10-29: versioned synthetic evaluations, local tracing, and bounded single-agent/delegated and provider comparisons. Preserve case/source isolation, read-only tools, content-bound draft approvals and cumulative M2 budgets. Experiments use separate state and generated benchmark fixtures; the workbench stays on its single-agent Ollama default. Hosted runs require explicit provider/model selection and operator credentials; never log or commit secrets. Missing credentials are unrun results, not passes. Stop after M5 checks and reporting. Do not begin a later milestone, external MCP servers or production integrations without another user request. Langfuse is optional; do not silently enable remote tracing.

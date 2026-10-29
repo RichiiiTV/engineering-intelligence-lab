@@ -1,0 +1,21 @@
+{
+  "id": "2a866e6e-fcb1-4b5d-8a2d-e634a9222cd8",
+  "status": "completed",
+  "tokens": 5500,
+  "model_calls": 5,
+  "tool_calls": 4,
+  "steps": 18,
+  "elapsed_seconds": 4.859000000054948,
+  "limits": {
+    "max_steps": 65,
+    "max_model_calls": 12,
+    "max_tool_calls": 20,
+    "max_total_tokens": 65536,
+    "max_output_tokens": 2048,
+    "timeout_seconds": 180.0
+  },
+  "source_ids": [
+    "91fa7039-a7ff-46fa-b0a6-188c1b4507ca",
+    "895e4ffa-4636-44df-b655-beb663ac681b"
+  ]
+}

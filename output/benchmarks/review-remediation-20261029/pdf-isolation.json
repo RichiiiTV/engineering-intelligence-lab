@@ -1,0 +1,15 @@
+{
+  "uid": 65532,
+  "network_denied": true,
+  "root_read_only": true,
+  "models_present": true,
+  "controls": {
+    "memory.max": "2147483648",
+    "memory.swap.max": "0",
+    "cpu.max": "200000 100000",
+    "pids.max": "128",
+    "CapEff": "0000000000000000",
+    "NoNewPrivs": "1",
+    "Seccomp": "2"
+  }
+}
