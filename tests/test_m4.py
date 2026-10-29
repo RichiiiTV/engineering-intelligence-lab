@@ -140,7 +140,7 @@ def test_reject_never_saves_and_proposals_require_completed_case(tmp_path):
 def test_m4_api_approval_filter_origin_and_sample_boundaries(tmp_path):
     store, case, run = case_run(tmp_path)
     app = create_app(lambda: RunService(tmp_path, worker_target=controlled_worker))
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://127.0.0.1") as client:
         assert client.get("/api/integrations/mock-mcp").json()["enabled_by_default"] is False
         assert (
             client.get("/api/investigations", params={"case_id": case["id"]}).json()[
@@ -221,7 +221,7 @@ def test_frontend_serving_preserves_api_errors_and_csp_scope(tmp_path, monkeypat
     (build / "index.html").write_text("<!doctype html><title>EIL test</title>")
     (build / "assets" / "test.js").write_text("console.log('local build')")
     app = create_app(lambda: RunService(tmp_path / "state", worker_target=controlled_worker))
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://127.0.0.1") as client:
         assert client.get("/").status_code == 200
         assert "script-src 'self'" in client.get("/").headers["content-security-policy"]
         assert client.get("/assets/test.js").status_code == 200

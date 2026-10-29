@@ -1,4 +1,4 @@
-"""Bound multipart request bodies before Starlette spools uploaded files."""
+"""Bound API bodies before JSON validation or multipart file spooling."""
 
 from fastapi.responses import JSONResponse
 
@@ -12,19 +12,19 @@ class UploadBodyLimit:
     async def __call__(self, scope, receive, send):
         if not (
             scope["type"] == "http"
-            and scope["method"] == "POST"
-            and scope["path"].startswith("/api/cases/")
-            and scope["path"].endswith("/sources")
+            and scope["method"] in {"POST", "PUT", "PATCH", "DELETE"}
+            and scope["path"].startswith("/api/")
         ):
             return await self.app(scope, receive, send)
-        cap = MAX_PDF_BYTES + 65536  # bounded multipart metadata overhead
+        upload = scope["path"].startswith("/api/cases/") and scope["path"].endswith("/sources")
+        cap = MAX_PDF_BYTES + 65536 if upload else 128 * 1024
         headers = dict(scope.get("headers", []))
         try:
             advertised = int(headers.get(b"content-length", b"0"))
         except ValueError:
             advertised = cap + 1
         body = bytearray()
-        if advertised <= cap:
+        if 0 <= advertised <= cap:
             while True:
                 message = await receive()
                 if message["type"] == "http.disconnect":
@@ -46,6 +46,10 @@ class UploadBodyLimit:
                     return await self.app(scope, replay, send)
         response = JSONResponse(
             status_code=413,
-            content={"detail": "Upload request exceeds 10 MiB plus bounded multipart metadata"},
+            content={
+                "detail": "Upload request exceeds 10 MiB plus bounded multipart metadata"
+                if upload
+                else "API request exceeds 128 KiB"
+            },
         )
         return await response(scope, receive, send)

@@ -23,6 +23,7 @@ from fastapi import (
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .analytics import ALLOWED_STATIONS, compare_stations, provisional_report, station_metrics
 from .drafts import DraftStore
@@ -161,6 +162,32 @@ def mock_mcp_catalog():
     from .mock_mcp import catalog
 
     return catalog()
+
+
+class SiemensQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    question: str = Field(min_length=1, max_length=500, strict=True)
+
+
+@router.get("/api/integrations/siemens-mcp")
+def siemens_catalog():
+    from .siemens_mcp import catalog
+
+    return catalog()
+
+
+@router.post("/api/knowledge/siemens/search")
+async def siemens_search(payload: SiemensQuestion):
+    from .siemens_mcp import SiemensBusy, SiemensUnavailable, search
+
+    try:
+        return await search(payload.question)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except SiemensBusy as exc:
+        raise HTTPException(status_code=429, detail=str(exc), headers={"Retry-After": "2"}) from exc
+    except SiemensUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.post("/api/investigations/{run_id}/draft-proposals", status_code=201)
@@ -336,7 +363,7 @@ def create_app(service_factory=RunService):
     async def local_browser_origin(request, call_next):
         origin = request.headers.get("origin")
         if (
-            request.method in {"POST", "PUT", "PATCH", "DELETE"}
+            request.url.path.startswith("/api/")
             and origin
             and origin
             not in {
@@ -346,6 +373,13 @@ def create_app(service_factory=RunService):
             }
         ):
             return JSONResponse(status_code=403, content={"detail": "Unapproved browser origin"})
+        if (
+            request.url.path.startswith("/api/")
+            and request.headers.get("sec-fetch-site") == "cross-site"
+        ):
+            return JSONResponse(
+                status_code=403, content={"detail": "Cross-site API request rejected"}
+            )
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         if request.url.path == "/":
@@ -392,6 +426,12 @@ def create_app(service_factory=RunService):
             status_code=429 if isinstance(exc, PDFBusy) else 503, content={"detail": str(exc)}
         )
 
+    # Host validation is outermost: reject rebinding before reading a body or
+    # deriving any origin from request.base_url. Loopback binding alone is not
+    # a browser security boundary.
+    app.add_middleware(
+        TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"], www_redirect=False
+    )
     return app
 
 

@@ -44,6 +44,10 @@ For UI development, run the backend on port 8000, then `cd frontend; npm.cmd run
 
 ## Using the workbench
 
+**SPS help** opens the [Siemens public knowledge search](http://127.0.0.1:8000/?page=siemens). Enter a public SIMATIC/S7/TIA Portal question and click **Search Siemens**. The app sends that question to the fixed Siemens MCP search tool and displays a labeled Siemens-generated summary and official source links. It keeps case files/history separate and provides no equipment connection. Search coverage varies; verify the exact CPU, firmware and TIA version against the linked documentation. See [project gaps and security review](docs/project-security-review.md).
+
+The local API now checks loopback Host headers, rejects unrelated browser origins/cross-site API requests, and bounds JSON bodies before parsing. This remains a single-user local application; those controls do not add authentication or make network deployment suitable.
+
 If a run reaches its token allowance, **Continue investigation** resumes its saved progress using the remaining capacity when possible. If needed, **Continue with extra capacity** explicitly adds a bounded token allowance; other limits and usage counters remain intact. The agent now summarizes gathered evidence before reaching capacity, and those results are labeled as findings so far. See [token recovery and validation](docs/token-budget-recovery.md). This refines the original fixed-reservation/immutable-limit behavior described in the historical M2 report.
 
 The default page now follows the approved simpler design: add files, ask a question, then review the finding and source links. It creates the case automatically, keeps run controls in plain language, and downloads a readable HTML report that can be printed or saved as PDF from a browser. Use **Try the demo files** to start with the committed generated fixtures.

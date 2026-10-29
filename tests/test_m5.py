@@ -188,7 +188,9 @@ def test_trace_api_is_read_only_and_omits_content(tmp_path):
     store = RunStore(tmp_path)
     run = store.create("private question")
     store.control(run["id"], "pause")
-    with TestClient(create_app(lambda: RunService(tmp_path))) as client:
+    with TestClient(
+        create_app(lambda: RunService(tmp_path)), base_url="http://127.0.0.1"
+    ) as client:
         response = client.get(f"/api/investigations/{run['id']}/trace")
         assert response.status_code == 200
         assert response.json()["schema"] == "eil-local-trace-v1"

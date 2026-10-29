@@ -16,7 +16,7 @@ from tests.fakes import controlled_worker
 def client(tmp_path):
     app = create_app(lambda: RunService(tmp_path, worker_target=controlled_worker))
     app.state.pdf_parser = fixture_pdf_parser
-    with TestClient(app) as client:
+    with TestClient(app, base_url="http://127.0.0.1") as client:
         yield client
 
 

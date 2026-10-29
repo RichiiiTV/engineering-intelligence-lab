@@ -194,7 +194,8 @@ def test_continuation_keeps_case_snapshot_when_new_sources_arrive(tmp_path):
 def test_continuation_api_validates_and_handles_legacy_token_stop(tmp_path):
     store, run = stopped_run(tmp_path)
     with TestClient(
-        create_app(lambda: RunService(tmp_path, worker_target=controlled_worker))
+        create_app(lambda: RunService(tmp_path, worker_target=controlled_worker)),
+        base_url="http://127.0.0.1",
     ) as client:
         path = f"/api/investigations/{run['id']}/continue"
         assert client.post(path, json={"additional_tokens": True}).status_code == 422

@@ -11,7 +11,8 @@ from tests.fakes import controlled_worker, wait_for_event
 @pytest.fixture
 def client(tmp_path):
     with TestClient(
-        create_app(lambda: RunService(tmp_path, worker_target=controlled_worker))
+        create_app(lambda: RunService(tmp_path, worker_target=controlled_worker)),
+        base_url="http://127.0.0.1",
     ) as value:
         yield value
 

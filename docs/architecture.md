@@ -177,3 +177,29 @@ Missing configuration is an unrun scorecard slot. Provider quality gates use a
 closed synthetic claim contract and observed evidence, not an LLM judge.
 Archived run/evidence/trace/score JSON supports deterministic rescoring without
 network or SQLite. See `m5-evaluation.md` for the protocol and its limits.
+
+## Public Siemens knowledge boundary
+
+The user authorized Siemens MCP for SPS questions after M5. A separate React
+page at `/?page=siemens` posts only its explicitly submitted question to
+`/api/knowledge/siemens/search`. It does not read case state, create an agent run,
+or add a network tool to the investigation agent. The server connects through
+the actual MCP SDK to the fixed public HTTPS endpoint, validates the reviewed
+`siemens_search(query)` schema, and rejects any changed contract before dispatch.
+It exposes none of the server's URL-fetching, resource, or other search tools.
+
+The transport pins the destination/method, disables redirects/proxies/retries,
+requires bounded uncompressed JSON, and enforces a 25-second overall deadline.
+There is one search at a time with a two-second minimum interval. Normalized
+output contains bounded plain text and up to eight HTTPS Siemens-domain links;
+job listings, invalid/unapproved URLs and duplicate links are removed. No linked
+page is fetched automatically. The React page independently validates links and
+renders text without HTML/Markdown execution. Returned AI summaries are labeled
+unverified; results are not inserted into case evidence, stored reports or
+automatic prompts. Query/result state remains in page memory.
+
+Loopback Host validation runs before API body admission. Browser-origin checks
+cover reads and writes, and cross-site Fetch Metadata is rejected. The existing
+upload-size admission now also caps other mutating API bodies at 128 KiB before
+JSON parsing. These defenses address browser-to-localhost attacks, not user
+identity; authentication, OS isolation and global retention remain open gaps.
