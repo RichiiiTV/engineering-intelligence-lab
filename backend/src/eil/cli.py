@@ -29,7 +29,9 @@ def _run_local(question, limits, run_id=None, *, case_id=None):
 
 def main():
     parser = argparse.ArgumentParser(description="Engineering Intelligence Lab")
-    parser.add_argument("mode", choices=("demo", "agent", "status", "pause", "resume", "cancel"))
+    parser.add_argument(
+        "mode", choices=("demo", "agent", "status", "trace", "pause", "resume", "cancel")
+    )
     parser.add_argument("run_id", nargs="?")
     parser.add_argument("--timeout-seconds", type=float, default=120)
     parser.add_argument("--case-id", help="Use this case's immutable uploaded-evidence snapshot")
@@ -55,11 +57,16 @@ def main():
                 result = _run_local(None, None, args.run_id)
             else:
                 store = RunStore(STATE_DIR)
-                result = (
-                    store.get(args.run_id)
-                    if args.mode == "status"
-                    else store.control(args.run_id, args.mode)
-                )
+                if args.mode == "trace":
+                    from .tracing import export_trace
+
+                    result = export_trace(store, args.run_id)
+                else:
+                    result = (
+                        store.get(args.run_id)
+                        if args.mode == "status"
+                        else store.control(args.run_id, args.mode)
+                    )
     except (
         ModelUnavailableError,
         RunConflict,

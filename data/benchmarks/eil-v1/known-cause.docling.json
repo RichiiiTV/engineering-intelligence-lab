@@ -1,0 +1,180 @@
+{
+  "chunks": [
+    {
+      "page": 1,
+      "kind": "section_header",
+      "text": "Synthetic investigation benchmark",
+      "item_ref": "#/texts/0",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 789.36,
+          "r": 375.20000000000005,
+          "b": 770.86,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 1,
+      "kind": "text",
+      "text": "Record: known-cause | EIL benchmark v1 | Page 1 of 2",
+      "item_ref": "#/texts/1",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 755.898,
+          "r": 313.23600000000005,
+          "b": 745.723,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 1,
+      "kind": "text",
+      "text": "Generated demo evidence. No company data or equipment connections. The CSV contains one baseline and one incident row per station.",
+      "item_ref": "#/texts/2",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 702.18,
+          "r": 365.83,
+          "b": 668.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 1,
+      "kind": "text",
+      "text": "The station S03 incident record and interpretation limits are on page 2.",
+      "item_ref": "#/texts/3",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 654.18,
+          "r": 355.82,
+          "b": 644.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "section_header",
+      "text": "Synthetic investigation benchmark",
+      "item_ref": "#/texts/5",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 789.36,
+          "r": 375.20000000000005,
+          "b": 770.86,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "section_header",
+      "text": "Record: known-cause | EIL benchmark v1 | Page 2 of 2",
+      "item_ref": "#/texts/6",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 755.898,
+          "r": 313.23600000000005,
+          "b": 745.723,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "text",
+      "text": "CONTROLLED-REPLAY: S03 lighting was the sole manipulated variable in a synthetic simulator. Three identical simulated lots were replayed in a blinded ABAB crossover. Exposure stayed at 2400 microseconds. Labels, alignment, product and thresholds were held fixed. At 600 lux false rejects were 100 per 10000; at 300 lux they were 1400 per 10000. Restoring 600 lux restored 100 per 10000 in every replay. This controlled intervention",
+      "item_ref": "#/texts/7",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 702.18,
+          "r": 473.5999999999999,
+          "b": 596.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "text",
+      "text": "supports illumination as the cause within this simulator. It does not prove a physical cause.",
+      "item_ref": "#/texts/8",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 582.18,
+          "r": 444.1699999999998,
+          "b": 572.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    }
+  ],
+  "page_count": 2,
+  "table_count": 0,
+  "parser": "docling-standard",
+  "ocr": false,
+  "parser_version": "2.144.0",
+  "core_version": "2.105.0",
+  "table_mode": "fast",
+  "device": "cpu"
+}

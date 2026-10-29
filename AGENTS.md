@@ -36,7 +36,7 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
-Milestone 4: React investigation workbench, fixed local read-only mock MCP integration, and explicit content-bound approval before saving report drafts. Preserve case/source isolation, read-only agent tools, and cumulative M2 budgets. Stop after M4 checks and reporting. Do not begin M5 evaluations, Langfuse, provider benchmarks, external MCP servers, or production integrations without another user request.
+Milestone 5 was authorized by the user on 2026-10-29: versioned synthetic evaluations, local tracing, and bounded single-agent/delegated and provider comparisons. Preserve case/source isolation, read-only tools, content-bound draft approvals and cumulative M2 budgets. Experiments use separate state and generated benchmark fixtures; the workbench stays on its single-agent Ollama default. Hosted runs require explicit provider/model selection and operator credentials; never log or commit secrets. Missing credentials are unrun results, not passes. Stop after M5 checks and reporting. Do not begin a later milestone, external MCP servers or production integrations without another user request. Langfuse is optional; do not silently enable remote tracing.
 
 The user approved a simpler default files/question/findings experience on 2026-10-29. Preserve the original interface under Advanced workspace, including draft approvals and full provenance. This is an M4 UX refinement, not M5. Use the approved mockups in `output/design/simple-user-flow-v1/` as the visual reference.
 

@@ -1,6 +1,6 @@
 [project]
 name = "engineering-intelligence-lab"
-version = "0.4.0"
+version = "0.5.0"
 description = "Local-first agentic engineering investigation workbench"
 requires-python = ">=3.12"
 dependencies = [
@@ -23,6 +23,9 @@ dependencies = [
 [project.optional-dependencies]
 documents = ["docling>=2.144,<3"]
 dev = ["pytest>=8,<10", "httpx>=0.27,<1", "ruff>=0.11,<1"]
+hosted = [
+    "langchain-openai>=1.1,<2",
+]
 
 [build-system]
 requires = ["hatchling>=1.26"]

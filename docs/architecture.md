@@ -152,3 +152,28 @@ durable state. User-facing source rows/charts are selected from the run export's
 source snapshot; model notes are displayed separately from deterministic comparisons.
 The new report is a downloadable escaped HTML document, with original evidence metadata
 retained for review. It is not an alternative write/approval path. See `simple-user-experience.md`.
+
+## M5 evaluation boundary
+
+`eil.benchmark` is a separate trusted CLI using only the fixed, hash-checked
+synthetic benchmark registry. Each row owns a fresh state directory and runs
+through the existing Windows process supervisor. `single` is the usual graph;
+`delegated` supplies one compiled case-scoped analyst, with no recursive child
+or general-purpose agent. Parent and child share the transactional budget and
+SQLite saver; child updates are included in the run step count. The existing
+workbench API cannot select an experimental provider or delegation mode.
+
+Run middleware adds paired local spans to the existing durable event log.
+`tracing.export_trace` returns metadata and measured usage/timing, omitting
+prompts, arguments, observations, answers and reasoning. No tracing service or
+remote exporter is introduced. Historical/unmatched spans and unknown usage
+remain incomplete. Token cost is estimated only from complete recorded usage
+and explicitly supplied rates.
+
+The optional hosted extra uses the official OpenAI LangChain adapter only in
+the benchmark worker, with explicit model, fixed official endpoint, zero SDK
+retries, output cap, input-envelope guard and shared supervised deadline.
+Missing configuration is an unrun scorecard slot. Provider quality gates use a
+closed synthetic claim contract and observed evidence, not an LLM judge.
+Archived run/evidence/trace/score JSON supports deterministic rescoring without
+network or SQLite. See `m5-evaluation.md` for the protocol and its limits.

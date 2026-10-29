@@ -14,9 +14,10 @@ A local-first **agentic engineering investigation workbench** developed with Ope
 - React/TypeScript UI with case navigation, charts, live activity, tool details and report review
 - Fixed read-only mock MCP integration, explicitly enabled per investigation
 - Content-bound approval proposals before saving immutable report drafts
+- Versioned M5 evaluation scorecards, content-minimal local traces and bounded delegation/provider experiments
 - `AGENTS.md`, milestone-specific Codex tasks, evaluation fixture, and tests
 
-M4 adds the local investigation workbench, mock MCP and report approval flow. See [M4 results](docs/m4-results.md), [M3 evidence validation](docs/m3-results.md), and [M2 execution checks](docs/m2-results.md). M5 has not started.
+M5 adds a separate synthetic benchmark workflow and local trace exports. See [M5 protocol](docs/m5-evaluation.md), [M5 results](docs/m5-results.md), [M4 results](docs/m4-results.md), [M3 evidence validation](docs/m3-results.md), and [M2 execution checks](docs/m2-results.md). The ordinary workbench retains its single-agent Ollama behavior.
 
 ## Quick start (Windows PowerShell)
 

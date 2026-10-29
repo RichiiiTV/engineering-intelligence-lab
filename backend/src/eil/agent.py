@@ -84,6 +84,9 @@ def build_agent(
     middleware=(),
     model_options=None,
     evidence_tools=None,
+    subagents=(),
+    extra_prompt="",
+    filesystem_tools=("ls", "read_file", "glob", "grep"),
 ):
     """Build a tool-using Deep Agent with a local Ollama model.
 
@@ -103,20 +106,24 @@ def build_agent(
     except ImportError as exc:
         raise RuntimeError("Install dependencies first: uv sync --extra dev") from exc
     model = model if model is not None else _build_model(**(model_options or {}))
-    # This app only uses Ollama. Disable its automatically added delegation tool.
-    register_harness_profile(
-        "ollama",
-        HarnessProfile(
-            general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=False),
-            # A summary invokes its own model outside the run's budget middleware.
-            excluded_middleware={"SummarizationMiddleware"},
-        ),
-    )
+    # Only explicitly supplied, budgeted subagents are permitted. Neither
+    # provider may add an unmetered summarizer or general-purpose subagent.
+    for provider in ("ollama", "openai"):
+        register_harness_profile(
+            provider,
+            HarnessProfile(
+                general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=False),
+                # A summary invokes its own model outside the run's budget middleware.
+                excluded_middleware={"SummarizationMiddleware"},
+            ),
+        )
     backend = StateBackend()
     return create_deep_agent(
         model=model,
         tools=_tools() if evidence_tools is None else evidence_tools,
+        subagents=subagents,
         system_prompt=SYSTEM_PROMPT
+        + extra_prompt
         + (
             "\nThis investigation uses uploaded case evidence. Begin with list_case_sources. "
             "Use compare_case_stations for CSV metrics and search_case_documents for PDF evidence. "
@@ -128,13 +135,13 @@ def build_agent(
             "Once you have enough evidence, answer concisely instead of repeating searches."
             " If read_mock_station_context is available, it returns fictional context via MCP. "
             "Label it synthetic mock context, never uploaded case evidence or a case citation."
-            if evidence_tools is not None
+            if evidence_tools
             else ""
         ),
         checkpointer=checkpointer if checkpointer is not None else InMemorySaver(),
         backend=backend,
         middleware=[
-            FilesystemMiddleware(backend=backend, tools=["ls", "read_file", "glob", "grep"]),
+            FilesystemMiddleware(backend=backend, tools=list(filesystem_tools)),
             *middleware,
         ],
     )

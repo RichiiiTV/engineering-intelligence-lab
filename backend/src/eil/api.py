@@ -132,6 +132,13 @@ def export(run_id: str, request: Request):
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@router.get("/api/investigations/{run_id}/trace")
+def trace(run_id: str, request: Request):
+    from .tracing import export_trace
+
+    return export_trace(service(request).store, run_id)
+
+
 class CaseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str = Field(min_length=1, max_length=120)
@@ -321,7 +328,7 @@ def create_app(service_factory=RunService):
             app.state.runs = runner
             yield
 
-    app = FastAPI(title="Engineering Intelligence Lab", version="0.4.0", lifespan=lifespan)
+    app = FastAPI(title="Engineering Intelligence Lab", version="0.5.0", lifespan=lifespan)
     app.add_middleware(UploadBodyLimit)
     app.include_router(router)
 

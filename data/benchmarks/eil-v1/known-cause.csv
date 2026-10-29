@@ -1,0 +1,9 @@
+row_id,timestamp,station_id,period,inspected,false_ejects,true_rejects,illumination_lux,exposure_us
+BENCH-S01-baseline,2026-10-09T00:00:00,S01,baseline,10000,100,0,600,2400
+BENCH-S01-incident,2026-10-10T00:00:00,S01,incident,10000,100,0,600,2400
+BENCH-S02-baseline,2026-10-09T00:00:00,S02,baseline,10000,100,0,600,2400
+BENCH-S02-incident,2026-10-10T00:00:00,S02,incident,10000,100,0,600,2400
+BENCH-S03-baseline,2026-10-09T00:00:00,S03,baseline,10000,100,0,600,2400
+BENCH-S03-incident,2026-10-10T00:00:00,S03,incident,10000,1400,0,300,2400
+BENCH-S04-baseline,2026-10-09T00:00:00,S04,baseline,10000,100,0,600,2400
+BENCH-S04-incident,2026-10-10T00:00:00,S04,incident,10000,100,0,600,2400

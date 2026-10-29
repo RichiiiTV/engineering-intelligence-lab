@@ -1,0 +1,201 @@
+{
+  "chunks": [
+    {
+      "page": 1,
+      "kind": "section_header",
+      "text": "Synthetic investigation benchmark",
+      "item_ref": "#/texts/0",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 789.36,
+          "r": 375.20000000000005,
+          "b": 770.86,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 1,
+      "kind": "text",
+      "text": "Record: ambiguous | EIL benchmark v1 | Page 1 of 2",
+      "item_ref": "#/texts/1",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 755.898,
+          "r": 302.236,
+          "b": 745.723,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 1,
+      "kind": "text",
+      "text": "Generated demo evidence. No company data or equipment connections.",
+      "item_ref": "#/texts/2",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 702.18,
+          "r": 365.83,
+          "b": 692.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 1,
+      "kind": "text",
+      "text": "The CSV contains one baseline and one incident row per station.",
+      "item_ref": "#/texts/3",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 678.18,
+          "r": 331.3699999999999,
+          "b": 668.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 1,
+      "kind": "text",
+      "text": "The station S03 incident record and interpretation limits are on page 2.",
+      "item_ref": "#/texts/4",
+      "offset": 0,
+      "pages": [
+        1
+      ],
+      "bboxes": [
+        {
+          "page": 1,
+          "l": 44.0,
+          "t": 654.18,
+          "r": 355.82,
+          "b": 644.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "section_header",
+      "text": "Synthetic investigation benchmark",
+      "item_ref": "#/texts/6",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 789.36,
+          "r": 375.20000000000005,
+          "b": 770.86,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "text",
+      "text": "Record: ambiguous | EIL benchmark v1 | Page 2 of 2",
+      "item_ref": "#/texts/7",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 755.898,
+          "r": 302.236,
+          "b": 745.723,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "text",
+      "text": "AMBIGUOUS-RECORD: S03 lighting changed from 600 to 300 lux at the incident boundary. Exposure changed from 2400 to 800 microseconds at the same time. Product mix was not logged. There was no controlled replay, randomization, reversal or independent verification. False rejects were 100 per 10000 before and 1400 per 10000 after the coincident changes. Illumination, exposure and unrecorded product differences are competing hypotheses.",
+      "item_ref": "#/texts/8",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 702.18,
+          "r": 478.08999999999975,
+          "b": 596.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    },
+    {
+      "page": 2,
+      "kind": "text",
+      "text": "The cause is unresolved. Correlation does not establish causation, even in this synthetic case.",
+      "item_ref": "#/texts/9",
+      "offset": 0,
+      "pages": [
+        2
+      ],
+      "bboxes": [
+        {
+          "page": 2,
+          "l": 44.0,
+          "t": 582.18,
+          "r": 460.8599999999999,
+          "b": 572.93,
+          "coord_origin": "BOTTOMLEFT"
+        }
+      ],
+      "multi_page_item": false
+    }
+  ],
+  "page_count": 2,
+  "table_count": 0,
+  "parser": "docling-standard",
+  "ocr": false,
+  "parser_version": "2.144.0",
+  "core_version": "2.105.0",
+  "table_mode": "fast",
+  "device": "cpu"
+}

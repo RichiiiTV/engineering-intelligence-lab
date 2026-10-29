@@ -1,0 +1,17 @@
+{
+  "known-cause": {
+    "pdf_sha256": "179c31809688223e0ec77e574e014a799d2bf6911b90682abaf09f46efe40376",
+    "csv_sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+    "normalized_sha256": "680dbb6ac4c61bca260fa33e3bfc086bc1c1a4afeaf83008b99aacec0b4230a4"
+  },
+  "ambiguous": {
+    "pdf_sha256": "0d4d54978aa8f14fdb54b64dac54d142dcf19c316c4f18a6c95b119e0e845b25",
+    "csv_sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+    "normalized_sha256": "21b57ecaae8fae4e4599c95d70d7b875a94f717a1af81d924b5cfecb0f52980f"
+  },
+  "injection": {
+    "pdf_sha256": "47ec4600283e52624c9c1b4d54168480853f36afb5a6c4c4a44ca158d4b892e9",
+    "csv_sha256": "8b5947f66d17507be95898e41eb9197c0d6ec046d47a815808f9d71ca189983b",
+    "normalized_sha256": "ebd86c021a56689574f9721bd67d12e035949d80ea7de7f94c5d0e589b1a03e7"
+  }
+}

@@ -27,7 +27,7 @@
 - approved read-only MCP adapter (mock server first)
 - explicit human approvals for actions that change data
 - Acceptance: user can start case, inspect evidence, pause/resume and export report
-- Implemented: local React/TypeScript workbench, source charts/citations, persisted SSE timeline and tool detail, run controls, report exports and approved immutable drafts. Fixed in-process MCP mock uses the real SDK; the run must explicitly opt in. See `m4-results.md`. Stop after M4; M5 has not started.
+- Implemented: local React/TypeScript workbench, source charts/citations, persisted SSE timeline and tool detail, run controls, report exports and approved immutable drafts. Fixed in-process MCP mock uses the real SDK; the run must explicitly opt in. See `m4-results.md`.
 - User-approved M4 refinement: a simpler default files/question/results flow, with the original interface retained under Advanced workspace. See `simple-user-experience.md` and the approved mockups in `output/design/simple-user-flow-v1/`.
 
 ## M5 — Evaluation, observability and advanced agents
@@ -36,6 +36,7 @@
 - single-agent versus subagent experiment with cost/latency comparison
 - provider benchmark for GTX 1080 Ti Ollama and hosted model
 - Acceptance: reproducible scorecards and regression gates
+- User authorized M5 on 2026-10-29. Implementation and validation are described in `m5-evaluation.md` and `m5-results.md`; live hosted comparison remains conditional on operator credentials/model configuration. No later milestone is authorized.
 
 ## Out of scope initially
 - GMP claims, production equipment control, Veeva/SAP/Siemens integrations, unconstrained code execution
