@@ -1,0 +1,21 @@
+{
+  "id": "2c7fa521-51a1-4b54-a686-232a4dc8022b",
+  "status": "budget_exceeded",
+  "tokens": 42162,
+  "model_calls": 10,
+  "tool_calls": 9,
+  "steps": 19,
+  "elapsed_seconds": 80.82799999997951,
+  "limits": {
+    "max_steps": 65,
+    "max_model_calls": 12,
+    "max_tool_calls": 20,
+    "max_total_tokens": 65536,
+    "max_output_tokens": 2048,
+    "timeout_seconds": 180.0
+  },
+  "source_ids": [
+    "29f607a7-e623-4839-871a-ed80d4d695f7",
+    "2d13dc6f-d6f8-4d40-b9da-fe4716b2c2f8"
+  ]
+}

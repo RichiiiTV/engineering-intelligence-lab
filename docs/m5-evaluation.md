@@ -76,7 +76,7 @@ uv run python -m eil.benchmark --rescore reports/m5-ollama-check
 
 Rescoring preserves observations and records the scorer source hash. It does not
 change a model answer or retry a failed run. The committed M5 baseline artifacts
-can be rescored in the same way. These local files are review evidence, not a
+in `output/benchmarks/m5-v1` can be rescored in the same way. These local files are review evidence, not a
 cryptographically signed attestation against an operator modifying the files.
 
 ## Local spans
