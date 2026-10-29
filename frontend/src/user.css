@@ -162,6 +162,89 @@
 .siemens-sources small {
   color: var(--ux-muted);
 }
+.auth-strip {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 24px;
+  background: #f5f3ff;
+  color: #514d69;
+  font:
+    13px/1.5 "Segoe UI",
+    sans-serif;
+}
+.auth-strip button {
+  border: 0;
+  background: transparent;
+  color: #6248d8;
+  cursor: pointer;
+  font: inherit;
+}
+.auth-main h1 {
+  font-size: 30px;
+}
+.auth-main code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f5f3ff;
+  padding: 10px;
+}
+.siemens-form input {
+  padding: 12px;
+  border: 1px solid #d8dbe9;
+  border-radius: 8px;
+  font: inherit;
+}
+.account-panel {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  color: #1c2030;
+  font:
+    16px/1.55 "Segoe UI",
+    sans-serif;
+}
+.account-panel form {
+  margin: 16px 0;
+}
+.account-panel {
+  border: 1px solid #e2e4ef;
+  border-radius: 14px;
+  background: white;
+}
+.storage-settings button {
+  border: 1px solid #ded9f2;
+  border-radius: 8px;
+  padding: 9px 13px;
+  margin: 6px;
+  background: #f7f5ff;
+  color: #5639bc;
+  font: inherit;
+  cursor: pointer;
+}
+.storage-settings button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.storage-settings li {
+  margin: 8px 0;
+}
+.storage-settings pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 300px;
+  overflow: auto;
+}
+.storage-settings code {
+  overflow-wrap: anywhere;
+}
+.siemens-form select {
+  font: inherit;
+  padding: 10px;
+  border: 1px solid #d8dbe9;
+  border-radius: 8px;
+}
 @media (max-width: 640px) {
   .siemens-help .ux-header {
     height: auto;

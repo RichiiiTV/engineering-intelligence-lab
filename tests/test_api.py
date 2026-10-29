@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 
 from eil.api import create_app
 from eil.service import RunService
+from tests.auth_helpers import sign_in
 from tests.fakes import controlled_worker, wait_for_event
 
 
@@ -14,6 +15,7 @@ def client(tmp_path):
         create_app(lambda: RunService(tmp_path, worker_target=controlled_worker)),
         base_url="http://127.0.0.1",
     ) as value:
+        sign_in(value)
         yield value
 
 

@@ -8,6 +8,7 @@ from eil.api import create_app
 from eil.pdf_ingest import MAX_PDF_BYTES, PDFUnavailable
 from eil.service import RunService
 from eil.uploads import UploadBodyLimit
+from tests.auth_helpers import sign_in
 from tests.evidence_fixtures import CSV_BYTES, PDF_BYTES, fixture_pdf_parser
 from tests.fakes import controlled_worker
 
@@ -17,6 +18,7 @@ def client(tmp_path):
     app = create_app(lambda: RunService(tmp_path, worker_target=controlled_worker))
     app.state.pdf_parser = fixture_pdf_parser
     with TestClient(app, base_url="http://127.0.0.1") as client:
+        sign_in(client)
         yield client
 
 

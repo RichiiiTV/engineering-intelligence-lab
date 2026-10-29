@@ -60,6 +60,7 @@ def _build_model(*, model_name=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL, max_outpu
             temperature=0,
             num_ctx=MODEL_CONTEXT_TOKENS,
             num_predict=max_output_tokens,
+            reasoning=False,
             validate_model_on_init=True,
             client_kwargs={
                 "timeout": httpx.Timeout(REQUEST_TIMEOUT_SECONDS, connect=CONNECT_TIMEOUT_SECONDS),
@@ -87,6 +88,7 @@ def build_agent(
     subagents=(),
     extra_prompt="",
     filesystem_tools=("ls", "read_file", "glob", "grep"),
+    response_format=None,
 ):
     """Build a tool-using Deep Agent with a local Ollama model.
 
@@ -122,8 +124,14 @@ def build_agent(
         model=model,
         tools=_tools() if evidence_tools is None else evidence_tools,
         subagents=subagents,
+        response_format=response_format,
         system_prompt=SYSTEM_PROMPT
         + extra_prompt
+        + (
+            "\nFinal response contract: use the declared structured response tool, or one strict JSON object with exactly the same fields. No prose or markdown fences. Copy complete citation IDs including source UUIDs; do not abbreviate references."
+            if response_format is not None
+            else ""
+        )
         + (
             "\nThis investigation uses uploaded case evidence. Begin with list_case_sources. "
             "Use compare_case_stations for CSV metrics and search_case_documents for PDF evidence. "

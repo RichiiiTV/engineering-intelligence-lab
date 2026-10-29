@@ -30,7 +30,8 @@ def _run_local(question, limits, run_id=None, *, case_id=None):
 def main():
     parser = argparse.ArgumentParser(description="Engineering Intelligence Lab")
     parser.add_argument(
-        "mode", choices=("demo", "agent", "status", "trace", "pause", "resume", "cancel")
+        "mode",
+        choices=("demo", "agent", "status", "trace", "pause", "resume", "cancel", "auth-bootstrap"),
     )
     parser.add_argument("run_id", nargs="?")
     parser.add_argument("--timeout-seconds", type=float, default=120)
@@ -43,6 +44,14 @@ def main():
     try:
         if args.mode == "demo":
             result = provisional_report()
+        elif args.mode == "auth-bootstrap":
+            from .auth import AuthStore
+
+            result = {
+                "bootstrap_code": AuthStore(STATE_DIR).bootstrap(),
+                "expires_in_seconds": 900,
+                "instructions": "Enter this one-time code on the local setup page. Do not share it or put it in a URL.",
+            }
         elif args.mode == "agent":
             limits = RunLimits(timeout_seconds=args.timeout_seconds)
             result = (

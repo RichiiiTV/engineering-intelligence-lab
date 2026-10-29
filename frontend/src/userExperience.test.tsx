@@ -159,6 +159,8 @@ function mockServer(
                 ]
               : [],
         });
+      if (path === `/api/investigations?case_id=${CASE}&limit=1`)
+        return json({ investigations: [run] });
       if (path === `/api/cases/${CASE}/sources` && init?.method === "POST") {
         if (fail) {
           fail = false;
@@ -246,6 +248,67 @@ async function fillForm() {
   expect(button.disabled).toBe(false);
   return button;
 }
+
+it("opens an older case through its own history even when the global latest runs omit it", async () => {
+  history.replaceState(null, "", "/?page=investigations");
+  const fallback = mockServer();
+  const fetcher = vi.fn(
+    async (input: string | URL | Request, init?: RequestInit) => {
+      if (String(input) === "/api/investigations")
+        return new Response(JSON.stringify({ investigations: [] }));
+      return fallback(input, init);
+    },
+  );
+  vi.stubGlobal("fetch", fetcher);
+  render(<UserApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: /Saved investigation/ }),
+  );
+  await screen.findByText(/S04 changed most/);
+  expect(
+    fetcher.mock.calls.some(
+      ([path]) => path === `/api/investigations?case_id=${CASE}&limit=1`,
+    ),
+  ).toBe(true);
+  expect(new URLSearchParams(location.search).get("run")).toBe(RUN);
+});
+
+it("loads another page of cases and deduplicates records", async () => {
+  history.replaceState(null, "", "/?page=investigations");
+  const fallback = mockServer();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const path = String(input);
+      const row = {
+        id: CASE,
+        title: "First saved case",
+        created_at: run.created_at,
+      };
+      if (path === "/api/cases")
+        return new Response(JSON.stringify({ cases: [row], next_offset: 50 }));
+      if (path === "/api/cases?offset=50&limit=50")
+        return new Response(
+          JSON.stringify({
+            cases: [row, { ...row, id: "later", title: "Older saved case" }],
+            next_offset: null,
+          }),
+        );
+      return fallback(input, init);
+    }),
+  );
+  render(<UserApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Load more investigations" }),
+  );
+  await screen.findByRole("button", { name: /Older saved case/ });
+  expect(
+    screen.getAllByRole("button", { name: /First saved case/ }),
+  ).toHaveLength(1);
+  expect(
+    screen.queryByRole("button", { name: "Load more investigations" }),
+  ).toBeNull();
+});
 
 it("shows the approved simple entry point without case setup or technical controls", () => {
   mockServer();

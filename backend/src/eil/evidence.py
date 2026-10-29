@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .analytics import ALLOWED_PERIODS, ALLOWED_STATIONS, EXPECTED_COLUMNS, station_metrics
+from .database import MAX_CASES, StorageFull, configure, storage_error
 from .pdf_ingest import MAX_PDF_BYTES, parse_pdf
 from .runs import now
 
@@ -97,42 +98,70 @@ class EvidenceStore:
                     page INTEGER, text TEXT, metadata TEXT
                 );
             """)
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(cases)")}
+            for name in ("owner_id", "deleted_at"):
+                if name not in columns:
+                    conn.execute(f"ALTER TABLE cases ADD COLUMN {name} TEXT")
 
     @contextmanager
     def connection(self):
         conn = sqlite3.connect(self.path, timeout=10)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys=ON")
+        configure(conn, "evidence")
         try:
             yield conn
             conn.commit()
-        except BaseException:
+        except BaseException as exc:
             conn.rollback()
+            if storage_error(exc):
+                raise StorageFull(
+                    "Evidence storage quota reached. Review Trash and backups before adding data."
+                ) from exc
             raise
         finally:
             conn.close()
 
-    def create_case(self, title):
+    def create_case(self, title, *, owner_id=None):
         if not title.strip() or len(title) > 120:
             raise ValueError("Case title must contain 1-120 characters")
-        value = {"id": str(uuid.uuid4()), "title": title, "created_at": now()}
+        from .auth import local_owner
+
+        value = {
+            "id": str(uuid.uuid4()),
+            "title": title,
+            "created_at": now(),
+            "owner_id": owner_id or local_owner(self.directory.parent),
+            "deleted_at": None,
+        }
         with self.connection() as conn:
-            conn.execute("INSERT INTO cases VALUES (?,?,?)", tuple(value.values()))
+            conn.execute("BEGIN IMMEDIATE")
+            if conn.execute("SELECT count(*) FROM cases").fetchone()[0] >= MAX_CASES:
+                raise StorageFull(
+                    "The installation case limit is reached; review retention before creating cases"
+                )
+            conn.execute(
+                "INSERT INTO cases(id,title,created_at,owner_id,deleted_at) VALUES (?,?,?,?,?)",
+                tuple(value.values()),
+            )
         return value
 
-    def case(self, case_id):
+    def case(self, case_id, *, include_deleted=False):
         checked_id(case_id)
         with self.connection() as conn:
             row = conn.execute("SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
-            if row is None:
+            if row is None or (row["deleted_at"] is not None and not include_deleted):
                 raise EvidenceNotFound("Case not found")
             return dict(row)
 
-    def cases(self):
+    def cases(self, *, limit=50, offset=0, owner_id=None, deleted=False):
         with self.connection() as conn:
             return [
                 dict(r)
-                for r in conn.execute("SELECT * FROM cases ORDER BY created_at DESC LIMIT 50")
+                for r in conn.execute(
+                    "SELECT * FROM cases WHERE (? IS NULL OR owner_id=?) AND ((deleted_at IS NOT NULL)=?) ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?",
+                    (owner_id, owner_id, int(deleted), limit, offset),
+                )
             ]
 
     @staticmethod
@@ -200,6 +229,11 @@ class EvidenceStore:
         source_id = str(uuid.uuid4())
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
+            current_case = conn.execute(
+                "SELECT deleted_at FROM cases WHERE id=?", (case_id,)
+            ).fetchone()
+            if not current_case or current_case[0] is not None:
+                raise EvidenceNotFound("Case not found")
             count, size = conn.execute(
                 "SELECT count(*), coalesce(sum(size),0) FROM sources WHERE case_id=?", (case_id,)
             ).fetchone()
@@ -267,6 +301,19 @@ class EvidenceStore:
                 ):
                     hit = self.resolve(case_id, cid, allowed)
                     hit["lexical_score"] = -score
+                    # Include the adjacent extracted items on the same page.
+                    # A conclusion is often split from its matching paragraph.
+                    index_number = int(cid.rsplit(":c", 1)[1])
+                    neighbors = []
+                    for neighbor in (index_number - 1, index_number + 1):
+                        if neighbor < 0:
+                            continue
+                        ref = cid.rsplit(":c", 1)[0] + f":c{neighbor}"
+                        try:
+                            neighbors.append(self.resolve(case_id, ref, allowed))
+                        except EvidenceNotFound:
+                            pass
+                    hit["context"] = neighbors
                     hits.append(hit)
             finally:
                 index.close()

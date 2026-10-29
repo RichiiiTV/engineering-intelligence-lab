@@ -1,0 +1,14 @@
+[project]
+name = "eil-isolated-pdf-worker"
+version = "1.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = ["docling==2.144.0", "docling-core==2.105.0", "torch", "torchvision"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }

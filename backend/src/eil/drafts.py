@@ -87,7 +87,7 @@ class DraftStore:
                 )
             ]
 
-    def decide(self, proposal_id, decision, expected_sha256):
+    def decide(self, proposal_id, decision, expected_sha256, *, actor=None):
         if decision not in {"approve", "reject"}:
             raise ValueError("Decision must be approve or reject")
         with self.runs.connection() as conn:
@@ -100,7 +100,12 @@ class DraftStore:
                 return proposal
             if proposal["status"] != "pending":
                 raise RunConflict("This proposal has already been decided")
-            proposal.update(status=status, decided_at=now())
+            proposal.update(
+                status=status,
+                decided_at=now(),
+                reviewer=actor,
+                reviewer_authentication="authenticated-session" if actor else "trusted-local-call",
+            )
             if decision == "approve":
                 draft = {**proposal, "id": str(uuid.uuid4()), "proposal_id": proposal_id}
                 proposal["draft_id"] = draft["id"]
@@ -129,6 +134,7 @@ class DraftStore:
                     "decision": decision,
                     "sha256": expected_sha256,
                     "draft_id": proposal["draft_id"],
+                    "reviewer": actor,
                 },
             )
             return proposal

@@ -2,27 +2,79 @@
 
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from contextvars import ContextVar
 
 import httpx
-from langchain.agents.middleware import AgentMiddleware
-from langchain_core.messages import SystemMessage
+from langchain.agents.middleware import AgentMiddleware, hook_config
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_ollama import ChatOllama
+from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.errors import GraphRecursionError
 from ollama import ResponseError
+from pydantic import ValidationError
 
 from .agent import MODEL_CONTEXT_TOKENS, ModelUnavailableError, build_agent
+from .database import configure
 from .runs import BudgetExceeded, RunStopped, RunStore
 
 _parent_span = ContextVar("eil_parent_span", default=None)
 
 
 class RunMiddleware(AgentMiddleware):
-    def __init__(self, store, run_id, agent_name="investigator"):
+    def __init__(self, store, run_id, agent_name="investigator", response_schema=None):
         self.store, self.run_id = store, run_id
         self.agent_name = agent_name
+        self.response_schema = response_schema
+
+    @hook_config(can_jump_to=["model"])
+    def after_model(self, state, runtime):
+        if self.response_schema is None:
+            return None
+        value = state.get("structured_response")
+        if value is None:
+            last = state["messages"][-1]
+            if getattr(last, "type", None) != "ai" or getattr(last, "tool_calls", []):
+                return None
+            try:
+                value = self.response_schema.model_validate_json(last.text, strict=True)
+            except (ValidationError, TypeError):
+                pass
+        if value is not None:
+            from .claims import check_closed_finding
+
+            errors = check_closed_finding(self.store, self.run_id, value.model_dump())
+            self.store.event(
+                self.run_id,
+                "claim_check",
+                {"agent": self.agent_name, "verified": not errors, "errors": errors},
+            )
+            if not errors:
+                return {"structured_response": value}
+            return {
+                "structured_response": None,
+                "messages": [
+                    HumanMessage(
+                        content="Typed evidence checks rejected this answer: "
+                        + " ".join(errors)
+                        + " Correct only these unsupported claims using the observed evidence; keep exact citations. Return the same JSON schema."
+                    )
+                ],
+                "jump_to": "model",
+            }
+        # Ollama ignores tool_choice. A plain prose response cannot silently
+        # bypass the selected contract. Retry through the metered graph hook.
+        return {
+            "messages": [
+                HumanMessage(
+                    content="Return the required structured response tool now, or one strict JSON object conforming to its schema. Copy exact full citation IDs from observations, including source UUIDs; never abbreviate rows or invent IDs. Do not return prose or markdown fences."
+                )
+            ],
+            "jump_to": "model",
+        }
 
     def span(self):
         return {
@@ -35,6 +87,55 @@ class RunMiddleware(AgentMiddleware):
         run, admission = self.store.reserve_model(self.run_id, MODEL_CONTEXT_TOKENS)
         reserved = admission["reserved"]
         finalizing = admission["finalizing"]
+        structural = {s.name for s in getattr(request.response_format, "schema_specs", [])}
+        # The harness retains its virtual filesystem scaffolding, but uploaded
+        # evidence is available exclusively through the closed case tools.
+        hidden = {
+            "ls",
+            "read_file",
+            "glob",
+            "grep",
+            "write_file",
+            "edit_file",
+            "execute",
+            "write_todos",
+        }
+        request = request.override(
+            tools=[t for t in request.tools if getattr(t, "name", "") not in hidden]
+        )
+        observed = [
+            m
+            for m in request.messages
+            if isinstance(m, ToolMessage) and getattr(m, "status", None) != "error"
+        ]
+        names = {m.name for m in observed}
+        inventory = next((m for m in observed if m.name == "list_case_sources"), None)
+        has_pdf = True
+        if inventory:
+            has_pdf = any(s["kind"] == "pdf" for s in json.loads(inventory.text).get("sources", []))
+        ready = "task" in names or (
+            "compare_case_stations" in names and (not has_pdf or "search_case_documents" in names)
+        )
+        if self.response_schema is not None and (ready or finalizing):
+            schema = self.response_schema.model_json_schema()
+            system = request.system_message.text if request.system_message else ""
+            options = dict(
+                tools=[],
+                system_message=SystemMessage(
+                    content=system
+                    + "\nSynthesize the observed evidence now. No further evidence tools are available. Return only the declared JSON contract; retain uncertainty for absent or conflicting evidence. Schema: "
+                    + json.dumps(schema)
+                ),
+            )
+            if isinstance(request.model, ChatOllama):
+                # Ollama's documented native JSON schema constraint complements
+                # its unsupported forced-tool choice. The graph still meters
+                # this call and validates its state through the same Pydantic schema.
+                options.update(
+                    response_format=None,
+                    model_settings={**request.model_settings, "format": schema, "reasoning": False},
+                )
+            request = request.override(**options)
         if finalizing:
             system = request.system_message.text if request.system_message else ""
             request = request.override(
@@ -77,24 +178,26 @@ class RunMiddleware(AgentMiddleware):
         # Missing usage is conservatively charged as the whole reservation.
         usage = [getattr(m, "usage_metadata", None) for m in response.result]
         actual = sum(u["total_tokens"] for u in usage) if usage and all(usage) else reserved
-        self.store.settle_tokens(self.run_id, reserved, actual)
+        try:
+            self.store.settle_tokens(self.run_id, reserved, actual)
+        finally:
+            self.store.event(
+                self.run_id,
+                "model_finished",
+                {
+                    **span,
+                    "tokens": actual,
+                    "usage_known": bool(usage and all(usage)),
+                    "input_tokens": sum(u["input_tokens"] for u in usage)
+                    if usage and all(usage)
+                    else None,
+                    "output_tokens": sum(u["output_tokens"] for u in usage)
+                    if usage and all(usage)
+                    else None,
+                    "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                },
+            )
         self.store.charge(self.run_id, "model_calls", 0)
-        self.store.event(
-            self.run_id,
-            "model_finished",
-            {
-                **span,
-                "tokens": actual,
-                "usage_known": bool(usage and all(usage)),
-                "input_tokens": sum(u["input_tokens"] for u in usage)
-                if usage and all(usage)
-                else None,
-                "output_tokens": sum(u["output_tokens"] for u in usage)
-                if usage and all(usage)
-                else None,
-                "duration_ms": round((time.perf_counter() - started) * 1000, 3),
-            },
-        )
         if any(
             (
                 getattr(m, "response_metadata", {}).get("done_reason")
@@ -105,7 +208,11 @@ class RunMiddleware(AgentMiddleware):
         ):
             raise BudgetExceeded("Model output limit reached before completion", "output_tokens")
         if finalizing:
-            if any(getattr(m, "tool_calls", []) for m in response.result):
+            if any(
+                call["name"] not in structural
+                for m in response.result
+                for call in getattr(m, "tool_calls", [])
+            ):
                 raise BudgetExceeded(
                     "The model requested more tools instead of finishing its bounded summary",
                     "model_calls",
@@ -115,7 +222,7 @@ class RunMiddleware(AgentMiddleware):
             for call in getattr(message, "tool_calls", []):
                 self.store.event(
                     self.run_id,
-                    "tool_requested",
+                    "structured_output" if call["name"] in structural else "tool_requested",
                     {
                         "name": call["name"],
                         "arguments": call["args"],
@@ -126,6 +233,17 @@ class RunMiddleware(AgentMiddleware):
         return response
 
     def wrap_tool_call(self, request, handler):
+        if request.tool_call["name"] in {
+            "ls",
+            "read_file",
+            "glob",
+            "grep",
+            "write_file",
+            "edit_file",
+            "execute",
+            "write_todos",
+        }:
+            raise ValueError("Case investigations do not expose filesystem or planning tools")
         self.store.charge(self.run_id, "tool_calls")
         call = request.tool_call
         span = self.span()
@@ -183,6 +301,14 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
         if agent_mode not in {"single", "delegated"}:
             raise ValueError("Unknown agent experiment")
         with SqliteSaver.from_conn_string(str(store.directory / "checkpoints.sqlite3")) as saver:
+            configure(saver.conn, "checkpoints")
+            saver.serde = JsonPlusSerializer(
+                allowed_msgpack_modules=[
+                    ("eil.benchmark", "Finding"),
+                    ("eil.benchmark_extended", "FindingV2"),
+                ]
+            )
+            saver.jsonplus_serde = JsonPlusSerializer(allowed_msgpack_modules=None)
             evidence_tools = None
             if run.get("case_id"):
                 from .case_tools import case_tools
@@ -201,6 +327,16 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                     "max_output_tokens": run["limits"]["max_output_tokens"],
                 },
             )
+            if run.get("experiment", {}).get("structured_output"):
+                from langchain.agents.structured_output import ToolStrategy
+
+                if run["experiment"].get("suite") == "eil-benchmark-v2":
+                    from .benchmark_extended import FindingV2 as Finding
+                else:
+                    from .benchmark import Finding
+
+                common["response_format"] = ToolStrategy(Finding)
+            response_schema = getattr(common.get("response_format"), "schema", None)
             subagents = []
             if agent_mode == "delegated":
                 if not evidence_tools or model is None:
@@ -210,7 +346,7 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                 child = build_agent(
                     **common,
                     checkpointer=saver,
-                    middleware=[RunMiddleware(store, run_id, "evidence-analyst")],
+                    middleware=[RunMiddleware(store, run_id, "evidence-analyst", response_schema)],
                 )
                 subagents = [
                     {
@@ -223,7 +359,7 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
             graph = build_agent(
                 **common,
                 checkpointer=saver,
-                middleware=[RunMiddleware(store, run_id)],
+                middleware=[RunMiddleware(store, run_id, response_schema=response_schema)],
                 subagents=subagents,
                 # Deep Agents requires read_file scaffolding, even for the
                 # coordinator. Its StateBackend is empty and virtual.
@@ -261,13 +397,18 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                     )
             state = graph.get_state(config).values
             last = state["messages"][-1]
-            if getattr(last, "type", None) != "ai" or getattr(last, "tool_calls", []):
+            structured = state.get("structured_response")
+            if structured is None and (
+                getattr(last, "type", None) != "ai" or getattr(last, "tool_calls", [])
+            ):
                 raise RuntimeError("Graph ended without a final answer")
             store.finish(
                 run_id,
                 "completed",
                 result={
-                    "answer": last.content,
+                    "answer": structured.model_dump_json()
+                    if structured is not None
+                    else last.content,
                     "capacity_limited": bool(store.get(run_id).get("budget_summary")),
                     "warning": "Experimental local LLM output; verify metrics against tool results."
                     + (

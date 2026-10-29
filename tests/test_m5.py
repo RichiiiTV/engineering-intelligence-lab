@@ -21,6 +21,7 @@ from eil.execution import execute_run
 from eil.runs import RunStore
 from eil.service import RunService
 from eil.tracing import export_trace
+from tests.auth_helpers import sign_in
 
 
 def calibration(directory, key="ambiguous", mode="single", limits=None):
@@ -191,6 +192,7 @@ def test_trace_api_is_read_only_and_omits_content(tmp_path):
     with TestClient(
         create_app(lambda: RunService(tmp_path)), base_url="http://127.0.0.1"
     ) as client:
+        sign_in(client)
         response = client.get(f"/api/investigations/{run['id']}/trace")
         assert response.status_code == 200
         assert response.json()["schema"] == "eil-local-trace-v1"

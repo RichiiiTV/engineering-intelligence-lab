@@ -56,6 +56,19 @@ def cap_request(request, output_tokens):
     # their serialized form separately instead of silently under-reserving.
     count = request.model.get_num_tokens_from_messages(messages, allow_fetching_images=False)
     schemas = [convert_to_openai_tool(tool) for tool in request.tools]
+    # Framework output-contract tools are appended after middleware. Include
+    # their schemas here too, before reserving/sending the hosted prompt.
+    schemas.extend(
+        {
+            "type": "function",
+            "function": {
+                "name": spec.name,
+                "description": spec.description,
+                "parameters": spec.json_schema,
+            },
+        }
+        for spec in getattr(request.response_format, "schema_specs", [])
+    )
     if schemas:
         count += request.model.get_num_tokens(json.dumps(schemas)) + 32 * len(schemas)
     if count + 512 > MODEL_CONTEXT_TOKENS:

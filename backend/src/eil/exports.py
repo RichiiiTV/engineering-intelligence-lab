@@ -3,12 +3,25 @@
 import json
 import re
 
+from .claims import evidence_ledger
 from .evidence import EvidenceNotFound, EvidenceStore
 
 
 def answer_citations(answer):
     """Expand only explicit same-source shorthand; never silently drop malformed references."""
     cited, malformed = set(), []
+    try:
+        structured = json.loads(answer)
+    except (ValueError, TypeError):
+        structured = None
+    if isinstance(structured, dict) and isinstance(structured.get("citations"), list):
+        for reference in structured["citations"][:32]:
+            if isinstance(reference, str) and re.fullmatch(
+                r"(?:pdf:[0-9a-f-]{36}:p[0-9]+:c[0-9]+|csv:[0-9a-f-]{36}:r[0-9]+)", reference
+            ):
+                cited.add(reference)
+            else:
+                malformed.append(str(reference)[:120])
     for body in re.findall(r"\[((?:pdf|csv):[^\]]*)\]", str(answer)):
         first, *rest = [part.strip() for part in body.split(",")]
         if not re.fullmatch(
@@ -70,6 +83,7 @@ def export_investigation(run_store, run_id):
                     )
                 for hit in observation.get("hits", []):
                     supplied.add(hit["citation_id"])
+                    supplied.update(c["citation_id"] for c in hit.get("context", []))
                 for station in observation.get("ranking", []):
                     supplied.update(station["example_citations"])
                 if "citation_id" in observation:
@@ -88,6 +102,7 @@ def export_investigation(run_store, run_id):
             )
     return {
         "schema": "eil-evidence-report-v1",
+        "verified_evidence": evidence_ledger(store, case_id, allowed),
         "run_id": run_id,
         "case_id": case_id,
         "status": run["status"],

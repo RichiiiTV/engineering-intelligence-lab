@@ -12,6 +12,7 @@ from eil.api import create_app
 from eil.execution import RunMiddleware, execute_run
 from eil.runs import BudgetExceeded, RunConflict, RunStore
 from eil.service import RunService
+from tests.auth_helpers import sign_in
 from tests.fakes import ControlledOllama, controlled_worker
 
 
@@ -197,6 +198,7 @@ def test_continuation_api_validates_and_handles_legacy_token_stop(tmp_path):
         create_app(lambda: RunService(tmp_path, worker_target=controlled_worker)),
         base_url="http://127.0.0.1",
     ) as client:
+        sign_in(client)
         path = f"/api/investigations/{run['id']}/continue"
         assert client.post(path, json={"additional_tokens": True}).status_code == 422
         assert client.post(path, json={"additional_tokens": 65537}).status_code == 422

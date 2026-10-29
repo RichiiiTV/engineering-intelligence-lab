@@ -10,6 +10,7 @@ from mcp.types import CallToolResult, Tool
 from eil import siemens_mcp as sm
 from eil.api import create_app
 from eil.service import RunService
+from tests.auth_helpers import sign_in
 
 
 class BytesStream(httpx.AsyncByteStream):
@@ -202,6 +203,7 @@ def test_host_origin_fetch_metadata_and_json_body_boundaries(tmp_path, monkeypat
     with TestClient(
         create_app(lambda: RunService(tmp_path)), base_url="http://127.0.0.1"
     ) as client:
+        sign_in(client)
         for path in ("/api/cases", "/api/integrations/siemens-mcp"):
             assert (
                 client.get(

@@ -260,12 +260,18 @@ def test_grouped_citations_are_resolved_and_malformed_ones_are_explicit():
     assert answer_citations(f"[csv:{source}:r2, r3-r500]")[1]
 
 
-def test_pdf_conversion_has_admission_and_time_limits():
+def test_pdf_conversion_has_admission_and_time_limits(monkeypatch):
     _slot.acquire()
     try:
         with pytest.raises(PDFBusy):
             parse_pdf(PDF_BYTES)
     finally:
         _slot.release()
+
+    def isolated_timeout(content, *, timeout):
+        assert timeout == 0.001
+        raise RuntimeError("Isolated PDF conversion timed out")
+
+    monkeypatch.setattr("eil.isolated_pdf.convert", isolated_timeout)
     with pytest.raises(PDFUnavailable, match="timed out"):
         parse_pdf(PDF_BYTES, timeout=0.001)

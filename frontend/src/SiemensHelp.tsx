@@ -18,6 +18,13 @@ type SearchResult = {
   server_version: string;
   connection_verified: boolean;
   limitations: string;
+  curated_references?: (Source & {
+    tia_version: string;
+    edition: string;
+    language: string;
+  })[];
+  version_notice?: string;
+  outbound_query?: string;
 };
 
 export function siemensUrl(value: string) {
@@ -30,6 +37,7 @@ export function siemensUrl(value: string) {
       !url.password &&
       (!url.port || url.port === "443") &&
       (url.hostname === "siemens.com" ||
+        url.hostname === "docs.tia.siemens.cloud" ||
         url.hostname.endsWith(".siemens.com")) &&
       url.hostname !== "jobs.siemens.com"
     );
@@ -40,6 +48,10 @@ export function siemensUrl(value: string) {
 
 export default function SiemensHelp() {
   const [question, setQuestion] = useState("");
+  const [family, setFamily] = useState("");
+  const [cpu, setCpu] = useState("");
+  const [firmware, setFirmware] = useState("");
+  const [tia, setTia] = useState("");
   const [result, setResult] = useState<SearchResult | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,6 +72,10 @@ export default function SiemensHelp() {
     try {
       const answer = await post<SearchResult>("/api/knowledge/siemens/search", {
         question: question.trim(),
+        ...(family ? { family } : {}),
+        ...(cpu ? { cpu } : {}),
+        ...(firmware ? { firmware } : {}),
+        ...(tia ? { tia_version: tia } : {}),
       });
       if (mounted.current) setResult(answer);
     } catch (e) {
@@ -120,10 +136,56 @@ export default function SiemensHelp() {
               S7-1200 programming
             </button>
           </div>
+          <details>
+            <summary>Product and version (optional)</summary>
+            <label htmlFor="siemens-family">SIMATIC family</label>
+            <select
+              id="siemens-family"
+              value={family}
+              onChange={(e) => setFamily(e.target.value)}
+            >
+              <option value="">Not specified</option>
+              {["S7-1200", "S7-1200 G2", "S7-1500"].map((f) => (
+                <option key={f}>{f}</option>
+              ))}
+            </select>
+            <label htmlFor="siemens-cpu">
+              Public CPU model or order number
+            </label>
+            <input
+              id="siemens-cpu"
+              value={cpu}
+              onChange={(e) => setCpu(e.target.value)}
+              maxLength={50}
+            />
+            <label htmlFor="siemens-firmware">Firmware version</label>
+            <input
+              id="siemens-firmware"
+              value={firmware}
+              onChange={(e) => setFirmware(e.target.value)}
+              maxLength={12}
+              placeholder="V3.1"
+            />
+            <label htmlFor="siemens-tia">TIA Portal version</label>
+            <select
+              id="siemens-tia"
+              value={tia}
+              onChange={(e) => setTia(e.target.value)}
+            >
+              <option value="">Not specified</option>
+              {[17, 18, 19, 20, 21].map((v) => (
+                <option key={v}>V{v}</option>
+              ))}
+            </select>
+            <p>
+              These fields are sent with your question. The combined query has a
+              500-character limit.
+            </p>
+          </details>
           <p className="siemens-disclosure">
-            Search sends the question above to Siemens’s public MCP service. Use
-            public product questions. Case files and investigation history are
-            kept separate.
+            Search sends the question and selected product context above to
+            Siemens’s public MCP service. Use public product questions. Case
+            files and investigation history are kept separate.
           </p>
           <button
             className="ux-primary"
@@ -150,6 +212,30 @@ export default function SiemensHelp() {
             aria-label="Siemens search results"
           >
             <h2>{result.question}</h2>
+            {result.version_notice && <p>{result.version_notice}</p>}
+            {(result.curated_references?.length || 0) > 0 && (
+              <section aria-label="Reviewed manual candidates">
+                <h3>Reviewed manual candidates</h3>
+                {result
+                  .curated_references!.filter((s) => siemensUrl(s.url))
+                  .map((s) => (
+                    <p key={s.url}>
+                      <a href={s.url} target="_blank" rel="noopener noreferrer">
+                        {s.title}
+                      </a>
+                      <br />
+                      {s.tia_version} · {s.edition} · {s.language} · Check exact
+                      CPU and firmware validity
+                    </p>
+                  ))}
+              </section>
+            )}
+            {result.outbound_query && (
+              <details>
+                <summary>Exact submitted query</summary>
+                <pre>{result.outbound_query}</pre>
+              </details>
+            )}
             {result.connection_verified && (
               <p className="siemens-meta">
                 Retrieved from Siemens MCP ·{" "}

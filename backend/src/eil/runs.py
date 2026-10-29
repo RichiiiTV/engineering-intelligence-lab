@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .database import MAX_EVENT_BYTES, MAX_RUNS, StorageFull, configure, storage_error
 from .settings import OLLAMA_BASE_URL, OLLAMA_MODEL
 
 STOPPED = frozenset(
@@ -80,11 +81,16 @@ class RunStore:
     def connection(self):
         conn = sqlite3.connect(self.path, timeout=10)
         conn.execute("PRAGMA foreign_keys=ON")
+        configure(conn, "runs")
         try:
             yield conn
             conn.commit()
-        except BaseException:
+        except BaseException as exc:
             conn.rollback()
+            if storage_error(exc):
+                raise StorageFull(
+                    "Investigation storage quota reached; review retention and backups"
+                ) from exc
             raise
         finally:
             conn.close()
@@ -106,9 +112,12 @@ class RunStore:
 
     @staticmethod
     def _event(conn, run_id, kind, data):
+        serialized = json.dumps(data)
+        if len(serialized.encode()) > MAX_EVENT_BYTES:
+            raise StorageFull("Observation exceeds the audit event size limit")
         conn.execute(
             "INSERT INTO events(run_id,at,type,data) VALUES (?,?,?,?)",
-            (run_id, now(), kind, json.dumps(data)),
+            (run_id, now(), kind, serialized),
         )
 
     def change(self, run_id, update):
@@ -123,18 +132,20 @@ class RunStore:
         with self.connection() as conn:
             return self._read(conn, run_id)
 
-    def list(self, limit=50, *, case_id=None):
+    def list(self, limit=50, *, case_id=None, offset=0, owner_id=None):
         with self.connection() as conn:
             return [
                 json.loads(r[0])
                 for r in conn.execute(
                     "SELECT document FROM runs WHERE (? IS NULL OR json_extract(document, '$.case_id')=?) "
-                    "ORDER BY created_at DESC LIMIT ?",
-                    (case_id, case_id, limit),
+                    "AND (? IS NULL OR json_extract(document, '$.owner_id')=?) "
+                    "AND coalesce(json_extract(document,'$.case_deleted'),0)=0 "
+                    "ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?",
+                    (case_id, case_id, owner_id, owner_id, limit, offset),
                 )
             ]
 
-    def create(self, question, limits=None, *, case_id=None, use_mock_mcp=False):
+    def create(self, question, limits=None, *, case_id=None, use_mock_mcp=False, owner_id=None):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
         limits = RunLimits.model_validate(limits or {})
@@ -142,6 +153,9 @@ class RunStore:
         if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password:
             raise ValueError("Configure an HTTP Ollama URL without embedded credentials")
         run_id = str(uuid.uuid4())
+        from .auth import local_owner
+
+        owner_id = owner_id or local_owner(self.directory)
         source_ids = None
         if case_id is not None:
             from .evidence import EvidenceStore
@@ -151,6 +165,7 @@ class RunStore:
             raise ValueError("Mock MCP requires a case-backed investigation")
         run = dict(
             id=run_id,
+            owner_id=owner_id,
             thread_id=run_id,
             question=question,
             use_mock_mcp=use_mock_mcp,
@@ -179,8 +194,19 @@ class RunStore:
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             pending = conn.execute("SELECT count(*) FROM runs WHERE status='queued'").fetchone()[0]
+            if conn.execute("SELECT count(*) FROM runs").fetchone()[0] >= MAX_RUNS:
+                raise StorageFull(
+                    "The installation investigation limit is reached; review retention"
+                )
             if pending >= 20:
                 raise QueueFull("The local queue is full; wait for an investigation to finish")
+            allocated = conn.execute("PRAGMA page_count").fetchone()[0]
+            free = conn.execute("PRAGMA freelist_count").fetchone()[0]
+            ceiling = conn.execute("PRAGMA max_page_count").fetchone()[0]
+            if allocated - free > ceiling * 0.8:
+                raise StorageFull(
+                    "Investigation storage is nearly full; maintenance capacity is reserved"
+                )
             conn.execute(
                 "INSERT INTO runs VALUES (?,?,?,?)",
                 (run_id, "queued", run["created_at"], json.dumps(run)),
@@ -192,7 +218,7 @@ class RunStore:
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             row = conn.execute(
-                "SELECT id FROM runs WHERE status='queued' ORDER BY created_at LIMIT 1"
+                "SELECT id FROM runs WHERE status='queued' AND coalesce(json_extract(document,'$.case_deleted'),0)=0 ORDER BY created_at LIMIT 1"
             ).fetchone()
             if row is None:
                 return None
@@ -228,6 +254,10 @@ class RunStore:
     def control(self, run_id, action):
         def update(run, conn):
             status = run["status"]
+            if run.get("case_deleted"):
+                raise RunConflict(
+                    "Restore the case from Trash before controlling its investigations"
+                )
             if action == "resume":
                 if status not in RESUMABLE:
                     raise RunConflict(
@@ -398,9 +428,40 @@ class RunStore:
         return self.change(run_id, update)
 
     def settle_tokens(self, run_id, reserved, actual):
-        def update(run, conn):
-            if actual < 0 or actual > reserved:
-                raise BudgetExceeded("Model usage exceeded its reserved token envelope")
-            run["tokens"] -= reserved - actual
+        if any(isinstance(n, bool) or not isinstance(n, int) or n < 0 for n in (reserved, actual)):
+            raise ValueError("Token usage must be non-negative integers")
 
-        return self.change(run_id, update)
+        def update(run, conn):
+            run["tokens"] -= reserved - actual
+            if actual > reserved:
+                error = {
+                    "code": "budget_exceeded",
+                    "resource": "provider_usage",
+                    "message": "Provider usage exceeded the admitted token envelope; actual usage was recorded.",
+                }
+                run.update(
+                    status="budget_exceeded",
+                    error=error,
+                    result=None,
+                    control=None,
+                    finished_at=now(),
+                )
+                self._event(
+                    conn,
+                    run_id,
+                    "model_usage_overage",
+                    {
+                        "reserved_tokens": reserved,
+                        "actual_tokens": actual,
+                        "overage_tokens": actual - reserved,
+                        "cumulative_tokens": run["tokens"],
+                    },
+                )
+                self._event(conn, run_id, "budget_exceeded", {"error": error})
+
+        run = self.change(run_id, update)
+        if actual > reserved:
+            raise BudgetExceeded(
+                "Provider usage exceeded its reserved token envelope", "provider_usage"
+            )
+        return run

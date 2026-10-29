@@ -54,6 +54,7 @@ export default function UserApp() {
     [navigation, setNavigation] = useState(0);
   const [cases, setCases] = useState<Case[]>([]),
     [runs, setRuns] = useState<Run[]>([]);
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [detail, setDetail] = useState<CaseDetail | null>(null),
     [error, setError] = useState("");
   const [revision, setRevision] = useState(0),
@@ -77,13 +78,16 @@ export default function UserApp() {
     const controller = new AbortController();
     setError("");
     void Promise.all([
-      api<{ cases: Case[] }>("/api/cases", { signal: controller.signal }),
+      api<{ cases: Case[]; next_offset?: number | null }>("/api/cases", {
+        signal: controller.signal,
+      }),
       api<{ investigations: Run[] }>("/api/investigations", {
         signal: controller.signal,
       }),
     ])
       .then(([c, r]) => {
         setCases(c.cases);
+        setNextOffset(c.next_offset ?? null);
         setRuns(r.investigations.filter((x) => x.case_id));
       })
       .catch((e) => {
@@ -106,10 +110,39 @@ export default function UserApp() {
   }, [route.caseId, navigation]);
   const home = () => navigate({ page: "new", caseId: "", runId: "" });
   const selectedDetail = detail?.id === route.caseId ? detail : null;
-  const open = (c: Case) => {
-    const r = runs.find((x) => x.case_id === c.id);
-    navigate({ page: "new", caseId: c.id, runId: r?.id || "" });
+  const open = async (c: Case) => {
+    setBusy(true);
+    try {
+      const data = await api<{ investigations: Run[] }>(
+        `/api/investigations?case_id=${c.id}&limit=1`,
+      );
+      navigate(
+        { page: "new", caseId: c.id, runId: data.investigations[0]?.id || "" },
+        true,
+      );
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
   };
+  async function loadMore() {
+    if (nextOffset === null || busy) return;
+    setBusy(true);
+    try {
+      const page = await api<{ cases: Case[]; next_offset: number | null }>(
+        `/api/cases?offset=${nextOffset}&limit=50`,
+      );
+      setCases((old) => [
+        ...new Map([...old, ...page.cases].map((c) => [c.id, c])).values(),
+      ]);
+      setNextOffset(page.next_offset);
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div className="user-app">
       <header className="ux-header">
@@ -165,6 +198,15 @@ export default function UserApp() {
               </button>
             </div>
             <Recent cases={cases} runs={runs} onOpen={open} />
+            {nextOffset !== null && (
+              <button
+                className="ux-secondary"
+                disabled={busy}
+                onClick={() => void loadMore()}
+              >
+                {busy ? "Loading…" : "Load more investigations"}
+              </button>
+            )}
           </>
         ) : (
           <>
@@ -251,7 +293,7 @@ function Recent({
             <button key={c.id} onClick={() => onOpen(c)}>
               <span>{c.title}</span>
               <small>
-                {run ? friendlyStatus(run.status) : "Files ready"} ·{" "}
+                {run ? friendlyStatus(run.status) : "Open investigation"} ·{" "}
                 {new Date(c.created_at).toLocaleDateString([], {
                   month: "short",
                   day: "numeric",

@@ -15,7 +15,7 @@ import time
 import uuid
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
@@ -53,7 +53,11 @@ class Finding(BaseModel):
     delta_pp: float = Field(ge=-100, le=100)
     cause: Literal["illumination", "undetermined"]
     cause_status: Literal["supported_in_simulator", "unresolved"]
-    citations: list[str] = Field(min_length=3, max_length=12)
+    citations: list[
+        Annotated[
+            str, Field(pattern=r"^(?:csv:[0-9a-f-]{36}:r[0-9]+|pdf:[0-9a-f-]{36}:p[0-9]+:c[0-9]+)$")
+        ]
+    ] = Field(min_length=3, max_length=12)
     limitations: list[Literal["synthetic_data", "no_physical_causation", "confounded_changes"]]
 
 
@@ -86,7 +90,7 @@ class ScriptedBenchmarkModel(ChatOllama):
         tools = [m for m in messages if isinstance(m, ToolMessage)]
         names = {t["function"]["name"] for t in kwargs.get("tools", [])}
         calls = []
-        if "task" in names:
+        if "task" in names or any(t.name == "task" for t in tools):
             if not tools:
                 calls = [
                     {
@@ -150,6 +154,16 @@ class ScriptedBenchmarkModel(ChatOllama):
             tool_calls=calls,
             usage_metadata={"input_tokens": 1000, "output_tokens": 100, "total_tokens": 1100},
         )
+        if content and "Finding" in names:
+            answer.content = ""
+            answer.tool_calls = [
+                {
+                    "name": "Finding",
+                    "args": json.loads(content),
+                    "id": str(uuid.uuid4()),
+                    "type": "tool_call",
+                }
+            ]
         return ChatResult(generations=[ChatGeneration(message=answer)])
 
 
@@ -182,7 +196,12 @@ def benchmark_worker(directory, run_id):
 
             httpx.Client.send = forbidden
             httpx.AsyncClient.send = forbidden
-            model = ScriptedBenchmarkModel(model="offline-calibration")
+            if experiment.get("suite") == "eil-benchmark-v2":
+                from .benchmark_extended import ScriptedV2Model
+
+                model = ScriptedV2Model(model="offline-calibration")
+            else:
+                model = ScriptedBenchmarkModel(model="offline-calibration")
         else:
             model = benchmark_model(experiment["provider"], run["model"], base_url=run["base_url"])
         execute_run(directory, run_id, model=model, agent_mode=experiment["agent_mode"])
@@ -332,7 +351,12 @@ def run_one(output, provider, model_name, agent_mode, case_key, repetition, time
         run["id"],
         lambda r, c: r.update(
             model=model_name,
-            experiment={"provider": provider, "agent_mode": agent_mode, "suite": VERSION},
+            experiment={
+                "provider": provider,
+                "agent_mode": agent_mode,
+                "suite": VERSION,
+                "structured_output": True,
+            },
             base_url=OLLAMA_BASE_URL if provider == "ollama" else None,
         ),
     )
@@ -406,7 +430,9 @@ def write_scorecard(output, records, metadata):
             }
         )
     card = {
-        "schema": VERSION,
+        "schema": metadata.get("suite", {}).get("version", VERSION)
+        if isinstance(metadata.get("suite", {}), dict)
+        else VERSION,
         "metadata": metadata,
         "records": records,
         "summary": summaries,
@@ -521,6 +547,7 @@ def main(argv=None):
         "fixture_hashes": json.loads((SUITE / "hashes.json").read_text()),
         "question_sha256": hashlib.sha256(QUESTION.encode()).hexdigest(),
         "question": QUESTION,
+        "verification": "Guarded end-to-end workflow with deterministic numeric/citation feedback; not unaided model accuracy. Expected-answer manifests are used only by the scorer.",
         "context_tokens": 8192,
         "limits": {**LIMITS, "timeout_seconds": args.timeout_seconds},
         "answer_schema": Finding.model_json_schema(),
@@ -528,7 +555,16 @@ def main(argv=None):
             name: hashlib.sha256(
                 (Path(__file__).parent / name).read_text(encoding="utf-8").encode()
             ).hexdigest()
-            for name in ("benchmark.py", "agent.py", "execution.py", "providers.py", "tracing.py")
+            for name in (
+                "benchmark.py",
+                "agent.py",
+                "execution.py",
+                "providers.py",
+                "tracing.py",
+                "claims.py",
+                "case_tools.py",
+                "evidence.py",
+            )
         },
         "temperature": "Ollama 0; hosted provider default",
         "repetitions": args.repetitions,

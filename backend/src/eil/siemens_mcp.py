@@ -113,7 +113,11 @@ def approved_url(value):
             and not url.username
             and not url.password
             and url.port in {None, 443}
-            and (host == "siemens.com" or host.endswith(".siemens.com"))
+            and (
+                host == "siemens.com"
+                or host.endswith(".siemens.com")
+                or host == "docs.tia.siemens.cloud"
+            )
             and host != "jobs.siemens.com"
         )
     except ValueError:

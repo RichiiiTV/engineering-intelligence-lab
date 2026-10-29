@@ -1,6 +1,8 @@
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init);
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith("/api/auth/"))
+      window.dispatchEvent(new Event("eil-auth-expired"));
     let detail = `${response.status} ${response.statusText}`;
     try {
       const body = await response.json();

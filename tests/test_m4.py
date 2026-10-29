@@ -19,6 +19,7 @@ from eil.mock_mcp import (
 )
 from eil.runs import RunConflict, RunStore
 from eil.service import RunService
+from tests.auth_helpers import sign_in
 from tests.evidence_fixtures import CSV_BYTES
 from tests.fakes import controlled_worker
 from tests.test_agent import call, make_model
@@ -141,6 +142,7 @@ def test_m4_api_approval_filter_origin_and_sample_boundaries(tmp_path):
     store, case, run = case_run(tmp_path)
     app = create_app(lambda: RunService(tmp_path, worker_target=controlled_worker))
     with TestClient(app, base_url="http://127.0.0.1") as client:
+        sign_in(client)
         assert client.get("/api/integrations/mock-mcp").json()["enabled_by_default"] is False
         assert (
             client.get("/api/investigations", params={"case_id": case["id"]}).json()[
@@ -222,6 +224,7 @@ def test_frontend_serving_preserves_api_errors_and_csp_scope(tmp_path, monkeypat
     (build / "assets" / "test.js").write_text("console.log('local build')")
     app = create_app(lambda: RunService(tmp_path / "state", worker_target=controlled_worker))
     with TestClient(app, base_url="http://127.0.0.1") as client:
+        sign_in(client)
         assert client.get("/").status_code == 200
         assert "script-src 'self'" in client.get("/").headers["content-security-policy"]
         assert client.get("/assets/test.js").status_code == 200

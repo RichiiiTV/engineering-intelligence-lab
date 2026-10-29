@@ -50,6 +50,10 @@ class RunService:
     """One active investigation and at most twenty waiting jobs, for local development."""
 
     def __init__(self, directory=STATE_DIR, *, worker_target=worker_main):
+        if (Path(directory) / ".restore-incomplete").exists():
+            raise RunConflict(
+                "This restore is incomplete; verify/restore a backup into a fresh directory"
+            )
         self.store = RunStore(directory)
         self.worker_target = worker_target
         self._stop = threading.Event()
@@ -90,10 +94,12 @@ class RunService:
             self._owner.close()
             self._owner = None
 
-    def submit(self, question, limits=None, *, case_id=None, use_mock_mcp=False):
+    def submit(self, question, limits=None, *, case_id=None, use_mock_mcp=False, owner_id=None):
         if self._stop.is_set() or self._fatal_error is not None:
             raise RunConflict("Run service is unavailable; restart the API")
-        return self.store.create(question, limits, case_id=case_id, use_mock_mcp=use_mock_mcp)
+        return self.store.create(
+            question, limits, case_id=case_id, use_mock_mcp=use_mock_mcp, owner_id=owner_id
+        )
 
     def wait(self, run_id, timeout=610):
         deadline = time.monotonic() + timeout

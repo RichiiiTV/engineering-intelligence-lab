@@ -1,0 +1,11 @@
+*
+!containers/
+!containers/pdf/
+!containers/pdf/Dockerfile
+!containers/pdf/worker.py
+!containers/pdf/pyproject.toml
+!containers/pdf/uv.lock
+!backend/
+!backend/src/
+!backend/src/eil/
+!backend/src/eil/*.py

@@ -20,6 +20,16 @@ it("keeps SPS queries separate and sends only the submitted question", async () 
       JSON.stringify({
         question: "OB1 cycle time",
         summary: "<script>untrusted</script>",
+        curated_references: [
+          {
+            title: "Reviewed cycle manual",
+            url: "https://docs.tia.siemens.cloud/r/manual",
+            tia_version: "V20",
+            edition: "06/2025",
+            language: "en-US",
+            kind: "curated_manual",
+          },
+        ],
         sources: [
           {
             title: "Manual",
@@ -58,6 +68,11 @@ it("keeps SPS queries separate and sends only the submitted question", async () 
   expect(screen.getByText("<script>untrusted</script>")).toBeTruthy();
   expect(document.querySelector("script")).toBeNull();
   expect(screen.queryByRole("link", { name: "Attack" })).toBeNull();
+  expect(
+    screen
+      .getByRole("link", { name: "Reviewed cycle manual" })
+      .getAttribute("href"),
+  ).toBe("https://docs.tia.siemens.cloud/r/manual");
   expect(
     screen.getByRole("link", { name: "Manual" }).getAttribute("rel"),
   ).toContain("noreferrer");

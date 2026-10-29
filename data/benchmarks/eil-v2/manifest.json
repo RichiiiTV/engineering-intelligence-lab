@@ -1,0 +1,61 @@
+{
+  "version": "eil-benchmark-v2",
+  "license": "Generated EIL demo data; PDFs reuse hash-verified v1 generated records with their actual cached Docling normalization.",
+  "cases": {
+    "other-station": {
+      "csv_sha256": "d5ae754f8e7893901722529214e7f10728ccc9e7c647a5b7f03c424a023fad0a",
+      "pdf_records": [
+        "known-cause"
+      ],
+      "expected": {
+        "station_id": "S02",
+        "baseline_rate": 0.01,
+        "incident_rate": 0.18,
+        "delta_pp": 17,
+        "cause": "undetermined",
+        "cause_status": "unresolved"
+      }
+    },
+    "no-increase": {
+      "csv_sha256": "143b09e7f8d4781b00582739cad244fb4ea6af4d66759f70ab774b6a02953143",
+      "pdf_records": [
+        "known-cause"
+      ],
+      "expected": {
+        "station_id": "S01",
+        "baseline_rate": 0.01,
+        "incident_rate": 0.01,
+        "delta_pp": 0,
+        "cause": "undetermined",
+        "cause_status": "unresolved"
+      }
+    },
+    "conflicting-records": {
+      "csv_sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "pdf_records": [
+        "known-cause",
+        "ambiguous"
+      ],
+      "expected": {
+        "station_id": "S03",
+        "baseline_rate": 0.01,
+        "incident_rate": 0.14,
+        "delta_pp": 13,
+        "cause": "undetermined",
+        "cause_status": "unresolved"
+      }
+    },
+    "missing-document": {
+      "csv_sha256": "8ae6bb0a2df6107a75e11cb3cf7a78f5310aab5bc4fb865efe85d892ef630d89",
+      "pdf_records": [],
+      "expected": {
+        "station_id": "S03",
+        "baseline_rate": 0.01,
+        "incident_rate": 0.14,
+        "delta_pp": 13,
+        "cause": "undetermined",
+        "cause_status": "unresolved"
+      }
+    }
+  }
+}
