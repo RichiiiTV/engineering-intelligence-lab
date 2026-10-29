@@ -5,7 +5,7 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 
 ## Stack and working practices
 - Windows-first, Python 3.12+ using `uv` and optional WSL.
-- FastAPI backend; DuckDB/Polars for analytical tools; React + TypeScript later.
+- FastAPI backend; DuckDB/Polars for analytical tools; React + TypeScript workbench.
 - Deep Agents and LangGraph, with explicit model adapter; Ollama is the default.
 - Dependency and API compatibility: consult official docs; use `uv lock` and commit the lockfile once resolved.
 - Work on one milestone at a time; avoid broad rewrites. Maintain tests and docs together with code.
@@ -36,4 +36,4 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
-Milestone 3: case-isolated PDF/CSV evidence ingestion, lexical retrieval and traceable exports. Preserve the read-only agent tools and M2 runtime budgets. Stop after M3 checks and reporting. Do not add UI, MCP, Langfuse or later-milestone integrations without another user request.
+Milestone 4: React investigation workbench, fixed local read-only mock MCP integration, and explicit content-bound approval before saving report drafts. Preserve case/source isolation, read-only agent tools, and cumulative M2 budgets. Stop after M4 checks and reporting. Do not begin M5 evaluations, Langfuse, provider benchmarks, external MCP servers, or production integrations without another user request.

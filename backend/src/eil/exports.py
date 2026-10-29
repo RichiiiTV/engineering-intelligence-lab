@@ -91,6 +91,13 @@ def export_investigation(run_store, run_id):
         "run_id": run_id,
         "case_id": case_id,
         "status": run["status"],
+        "integrations": {
+            "mock_mcp": {
+                "enabled": run.get("use_mock_mcp", False),
+                "server_id": "eil-synthetic-maintenance-v1",
+                "transport": "in-process-memory",
+            }
+        },
         "answer": answer,
         "error": run["error"],
         "source_snapshot": store.sources(case_id, allowed),

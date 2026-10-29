@@ -83,6 +83,10 @@ def execute_run(directory, run_id, *, model=None):
                 from .case_tools import case_tools
 
                 evidence_tools = case_tools(store.directory, run["case_id"], run["source_ids"])
+                if run.get("use_mock_mcp", False):
+                    from .mock_mcp import read_mock_station_context
+
+                    evidence_tools.append(read_mock_station_context)
             graph = build_agent(
                 model=model,
                 checkpointer=saver,

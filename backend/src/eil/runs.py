@@ -121,16 +121,18 @@ class RunStore:
         with self.connection() as conn:
             return self._read(conn, run_id)
 
-    def list(self, limit=50):
+    def list(self, limit=50, *, case_id=None):
         with self.connection() as conn:
             return [
                 json.loads(r[0])
                 for r in conn.execute(
-                    "SELECT document FROM runs ORDER BY created_at DESC LIMIT ?", (limit,)
+                    "SELECT document FROM runs WHERE (? IS NULL OR json_extract(document, '$.case_id')=?) "
+                    "ORDER BY created_at DESC LIMIT ?",
+                    (case_id, case_id, limit),
                 )
             ]
 
-    def create(self, question, limits=None, *, case_id=None):
+    def create(self, question, limits=None, *, case_id=None, use_mock_mcp=False):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
         limits = RunLimits.model_validate(limits or {})
@@ -143,10 +145,13 @@ class RunStore:
             from .evidence import EvidenceStore
 
             source_ids = EvidenceStore(self.directory).snapshot(case_id)
+        if use_mock_mcp and case_id is None:
+            raise ValueError("Mock MCP requires a case-backed investigation")
         run = dict(
             id=run_id,
             thread_id=run_id,
             question=question,
+            use_mock_mcp=use_mock_mcp,
             status="queued",
             created_at=now(),
             updated_at=now(),

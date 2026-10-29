@@ -1,6 +1,6 @@
 [project]
 name = "engineering-intelligence-lab"
-version = "0.3.0"
+version = "0.4.0"
 description = "Local-first agentic engineering investigation workbench"
 requires-python = ">=3.12"
 dependencies = [
@@ -18,6 +18,7 @@ dependencies = [
     "httpx>=0.28,<1",
     "python-multipart>=0.0.20,<1",
     "docling-core>=2.105,<3",
+    "mcp>=1.28,<2",
 ]
 [project.optional-dependencies]
 documents = ["docling>=2.144,<3"]

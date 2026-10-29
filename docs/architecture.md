@@ -101,5 +101,45 @@ unobserved citations, and state when the answer contains no citations. Resolutio
 source location, not claim entailment or causality. Confidence is not statistically estimated.
 
 Limits do not replace authentication, a native-parser sandbox, retention policy or storage
-encryption. Keep the API on loopback and use generated/licensed public demo data. No vector
-database, UI, MCP integration or later-milestone feature was added.
+encryption. Keep the API on loopback and use generated/licensed public demo data. M3 did not
+add vector retrieval. M4's UI and mock integration are described below.
+
+## M4 — local workbench, MCP mock and report approval
+
+The React/TypeScript frontend builds with Vite into `frontend/dist`. FastAPI serves the
+index at `/` and hashed assets at `/assets`; API routes retain their normal errors.
+Development uses Vite port 5173 with a same-origin `/api` proxy to the loopback API on 8000.
+No cloud hosting, CDN scripts, telemetry or third-party fonts are used by the workbench.
+
+The UI selects a case and an investigation by URL parameters. Case changes reset view state;
+requests are aborted on unmount. Overview compares an explicitly selected CSV and searches
+current PDF evidence. The run view instead uses its frozen M3 snapshot. SSE replays durable
+events, deduplicates global event IDs within each run and reconnects from the last cursor.
+Run status polling keeps controls current even when the stream has stopped for a pause.
+Tool details pair call IDs with arguments and render observations as text. All document,
+question and model output is rendered as escaped React text; no generated HTML is executed.
+
+`use_mock_mcp` is opt-in and persisted at run creation. Only case runs may enable it.
+The worker adds one reviewed `read_mock_station_context` tool to the existing read-only set.
+It uses the official MCP Python SDK 1.x ClientSession/FastMCP initialization, tools/list
+and tools/call over in-memory streams, with a three-second deadline. The adapter validates
+the tool name, station enum, catalog shape, structured output type and result size. Tool
+annotations are never an authorization decision. The fixed local server returns generated
+maintenance context; no case evidence, credentials, network URL, subprocess command, resource
+roots or host files are supplied. The result is explicitly synthetic and cannot resolve as
+a case citation. An external MCP transport is intentionally outside M4.
+
+Report proposals and saved drafts live in separate tables in the run database. Proposal
+content is immutable, includes its case/run identity and a SHA-256 of title/body, and starts
+pending. A separate approve/reject request must supply the exact digest that was previewed.
+An immediate SQLite transaction records the decision, creates at most one approved draft,
+and appends its audit event atomically. Repeated identical decisions are idempotent;
+stale hashes or conflicting decisions fail with 409. Rejected proposals never create drafts.
+Pending proposals and approved drafts survive reload/restart. The agent has no proposal,
+decision or save tool. Case creation/uploads are explicit user operations.
+
+This is a local human review workflow, not an authenticated identity or multi-user security
+boundary. Unrelated browser origins cannot mutate the API; a self-only CSP applies to the
+workbench while the existing Swagger docs keep their normal assets. Keep loopback binding.
+M5 evaluation infrastructure, Langfuse, production MCP servers and equipment writes remain
+outside this milestone.

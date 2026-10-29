@@ -20,16 +20,18 @@ from fastapi import (
     Request,
     UploadFile,
 )
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .analytics import ALLOWED_STATIONS, compare_stations, provisional_report, station_metrics
+from .drafts import DraftStore
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore
 from .exports import export_investigation
 from .pdf_ingest import MAX_PDF_BYTES, PDFBusy, PDFUnavailable, parse_pdf
 from .runs import STOPPED, QueueFull, RunConflict, RunLimits, RunNotFound
 from .service import RunService
-from .settings import DATASET_NAME
+from .settings import DATASET_NAME, ROOT
 from .uploads import UploadBodyLimit
 
 router = APIRouter()
@@ -40,6 +42,7 @@ class InvestigationRequest(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
     limits: RunLimits = Field(default_factory=RunLimits)
     case_id: UUID | None = None
+    use_mock_mcp: bool = False
 
     @field_validator("question")
     @classmethod
@@ -57,6 +60,17 @@ def health():
 @router.get("/api/datasets")
 def datasets():
     return {"datasets": [{"id": DATASET_NAME, "type": "synthetic-inspection-csv"}]}
+
+
+@router.get("/api/examples/{name}")
+def example(name: Literal["inspection.csv", "maintenance.pdf"]):
+    # Fixed generated fixtures only, never a user-supplied host path.
+    path = ROOT / (
+        "data/synthetic_inspection_v1.csv"
+        if name == "inspection.csv"
+        else "output/pdf/synthetic-maintenance-note.pdf"
+    )
+    return FileResponse(path, filename=name)
 
 
 @router.get("/api/metrics/summary")
@@ -92,14 +106,17 @@ def investigate(payload: InvestigationRequest, request: Request):
             payload.question,
             payload.limits,
             case_id=str(payload.case_id) if payload.case_id else None,
+            use_mock_mcp=payload.use_mock_mcp,
         )
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 @router.get("/api/investigations")
-def investigations(request: Request):
-    return {"investigations": service(request).store.list()}
+def investigations(request: Request, case_id: UUID | None = None):
+    return {
+        "investigations": service(request).store.list(case_id=str(case_id) if case_id else None)
+    }
 
 
 @router.get("/api/investigations/{run_id}")
@@ -118,6 +135,51 @@ def export(run_id: str, request: Request):
 class CaseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str = Field(min_length=1, max_length=120)
+
+
+class DraftRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str = Field(min_length=1, max_length=120)
+    body: str = Field(min_length=1, max_length=20000)
+
+
+class DecisionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    decision: Literal["approve", "reject"]
+    expected_sha256: str = Field(pattern="^[0-9a-f]{64}$")
+
+
+@router.get("/api/integrations/mock-mcp")
+def mock_mcp_catalog():
+    from .mock_mcp import catalog
+
+    return catalog()
+
+
+@router.post("/api/investigations/{run_id}/draft-proposals", status_code=201)
+def propose_draft(run_id: str, payload: DraftRequest, request: Request):
+    try:
+        return DraftStore(service(request).store).propose(run_id, payload.title, payload.body)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/api/approvals/{proposal_id}")
+def proposal(proposal_id: str, request: Request):
+    return DraftStore(service(request).store).get(proposal_id)
+
+
+@router.post("/api/approvals/{proposal_id}/decision")
+def decide_draft(proposal_id: str, payload: DecisionRequest, request: Request):
+    return DraftStore(service(request).store).decide(
+        proposal_id, payload.decision, payload.expected_sha256
+    )
+
+
+@router.get("/api/cases/{case_id}/drafts")
+def drafts(case_id: str, request: Request):
+    store = DraftStore(service(request).store)
+    return {"drafts": store.drafts(case_id), "proposals": store.proposals(case_id)}
 
 
 def evidence(request):
@@ -249,9 +311,45 @@ def create_app(service_factory=RunService):
             app.state.runs = runner
             yield
 
-    app = FastAPI(title="Engineering Intelligence Lab", version="0.3.0", lifespan=lifespan)
+    app = FastAPI(title="Engineering Intelligence Lab", version="0.4.0", lifespan=lifespan)
     app.add_middleware(UploadBodyLimit)
     app.include_router(router)
+
+    @app.middleware("http")
+    async def local_browser_origin(request, call_next):
+        origin = request.headers.get("origin")
+        if (
+            request.method in {"POST", "PUT", "PATCH", "DELETE"}
+            and origin
+            and origin
+            not in {
+                str(request.base_url).rstrip("/"),
+                "http://127.0.0.1:5173",
+                "http://localhost:5173",
+            }
+        ):
+            return JSONResponse(status_code=403, content={"detail": "Unapproved browser origin"})
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        if request.url.path == "/":
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+                "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+            )
+        return response
+
+    ui = ROOT / "frontend" / "dist"
+
+    @app.get("/", include_in_schema=False)
+    def workbench():
+        if not (ui / "index.html").is_file():
+            raise HTTPException(
+                status_code=503, detail="Build the UI: cd frontend; npm ci; npm run build"
+            )
+        return FileResponse(ui / "index.html", headers={"Cache-Control": "no-cache"})
+
+    # API paths keep their normal 404 behavior; only hashed build assets are mounted.
+    app.mount("/assets", StaticFiles(directory=ui / "assets", check_dir=False), name="ui-assets")
 
     @app.exception_handler(RunNotFound)
     async def missing(request, exc):

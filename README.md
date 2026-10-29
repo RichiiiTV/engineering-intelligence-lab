@@ -11,9 +11,12 @@ A local-first **agentic engineering investigation workbench** developed with Ope
 - Durable SQLite investigation queue, thread-scoped checkpoints, run history and SSE events
 - Step, model/tool call, token and time budgets; pause, resume and cancellation
 - Case-isolated PDF/CSV uploads, local Docling tables/pages, lexical search and citation exports
+- React/TypeScript UI with case navigation, charts, live activity, tool details and report review
+- Fixed read-only mock MCP integration, explicitly enabled per investigation
+- Content-bound approval proposals before saving immutable report drafts
 - `AGENTS.md`, milestone-specific Codex tasks, evaluation fixture, and tests
 
-M3 adds PDF/CSV evidence ingestion and lexical retrieval to M2's durable execution. React, MCP, vector retrieval and sandboxed code execution remain future work. A real Docling/Ollama case investigation has linked the golden PDF page to the correct CSV finding. See [the M3 report](docs/m3-results.md), [M2 report](docs/m2-results.md) and [M1 Ollama verification](docs/ollama-verification.md).
+M4 adds the local investigation workbench, mock MCP and report approval flow. See [M4 results](docs/m4-results.md), [M3 evidence validation](docs/m3-results.md), and [M2 execution checks](docs/m2-results.md). M5 has not started.
 
 ## Quick start (Windows PowerShell)
 
@@ -24,9 +27,30 @@ uv run ruff check .
 uv run ruff format --check .
 uv run pytest -q
 uv run python -m eil.cli demo
+# Build the React interface (Node 22.12+ or 24 recommended):
+Push-Location frontend
+npm.cmd ci
+npm.cmd test
+npm.cmd run build
+Pop-Location
 uv run uvicorn eil.api:app --host 127.0.0.1 --timeout-graceful-shutdown 5
-# Open http://127.0.0.1:8000/docs
+# Workbench: http://127.0.0.1:8000/    API docs: http://127.0.0.1:8000/docs
 ```
+
+For the full UI with local PDF parsing, run `.\scripts\start-workbench.cmd` from this folder. It installs locked frontend dependencies if missing, builds the UI, and starts the loopback API with the `documents` extra. The CMD launcher works without changing PowerShell execution policy. Prefetch Docling models as described below before uploading PDFs. It does not start or download Ollama models.
+
+For UI development, run the backend on port 8000, then `cd frontend; npm.cmd run dev`. Open `http://127.0.0.1:5173`; Vite proxies `/api` to port 8000. The built application is served directly by FastAPI at port 8000 with no second server needed. Rebuild and reload after frontend edits.
+
+## Using the workbench
+
+1. Create a case. Upload generated or explicitly licensed public inspection CSVs and text PDFs; confirm the data category. The guide and upload dialog link the committed synthetic samples.
+2. Review the Overview chart and calculation provenance, search the PDFs, and open row/page citations. Each CSV is compared separately. Overview includes current case sources; runs freeze their own source snapshot.
+3. Start an investigation with a question and active time limit. Optionally allow the read-only **synthetic mock MCP** context. Activity replays persisted SSE events and exposes tool arguments/observations. Pause/resume/cancel controls preserve cumulative budgets.
+4. Review the model answer, citation checks and limitations in Report. Export the full JSON record. For a saved draft, edit the text, request review, then **Approve & save draft** or reject the proposal. Pending proposals survive reload; approved versions download as Markdown. Draft approval records a decision, not claim validity.
+
+The MCP mock implements the MCP SDK's actual initialization, tool listing and tool call exchange over in-memory streams. It has one reviewed synthetic station-context tool, no configurable commands/URLs and no writes. It is disabled by default; the option is frozen in each run. It is not an external plant connection or a case citation source.
+
+This remains a single-user loopback demo. Approval is an explicit local UI/API decision bound to immutable proposal content, **not authenticated proof of a person's identity**. Do not expose the API to a network. Browser mutations from unrelated origins are rejected; this does not replace authentication. Case creation and uploads are explicit user actions; no agent tool can create cases, upload files or save drafts.
 
 Optional: **run a real agent** after starting Ollama and ensuring the configured model is installed:
 

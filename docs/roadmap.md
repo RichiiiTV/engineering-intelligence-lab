@@ -20,13 +20,14 @@
 - multiple allowlisted CSV uploads; schema validation and per-case file isolation
 - export citations, query provenance and calibrated uncertainty
 - Acceptance: golden fixture returns correct document page + correct CSV finding
-- Implemented: bounded offline Docling conversion, immutable case-scoped uploads, snapshot-isolated lexical retrieval, CSV schema validation and citation/query exports. The golden fixture retrieves page 2 and S03 +12.5021 points. See `m3-results.md`. Stop after M3; M4 has not started.
+- Implemented: bounded offline Docling conversion, immutable case-scoped uploads, snapshot-isolated lexical retrieval, CSV schema validation and citation/query exports. The golden fixture retrieves page 2 and S03 +12.5021 points. See `m3-results.md`.
 
 ## M4 — Agentic user experience and MCP
 - React UI case list, event timeline, tool-call detail, charts, report drafts
 - approved read-only MCP adapter (mock server first)
 - explicit human approvals for actions that change data
 - Acceptance: user can start case, inspect evidence, pause/resume and export report
+- Implemented: local React/TypeScript workbench, source charts/citations, persisted SSE timeline and tool detail, run controls, report exports and approved immutable drafts. Fixed in-process MCP mock uses the real SDK; the run must explicitly opt in. See `m4-results.md`. Stop after M4; M5 has not started.
 
 ## M5 — Evaluation, observability and advanced agents
 - known-cause and ambiguous incident benchmark; tool selection, correct evidence, hallucinations
