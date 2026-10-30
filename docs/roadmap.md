@@ -36,7 +36,7 @@
 - single-agent versus subagent experiment with cost/latency comparison
 - provider benchmark for GTX 1080 Ti Ollama and hosted model
 - Acceptance: reproducible scorecards and regression gates
-- User authorized M5 on 2026-10-29. Implementation and validation are described in `m5-evaluation.md` and `m5-results.md`; live hosted comparison remains conditional on operator credentials/model configuration. No later milestone is authorized.
+- User authorized M5 on 2026-10-29. Implementation and validation are described in `m5-evaluation.md` and `m5-results.md`; hosted validation remains deferred. Subsequent M6–M10 authorization is recorded below.
 
 ## Out of scope initially
 - GMP claims, production equipment control, Veeva/SAP/Siemens integrations, unconstrained code execution

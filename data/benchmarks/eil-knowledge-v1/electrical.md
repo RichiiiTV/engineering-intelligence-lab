@@ -1,0 +1,2 @@
+Generated fictional EIL fixture. CC0-1.0. Not operational guidance.
+SupplyRipple Spannungswelligkeit: generated voltage observation is 24 V. FuseIdentity Sicherungskennung: F_DEMO_01 is a fictional identifier. No live electrical work is authorized.

@@ -1,0 +1,2 @@
+Generated fictional EIL fixture. CC0-1.0. Not operational guidance.
+ConveyorStopBand Stopfenster: fictional delay 10 ms. SensorLatch Sensorverriegelung: reset requires an explicit operator acknowledgement.

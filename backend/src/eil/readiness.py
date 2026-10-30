@@ -7,6 +7,7 @@ import httpx
 
 from .audit import status
 from .database import DATABASE_BYTES
+from .embeddings import MODEL
 from .knowledge import KnowledgeStore
 from .settings import DOCLING_ARTIFACTS, OLLAMA_BASE_URL, OLLAMA_MODEL
 
@@ -36,19 +37,33 @@ def readiness(directory):
         with httpx.Client(timeout=3, trust_env=False, follow_redirects=False) as client:
             reply = client.get(OLLAMA_BASE_URL.rstrip("/") + "/api/tags")
             reply.raise_for_status()
-            installed = {m["name"] for m in reply.json()["models"]}
+            models = reply.json()["models"]
+            installed = {m["name"] for m in models}
+            embedding = next((m for m in models if m["name"] == MODEL), {})
+            embedding_key = f"{MODEL}@{embedding.get('digest', '')}|retrieval-v2"
         checks["generation"] = {"ready": OLLAMA_MODEL in installed}
+        checks["embedding"] = {"ready": bool(embedding) and not embedding.get("remote_host")}
     except (httpx.HTTPError, ValueError, KeyError):
         checks["generation"] = {"ready": False}
+        checks["embedding"] = {"ready": False}
+        embedding_key = None
     documents = KnowledgeStore(directory).list()
     checks["library"] = {
         "ready": all(d["passages"] == d["indexed_passages"] for d in documents),
         "documents": len(documents),
     }
+    with KnowledgeStore(directory).evidence.connection() as conn:
+        stale = conn.execute(
+            "SELECT count(*) FROM knowledge_passages p JOIN knowledge_documents d ON d.id=p.document_id WHERE d.active=1 AND d.machine_id IS NULL AND (p.model IS NULL OR p.model<>?)",
+            (embedding_key or "",),
+        ).fetchone()[0]
+    checks["library"]["stale_passages"] = stale
+    checks["library"]["ready"] = checks["library"]["ready"] and stale == 0
     try:
         from .isolated_pdf import command
 
         command("eil-readiness-probe")
+        command("eil-readiness-machine-probe", image="eil-pdf-worker:2")
         parser_ready = DOCLING_ARTIFACTS.is_dir()
     except (RuntimeError, OSError):
         parser_ready = False

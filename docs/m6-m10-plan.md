@@ -116,4 +116,9 @@ publish internal material, enable remote tracing or introduce production control
   a separate explicit Siemens public question. User creation is consolidated under
   Administration and failed user forms retain inputs. Backend gate: **15 passed
   in 9.86 seconds**; complete frontend suite: **37 passed**; build passed.
-- M10 in progress: reproducible generated coverage suite and final release checks.
+- M10 implemented and validated on 2026-10-30: 245 backend tests, 37 frontend tests,
+  build/lint/lock checks, zero known dependency advisories, 50/50 lexical and live
+  hybrid mechanism checks, isolated PDF/browser/background ingestion checks and a
+  verified existing-workspace backup/restore/migration. See [results and remaining
+  limits](m6-m10-results.md). Hosted validation remains deferred; M5 quality failures
+  and general engineering-entailment limits remain explicit. Stop after reporting.

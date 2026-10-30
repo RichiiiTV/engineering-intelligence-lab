@@ -70,11 +70,15 @@ class RunMiddleware(AgentMiddleware):
                 "jump_to": "model",
             }
         if (
-            run.get("library_lookup")
+            (run.get("library_lookup") or run.get("machine_lookup"))
             and getattr(last, "type", None) == "ai"
             and not getattr(last, "tool_calls", [])
         ):
-            hits = run["library_lookup"].get("hits", [])
+            hits = (
+                (run.get("library_lookup") or {}).get("hits", [])
+                + (run.get("machine_lookup") or {}).get("hits", [])
+                + run.get("machine_source_reads", [])
+            )
             supplied = {h["citation_id"] for h in hits}
             cited = set(re.findall(r"\[(kb:[^\]]+)\]", last.text))
             if (
@@ -88,7 +92,7 @@ class RunMiddleware(AgentMiddleware):
                 return {
                     "messages": [
                         HumanMessage(
-                            content="Use only supporting library passages and cite their exact IDs: "
+                            content="Use only supporting selected-source passages and cite their exact IDs in square brackets: "
                             + ", ".join(f"[{c}]" for c in sorted(supplied))
                             + ". If none supports the question, explicitly state that rather than inventing a claim. Keep a concise answer."
                         )
@@ -418,6 +422,10 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
     try:
         if agent_mode not in {"single", "delegated"}:
             raise ValueError("Unknown agent experiment")
+        if run.get("machine_id") and model is None:
+            from .agent import verify_private_model
+
+            verify_private_model(run["base_url"], run["model"])
         with SqliteSaver.from_conn_string(str(store.directory / "checkpoints.sqlite3")) as saver:
             configure(saver.conn, "checkpoints")
             saver.serde = JsonPlusSerializer(

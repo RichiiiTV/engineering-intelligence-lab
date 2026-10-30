@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from typing import TYPE_CHECKING
+from urllib.parse import urlsplit
 
 import httpx
 from ollama import ResponseError
@@ -23,6 +25,46 @@ MODEL_CONTEXT_TOKENS = 8192
 
 class ModelUnavailableError(RuntimeError):
     """The configured local model cannot complete the investigation."""
+
+
+def verify_private_model(base_url, model_name):
+    """A loopback URL alone does not rule out an Ollama cloud-model alias."""
+    url = urlsplit(base_url)
+    if (
+        url.scheme != "http"
+        or url.hostname not in {"localhost", "127.0.0.1", "::1"}
+        or url.username
+        or url.password
+        or url.path not in {"", "/"}
+        or url.query
+        or url.fragment
+    ):
+        raise ModelUnavailableError(
+            "Private machine content requires a plain loopback Ollama endpoint"
+        )
+    try:
+        with httpx.Client(timeout=5, trust_env=False, follow_redirects=False) as client:
+            with client.stream("GET", base_url.rstrip("/") + "/api/tags") as response:
+                response.raise_for_status()
+                content = bytearray()
+                for part in response.iter_bytes():
+                    content.extend(part)
+                    if len(content) > 2 * 1024**2:
+                        raise ValueError("Oversized model catalogue")
+            entry = next(m for m in json.loads(content)["models"] if m["name"] == model_name)
+        if (
+            entry.get("remote_host")
+            or entry.get("remote_model")
+            or "cloud" in model_name.casefold()
+            or entry.get("details", {}).get("format") != "gguf"
+            or entry.get("size", 0) < 1024**2
+            or not re.fullmatch(r"(?:sha256:)?[0-9a-f]{64}", entry.get("digest", ""))
+        ):
+            raise ValueError("A downloaded local GGUF model is required")
+    except (httpx.HTTPError, ValueError, TypeError, KeyError, StopIteration) as exc:
+        raise ModelUnavailableError(
+            "Private machine content requires a verified downloaded local model. Cloud models/aliases are not allowed; no private prompt was sent."
+        ) from exc
 
 
 SYSTEM_PROMPT = """You are an engineering investigation assistant analyzing demo inspection evidence.

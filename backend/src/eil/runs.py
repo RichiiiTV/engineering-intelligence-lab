@@ -57,6 +57,18 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def notebook_idle(conn, run):
+    notebook = (run.get("notebook_context") or {}).get("id")
+    if (
+        notebook
+        and conn.execute(
+            "SELECT 1 FROM runs WHERE id<>? AND status IN ('queued','running') AND json_extract(document,'$.notebook_context.id')=? LIMIT 1",
+            (run["id"], notebook),
+        ).fetchone()
+    ):
+        raise RunConflict("Another answer is active in this notebook; wait before continuing")
+
+
 class RunStore:
     def __init__(self, directory: Path):
         self.directory = Path(directory).resolve()
@@ -253,6 +265,7 @@ class RunStore:
         with self.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             pending = conn.execute("SELECT count(*) FROM runs WHERE status='queued'").fetchone()[0]
+            notebook_idle(conn, run)
             if conn.execute("SELECT count(*) FROM runs").fetchone()[0] >= MAX_RUNS:
                 raise StorageFull(
                     "The installation investigation limit is reached; review retention"
@@ -340,6 +353,7 @@ class RunStore:
                     "Restore the case from Trash before controlling its investigations"
                 )
             if action == "resume":
+                notebook_idle(conn, run)
                 if status not in RESUMABLE:
                     raise RunConflict(
                         "Only paused, interrupted or failed investigations can resume"
@@ -458,6 +472,7 @@ class RunStore:
 
         def update(run, conn):
             error = run.get("error") or {}
+            notebook_idle(conn, run)
             token_stop = error.get("resource") == "tokens" or (
                 error.get("resource") is None
                 and str(error.get("message", "")).startswith("tokens budget exhausted")

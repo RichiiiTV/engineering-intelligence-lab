@@ -36,6 +36,13 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+M6–M10 implementation and local validation completed on 2026-10-30. Results and
+remaining limits are recorded in `docs/m6-m10-results.md`; private-machine usage
+is documented in `docs/machine-workspaces.md`. The final gates passed 245 backend
+tests, 37 frontend tests and the 50-case lexical/live hybrid mechanism suite.
+Hosted validation remains deferred and earlier M5 model-quality failures remain
+explicit. Stop after reporting; no M11 or production work is authorized.
+
 The user authorized planning and sequential implementation of M6–M10 on
 2026-10-29, including the whole-project review fixes. The clarified product goal
 is private machine workspaces containing manuals, documentation and internal

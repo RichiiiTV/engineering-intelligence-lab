@@ -1,6 +1,8 @@
 """Bounded source-text locations and static parsing. Uploaded code is never executed."""
 
 import ast
+import io
+import tokenize
 
 
 def chunks(text):
@@ -54,7 +56,24 @@ def chunks(text):
 def inspect(filename, text):
     findings = []
     if filename.lower().endswith(".py"):
+        if len(text) > 32000:
+            return {
+                "findings": [],
+                "scope": "Static parsing skipped above 32,000 characters. Use bounded text search/read; no uploaded code was executed.",
+            }
         try:
+            tokens = list(tokenize.generate_tokens(io.StringIO(text).readline))
+            depth = 0
+            for token in tokens:
+                if token.type == tokenize.OP:
+                    if token.string in {"(", "[", "{"}:
+                        depth += 1
+                    if token.string in {")", "]", "}"}:
+                        depth -= 1
+                    if depth > 80:
+                        raise RecursionError
+            if len(tokens) > 1000:
+                raise RecursionError
             ast.parse(text)
         except SyntaxError as exc:
             findings.append(
@@ -65,6 +84,11 @@ def inspect(filename, text):
                     "kind": "syntax_error",
                 }
             )
+        except (RecursionError, MemoryError, tokenize.TokenError, ValueError):
+            return {
+                "findings": [],
+                "scope": "Static parser complexity limit reached. Use bounded text search/read; no uploaded code was executed.",
+            }
         scope = "Python syntax only; code was parsed, never executed. Behaviour and runtime dependencies are unverified."
     else:
         scope = "Source text only. Device/compiler semantics require the appropriate engineering tool; no uploaded code was executed."

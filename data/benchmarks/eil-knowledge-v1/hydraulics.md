@@ -1,0 +1,2 @@
+Generated fictional EIL fixture. CC0-1.0. Not operational guidance.
+PressureTrend Druckverlauf: generated measurement is 4 bar. ValveFeedback Ventilrueckmeldung: sensor feedback was absent; the record does not prove a stuck valve.

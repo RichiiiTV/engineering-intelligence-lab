@@ -94,6 +94,16 @@ def ready(request: Request):
     from .readiness import readiness
 
     result = readiness(service(request).store.directory)
+    ingestion = getattr(request.app.state, "ingestion", None)
+    result["checks"]["ingestion"] = {
+        "ready": bool(
+            ingestion
+            and ingestion.thread
+            and ingestion.thread.is_alive()
+            and not ingestion.fatal_error
+        )
+    }
+    result["ready"] = result["ready"] and result["checks"]["ingestion"]["ready"]
     return JSONResponse(result, status_code=200 if result["ready"] else 503)
 
 

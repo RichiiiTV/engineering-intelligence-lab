@@ -18,9 +18,9 @@ it("renders source links and code safely without interpreting HTML or URLs", asy
     <>
       <SafeAnswer
         text={
-          "**Check** [" +
+          "**Check** `[" +
           cid +
-          "]\n\n```st\nmotor := FALSE;\n```\n\n<img src=x onerror=alert(1)> [bad](javascript:alert(1))"
+          "]`\n\n```st\nmotor := FALSE;\n```\n\n<img src=x onerror=alert(1)> [bad](javascript:alert(1))"
         }
         references={[{ citation_id: cid }]}
       />

@@ -1,0 +1,2 @@
+Generated fictional EIL fixture. CC0-1.0. Not operational guidance.
+IlluminationUniformity Beleuchtungsgleichmaessigkeit: recorded illumination is 340 lux. ExposureWindow Belichtungsfenster: recorded exposure is 800 microseconds. These simultaneous observations do not establish a cause.

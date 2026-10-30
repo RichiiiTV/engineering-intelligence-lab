@@ -13,7 +13,11 @@ export default function SafeAnswer({
     return value
       .split(/(\[(?:kb|pdf|csv|siemens):[^\]]+\]|\*\*[^*]+\*\*|`[^`]+`)/g)
       .map((part, i) => {
-        const ref = references.find((r) => "[" + r.citation_id + "]" === part);
+        const normalized =
+          part.startsWith("`") && part.endsWith("`") ? part.slice(1, -1) : part;
+        const ref = references.find(
+          (r) => "[" + r.citation_id + "]" === normalized,
+        );
         if (ref && ref.citation_id.startsWith("kb:"))
           return (
             <button

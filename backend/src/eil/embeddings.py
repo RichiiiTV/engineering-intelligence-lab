@@ -4,6 +4,8 @@ import math
 import os
 import re
 import struct
+from contextlib import contextmanager
+from contextvars import ContextVar
 from urllib.parse import urlsplit
 
 import httpx
@@ -11,6 +13,17 @@ import httpx
 from .settings import OLLAMA_BASE_URL
 
 MODEL = os.environ.get("EIL_EMBEDDING_MODEL", "embeddinggemma:300m")
+_lifetime = ContextVar("eil_embedding_lifetime", default="0s")
+
+
+@contextmanager
+def batch_lifetime(more_batches):
+    """Keep a local model warm only between batches; failures expire within 30 seconds."""
+    token = _lifetime.set("30s" if more_batches else "0s")
+    try:
+        yield
+    finally:
+        _lifetime.reset(token)
 
 
 class EmbeddingUnavailable(RuntimeError):
@@ -51,7 +64,12 @@ def embed(texts):
             with client.stream(
                 "POST",
                 "/api/embed",
-                json={"model": MODEL, "input": texts, "truncate": False, "keep_alive": "0s"},
+                json={
+                    "model": MODEL,
+                    "input": texts,
+                    "truncate": False,
+                    "keep_alive": _lifetime.get(),
+                },
             ) as response:
                 response.raise_for_status()
                 content = bytearray()

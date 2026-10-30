@@ -6,7 +6,7 @@ import pytest
 from eil.evidence import EvidenceConflict, EvidenceNotFound
 from eil.machines import MachineStore, machine_tools
 from eil.notebooks import NotebookStore
-from eil.runs import RunStore
+from eil.runs import RunConflict, RunStore
 from tests.test_m8 import source, vector
 
 
@@ -39,6 +39,10 @@ def test_notebook_followup_has_frozen_sources_context_budget_and_idempotency(tmp
     )
     later = source(docs, b"New sensor logic version; diagnose drive alarms.")
     follow = notebooks.submit(n["id"], "a", "Where is that condition?", str(uuid.uuid4()), service)
+    runs.change(r["id"], lambda row, c: row.update(status="paused"))
+    with pytest.raises(RunConflict):
+        runs.control(r["id"], "resume")
+    runs.change(r["id"], lambda row, c: row.update(status="completed"))
     assert (
         follow["machine_document_ids"] == [first["id"]]
         and later["id"] not in follow["machine_document_ids"]

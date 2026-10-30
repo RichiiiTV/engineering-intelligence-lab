@@ -18,6 +18,7 @@ A local-first **agentic engineering investigation workbench** developed with Ope
 - `AGENTS.md`, milestone-specific Codex tasks, evaluation fixture, and tests
 - Preloaded shared document library with local Ollama embeddings, SQLite vector + keyword retrieval, selected-source snapshots and passage citations
 - Administrator controls for documents, users/roles, account deactivation, session revocation and a paginated hash-chained audit trail
+- Private machine manuals/code, automatic local embedding groups, supervised ingestion and source-scoped notebook follow-ups. See [machine workspaces](docs/machine-workspaces.md) and [M6–M10 validation](docs/m6-m10-results.md).
 
 M5 adds a separate synthetic benchmark workflow and local trace exports. See [M5 protocol](docs/m5-evaluation.md), [M5 results](docs/m5-results.md), [M4 results](docs/m4-results.md), [M3 evidence validation](docs/m3-results.md), and [M2 execution checks](docs/m2-results.md). The ordinary workbench retains its single-agent Ollama behavior.
 

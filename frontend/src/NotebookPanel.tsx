@@ -36,19 +36,27 @@ export default function NotebookPanel({
     [busy, setBusy] = useState(false);
   const [publicEnabled, setPublicEnabled] = useState(false),
     [publicQuestion, setPublicQuestion] = useState("");
+  const [loadError, setLoadError] = useState("");
   const submission = useRef<{ body: string; id: string } | null>(null);
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
   async function refresh() {
-    setRows((await api<{ notebooks: Notebook[] }>(base)).notebooks);
-    if (selected) setNotebook(await api<Notebook>(base + "/" + selected));
+    try {
+      setRows((await api<{ notebooks: Notebook[] }>(base)).notebooks);
+      if (selected) {
+        const result = await api<Notebook>(base + "/" + selected);
+        if (selectedRef.current === selected) setNotebook(result);
+      }
+      setLoadError("");
+    } catch (e) {
+      setLoadError(msg(e));
+    }
   }
   useEffect(() => {
     setNotebook(null);
     setError("");
-    void refresh().catch((e) => setError(msg(e)));
-    const timer = setInterval(
-      () => void refresh().catch((e) => setError(msg(e))),
-      1800,
-    );
+    void refresh();
+    const timer = setInterval(() => void refresh(), 1800);
     return () => clearInterval(timer);
   }, [selected, machineId]);
   async function action(fn: () => Promise<unknown>) {
@@ -67,6 +75,10 @@ export default function NotebookPanel({
   }
   function select(id: string) {
     setSelected(id);
+    setQuestion("");
+    setPublicQuestion("");
+    setPublicEnabled(false);
+    submission.current = null;
     const url = new URL(location.href);
     if (id) url.searchParams.set("notebook", id);
     else url.searchParams.delete("notebook");
@@ -122,9 +134,9 @@ export default function NotebookPanel({
         <h2>Notebooks</h2>
         {selected && <button onClick={() => select("")}>All notebooks</button>}
       </div>
-      {error && (
+      {(error || loadError) && (
         <p className="ux-error" role="alert">
-          {error}
+          {error || loadError}
         </p>
       )}
       {!selected ? (
@@ -186,7 +198,7 @@ export default function NotebookPanel({
             </summary>
             <form
               className="machine-form"
-              key={notebook.revision + ":" + sources.map((s) => s.id).join(",")}
+              key={notebook.id + ":" + notebook.revision}
               onSubmit={(e) => {
                 e.preventDefault();
                 const data = new FormData(e.currentTarget);

@@ -137,6 +137,10 @@ def test_cancel_claim_restart_and_queue_limits(tmp_path, monkeypatch):
         jobs.enqueue(m["id"], "a", f"{n}.txt", b"demo", metadata())
     with pytest.raises(EvidenceConflict):
         jobs.control(job["id"], "a", "retry")
+    jobs.discard(job["id"], "a")
+    assert jobs.get(job["id"])["content"] == b""
+    with pytest.raises(EvidenceConflict):
+        jobs.control(job["id"], "a", "retry")
 
 
 def test_batched_pdf_preserves_original_pages_and_rejects_oversize(tmp_path, monkeypatch):

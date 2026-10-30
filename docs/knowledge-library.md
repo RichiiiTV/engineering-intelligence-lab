@@ -87,7 +87,12 @@ remain self-service with the existing current-password check.
 
 ## Audit trail
 
-The existing authentication audit table is migrated in place. Legacy events retain
+Legacy authentication audit history is migrated into a separate `audit.sqlite3`.
+Account/session changes first commit to a bounded transactional outbox in the auth
+database; delivery is idempotent and retains the original timestamp. Anonymous
+denials use bounded aggregate counters. A history outage leaves login usable and
+readiness degraded; a full security-event outbox rejects account-security changes
+explicitly. Legacy events retain
 their recorded actors/times/types; new metadata defaults to empty rather than
 inventing historical details. Each new entry commits with a previous hash and
 SHA-256 entry hash, serialized with concurrent writers. Database triggers forbid
@@ -101,13 +106,16 @@ The existing owner-scoped run/tool event log retains detailed execution provenan
 the workspace audit is content-minimal. Document metadata records source provenance.
 
 The admin view supports exact event-type/actor-ID filters and cursor pagination.
-JSON downloads contain up to 100 events and the `next_after` continuation cursor,
-plus the chain head. The UI states this page limit explicitly. A local database/OS
+Page JSON downloads contain up to 100 events and the `next_after` continuation
+cursor; **Download complete history** streams JSONL across all retained segments.
+An administrator can archive a verified segment; up to eight segments are retained
+without automatic deletion, and backup/restore includes them. The UI states page
+and backlog limits explicitly. A local database/OS
 administrator can replace the database or its triggers; this is an application
 audit trail, not externally anchored tamper-proof storage. Retain exported heads
 independently when stronger assurance is required.
 
-Account changes and their audit entries share an auth-database transaction.
+Account changes and their audit outbox entries share an auth-database transaction.
 Document/run state and workspace audit entries live in different databases;
 they are not one distributed transaction. A process failure between commits can
 leave an incomplete workspace audit record. Independent source hashes and the

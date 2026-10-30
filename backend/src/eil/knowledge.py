@@ -10,7 +10,7 @@ from pathlib import Path
 
 import sqlite_vec
 
-from .embeddings import EmbeddingUnavailable, embed
+from .embeddings import EmbeddingUnavailable, batch_lifetime, embed
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore, checked_id
 from .passages import ProductContext, compatible, context_for, location
 from .pdf_ingest import MAX_PDF_BYTES, parse_pdf
@@ -273,7 +273,7 @@ class KnowledgeStore:
                 "SELECT id,text FROM knowledge_passages WHERE document_id=? ORDER BY id",
                 (identity,),
             ).fetchall()
-        output, key, deadline = [], None, time.monotonic() + 90
+        output, key, deadline = [], None, time.monotonic() + (420 if self.machine_id else 90)
         for start in range(0, len(passages), 16):
             if cancelled and cancelled():
                 raise EmbeddingUnavailable("Indexing canceled; no partial index was published")
@@ -282,9 +282,10 @@ class KnowledgeStore:
                     "Indexing exceeded its deadline; no partial index was saved"
                 )
             batch = passages[start : start + 16]
-            current, vectors = embed(
-                [f"title: {document['title']} | text: {p['text']}" for p in batch]
-            )
+            with batch_lifetime(start + 16 < len(passages)):
+                current, vectors = embed(
+                    [f"title: {document['title']} | text: {p['text']}" for p in batch]
+                )
             current += "|retrieval-v2"
             if key and key != current:
                 raise EmbeddingUnavailable("Embedding model changed while indexing")

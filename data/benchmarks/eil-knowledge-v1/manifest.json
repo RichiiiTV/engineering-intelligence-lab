@@ -1,0 +1,406 @@
+{
+  "id": "eil-knowledge-v1",
+  "license": "CC0-1.0",
+  "origin": "Original generated fictional EIL material",
+  "notice": "Deterministic retrieval/contracts, not engineering correctness or model answerability.",
+  "documents": [
+    {
+      "filename": "conveyor-v19.md",
+      "title": "Conveyor V19",
+      "version": "V19",
+      "sha256": "c8fe325748eef3b8be314297bc7a64731866f655a5388afeb930b48d71c15a7d"
+    },
+    {
+      "filename": "conveyor-v20.md",
+      "title": "Conveyor V20",
+      "version": "V20",
+      "sha256": "62fe3ac837f3600482f0a556aa9e37eaf2c448c382779ccd14940c3141808be0"
+    },
+    {
+      "filename": "optics.md",
+      "title": "Optics record",
+      "version": "V20",
+      "sha256": "8b245ebb360a06574da658c36b7afac3bbc3c2742b4c5acd70cbcfe54c004e5e"
+    },
+    {
+      "filename": "hydraulics.md",
+      "title": "Pressure record",
+      "version": "V20",
+      "sha256": "0430c14aa0e3667aa1c59e632bf8c94cc3ad1c7d78ec8a40c4ef43a155f4345f"
+    },
+    {
+      "filename": "network.md",
+      "title": "Network record",
+      "version": "V20",
+      "sha256": "9b636b495fee2819565e9786144bad1bb9eda73cfec48aba4663bcff4a9bb283"
+    },
+    {
+      "filename": "electrical.md",
+      "title": "Electrical record",
+      "version": "V20",
+      "sha256": "6c2168dc242ad128f3c2d6251b741ecc821869d67c2b17734ede8423038c3d6b"
+    },
+    {
+      "filename": "alarm-table.md",
+      "title": "Alarm lookup",
+      "version": "V20",
+      "sha256": "187bd761478c16ed21cedad4c43c8b89512de5d2c2c58a8b98d133aed7348f1a"
+    },
+    {
+      "filename": "drive.st",
+      "title": "Drive source",
+      "version": "V20",
+      "sha256": "f2b686e07d160b98132979f021c7c3f97f7798ff73ba9f70c939347f02d3824a"
+    },
+    {
+      "filename": "checks.py",
+      "title": "Invalid syntax example",
+      "version": "V20",
+      "sha256": "41fefdc80a48e9189ca9edb98121b5fad3b6302c0bb3131705c6af0d96800386"
+    },
+    {
+      "filename": "adversarial.md",
+      "title": "Untrusted document instructions",
+      "version": "V20",
+      "sha256": "e3b4bd4bcae819f1371571bf27b39b27f80cb7ec8dd7627c2f150a729f408dce"
+    }
+  ],
+  "cases": [
+    {
+      "category": "retrieval",
+      "query": "ConveyorStopBand",
+      "expected": "conveyor-v19.md",
+      "profile": {
+        "software_version": "V19"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Stopfenster",
+      "expected": "conveyor-v19.md",
+      "profile": {
+        "software_version": "V19"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "SensorLatch",
+      "expected": "conveyor-v19.md",
+      "profile": {
+        "software_version": "V19"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Sensorverriegelung",
+      "expected": "conveyor-v19.md",
+      "profile": {
+        "software_version": "V19"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "ConveyorStopBand",
+      "expected": "conveyor-v20.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Stopfenster",
+      "expected": "conveyor-v20.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "SensorLatch",
+      "expected": "conveyor-v20.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Sensorverriegelung",
+      "expected": "conveyor-v20.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "IlluminationUniformity",
+      "expected": "optics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Beleuchtungsgleichmaessigkeit",
+      "expected": "optics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "ExposureWindow",
+      "expected": "optics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Belichtungsfenster",
+      "expected": "optics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "PressureTrend",
+      "expected": "hydraulics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Druckverlauf",
+      "expected": "hydraulics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "ValveFeedback",
+      "expected": "hydraulics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Ventilrueckmeldung",
+      "expected": "hydraulics.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "PacketLoss",
+      "expected": "network.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Paketverlust",
+      "expected": "network.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "LinkFlap",
+      "expected": "network.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Verbindungswechsel",
+      "expected": "network.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "SupplyRipple",
+      "expected": "electrical.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Spannungswelligkeit",
+      "expected": "electrical.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "FuseIdentity",
+      "expected": "electrical.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Sicherungskennung",
+      "expected": "electrical.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "DEMO_A17",
+      "expected": "alarm-table.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Foerderstau",
+      "expected": "alarm-table.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "DEMO_B42",
+      "expected": "alarm-table.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Schutztueroffen",
+      "expected": "alarm-table.md",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "DriveEnable",
+      "expected": "drive.st",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Antriebsfreigabe",
+      "expected": "drive.st",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "StopLatch",
+      "expected": "drive.st",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "retrieval",
+      "query": "Stoppverriegelung",
+      "expected": "drive.st",
+      "profile": {
+        "software_version": "V20"
+      }
+    },
+    {
+      "category": "unknown",
+      "query": "NO_SOURCE_ZXQ_0_92831"
+    },
+    {
+      "category": "unknown",
+      "query": "NO_SOURCE_ZXQ_1_92831"
+    },
+    {
+      "category": "unknown",
+      "query": "NO_SOURCE_ZXQ_2_92831"
+    },
+    {
+      "category": "unknown",
+      "query": "NO_SOURCE_ZXQ_3_92831"
+    },
+    {
+      "category": "applicability",
+      "query": "ConveyorStopBand V20",
+      "expected": "conveyor-v20.md",
+      "excluded": "conveyor-v19.md"
+    },
+    {
+      "category": "applicability",
+      "query": "Stopfenster V20",
+      "expected": "conveyor-v20.md",
+      "excluded": "conveyor-v19.md"
+    },
+    {
+      "category": "applicability",
+      "query": "SensorLatch V20",
+      "expected": "conveyor-v20.md",
+      "excluded": "conveyor-v19.md"
+    },
+    {
+      "category": "applicability",
+      "query": "Sensorverriegelung V20",
+      "expected": "conveyor-v20.md",
+      "excluded": "conveyor-v19.md"
+    },
+    {
+      "category": "contract",
+      "variant": "observed"
+    },
+    {
+      "category": "contract",
+      "variant": "unseen"
+    },
+    {
+      "category": "contract",
+      "variant": "quote-match"
+    },
+    {
+      "category": "contract",
+      "variant": "quote-mismatch"
+    },
+    {
+      "category": "static",
+      "variant": "syntax"
+    },
+    {
+      "category": "static",
+      "variant": "no-execution"
+    },
+    {
+      "category": "isolation",
+      "variant": "other-owner"
+    },
+    {
+      "category": "isolation",
+      "variant": "other-machine"
+    },
+    {
+      "category": "snapshot",
+      "variant": "archive-retained"
+    },
+    {
+      "category": "snapshot",
+      "variant": "later-excluded"
+    }
+  ]
+}

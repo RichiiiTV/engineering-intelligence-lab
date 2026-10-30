@@ -1,0 +1,2 @@
+Generated fictional EIL fixture. CC0-1.0. Not operational guidance.
+PacketLoss Paketverlust: generated observation is 3 percent. LinkFlap Verbindungswechsel: 2 events were recorded. Switch configuration and timestamps require review.

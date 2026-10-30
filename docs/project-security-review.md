@@ -1,7 +1,7 @@
 # Project gaps, security review and Siemens SPS connection
 
 This is the original review snapshot. The user subsequently authorized fixing
-the findings. See [remediation results](gap-remediation-results.md) and the
+the findings. See [M6–M10 results](m6-m10-results.md), [machine workspaces](machine-workspaces.md), [remediation results](gap-remediation-results.md) and the
 [operator guide](security-operations.md) for current behavior and validation.
 
 Reviewed 2026-10-29, after M5. This is a code/configuration review, dependency

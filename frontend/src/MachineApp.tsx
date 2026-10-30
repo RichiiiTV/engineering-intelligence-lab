@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Beaker, FolderLock, Plus, FileText, ArrowLeft } from "lucide-react";
 import { api, post } from "./api";
 import "./user.css";
@@ -54,6 +54,9 @@ export default function MachineApp() {
   const [create, setCreate] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
   const [preview, setPreview] = useState<{
     text?: string;
     truncated?: boolean;
@@ -66,9 +69,13 @@ export default function MachineApp() {
     try {
       const data = await api<{ groups: Group[] }>("/api/machines/groups");
       setGroups(data.groups);
-      if (selected) setDetail(await api<Detail>("/api/machines/" + selected));
+      if (selected) {
+        const result = await api<Detail>("/api/machines/" + selected);
+        if (selectedRef.current === selected) setDetail(result);
+      }
+      setLoadError("");
     } catch (e) {
-      setError(message(e));
+      setLoadError(message(e));
     }
   }
   useEffect(() => {
@@ -140,9 +147,9 @@ export default function MachineApp() {
         </nav>
       </header>
       <main className="ux-main machine-main">
-        {error && (
+        {(error || loadError) && (
           <div className="ux-error" role="alert">
-            {error}
+            {error || loadError}
             <button onClick={() => void refresh()}>Try again</button>
           </div>
         )}
@@ -386,20 +393,47 @@ export default function MachineApp() {
                           <progress value={j.progress} max={100} />
                         )}{" "}
                         {j.error && <p className="ux-caution">{j.error}</p>}{" "}
-                        {j.status !== "completed" && (
-                          <button
-                            disabled={busy}
-                            onClick={() =>
-                              void action(() =>
-                                post(
-                                  `/api/machines/${selected}/jobs/${j.id}/${stopped.has(j.status) ? "retry" : "cancel"}`,
-                                ),
-                              )
-                            }
-                          >
-                            {stopped.has(j.status) ? "Retry" : "Cancel"}
-                          </button>
-                        )}
+                        {j.status !== "completed" &&
+                          j.phase !== "discarded" && (
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                void action(() =>
+                                  post(
+                                    `/api/machines/${selected}/jobs/${j.id}/${stopped.has(j.status) ? "retry" : "cancel"}`,
+                                  ),
+                                )
+                              }
+                            >
+                              {stopped.has(j.status) ? "Retry" : "Cancel"}
+                            </button>
+                          )}
+                        {stopped.has(j.status) &&
+                          j.status !== "completed" &&
+                          j.phase !== "discarded" && (
+                            <details>
+                              <summary>Discard staged upload</summary>
+                              <p className="ux-small">
+                                Remove the staged bytes for {j.filename}. This
+                                prevents retry of this job. Published/retained
+                                sources and answers stay available. Upload the
+                                original file again if needed.
+                              </p>
+                              <button
+                                disabled={busy}
+                                onClick={() =>
+                                  void action(() =>
+                                    post(
+                                      `/api/machines/${selected}/jobs/${j.id}/discard`,
+                                      { confirmation: "DISCARD STAGED UPLOAD" },
+                                    ),
+                                  )
+                                }
+                              >
+                                Confirm discard of staged upload
+                              </button>
+                            </details>
+                          )}
                       </div>
                     ))}
                   </details>

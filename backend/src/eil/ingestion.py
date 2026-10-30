@@ -75,13 +75,13 @@ class JobStore:
         with self.evidence.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             queued = conn.execute(
-                "SELECT count(*),coalesce(sum(length(content)),0) FROM ingestion_jobs WHERE status IN ('queued','running')"
+                "SELECT count(CASE WHEN status IN ('queued','running') THEN 1 END),coalesce(sum(length(content)),0) FROM ingestion_jobs"
             ).fetchone()
             if queued[0] >= 4 or queued[1] + len(content) > 30 * 1024**2:
                 raise EvidenceConflict("Ingestion queue is full (four jobs / 30 MiB staged)")
             if conn.execute("SELECT count(*) FROM ingestion_jobs").fetchone()[0] >= 500:
                 raise EvidenceConflict(
-                    "Ingestion job history limit reached; archive completed machine history before adding jobs"
+                    "Ingestion job history limit reached (500); operator workspace archival is required. No records are deleted automatically."
                 )
             conn.execute(
                 "INSERT INTO ingestion_jobs VALUES (?,?,?,?,?,?)",
@@ -131,6 +131,10 @@ class JobStore:
             if not row:
                 raise EvidenceNotFound("Ingestion job not found")
             job = json.loads(row[0])
+            if job.get("phase") == "discarded":
+                raise EvidenceConflict(
+                    "This staged upload was discarded; upload the file again to retry"
+                )
             if action == "cancel" and job["status"] not in TERMINAL:
                 job.update(
                     cancel_requested=True,
@@ -158,6 +162,29 @@ class JobStore:
             conn.execute(
                 "UPDATE ingestion_jobs SET status=?,document=? WHERE id=?",
                 (job["status"], json.dumps(job), identity),
+            )
+        return job
+
+    def discard(self, identity, owner_id):
+        with self.evidence.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT document FROM ingestion_jobs WHERE id=? AND owner_id=?",
+                (identity, owner_id),
+            ).fetchone()
+            if not row:
+                raise EvidenceNotFound("Job not found")
+            job = json.loads(row[0])
+            if job["status"] not in TERMINAL or job["status"] == "completed":
+                raise EvidenceConflict("Only a stopped unsuccessful upload can be discarded")
+            job.update(
+                phase="discarded",
+                updated_at=now(),
+                error="Staged upload discarded by its owner. Existing source snapshots were retained; upload the file again to retry.",
+            )
+            conn.execute(
+                "UPDATE ingestion_jobs SET document=?,content=X'' WHERE id=?",
+                (json.dumps(job), identity),
             )
         return job
 
@@ -293,6 +320,7 @@ class IngestionService:
         self.store = JobStore(directory)
         self.stop = threading.Event()
         self.thread = None
+        self.fatal_error = None
 
     def start(self):
         with self.store.evidence.connection() as conn:
@@ -306,7 +334,7 @@ class IngestionService:
                 phase="stopped",
                 error="Service restarted. Retry explicitly to continue the staged source.",
             )
-        self.thread = threading.Thread(target=self.loop, daemon=True)
+        self.thread = threading.Thread(target=self.supervise_loop, daemon=True)
         self.thread.start()
         return self
 
@@ -316,6 +344,12 @@ class IngestionService:
             self.thread.join(15)
         if self.thread and self.thread.is_alive():
             raise RuntimeError("Ingestion supervisor did not stop")
+
+    def supervise_loop(self):
+        try:
+            self.loop()
+        except Exception as exc:
+            self.fatal_error = type(exc).__name__
 
     def loop(self):
         while not self.stop.is_set():

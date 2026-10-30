@@ -227,12 +227,28 @@ def purge(machine_id: UUID, document_id: UUID, payload: Purge, request: Request)
     return {"purged": True}
 
 
+class JobControl(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    confirmation: Literal["DISCARD STAGED UPLOAD"] | None = None
+
+
 @router.post("/{machine_id}/jobs/{job_id}/{action}")
-def control(machine_id: UUID, job_id: UUID, action: Literal["cancel", "retry"], request: Request):
+def control(
+    machine_id: UUID,
+    job_id: UUID,
+    action: Literal["cancel", "retry", "discard"],
+    request: Request,
+    payload: JobControl | None = None,
+):
     store(request).get(str(machine_id), owner(request))
     jobs = JobStore(request.app.state.runs.store.directory)
     if jobs.get(str(job_id), owner(request))["machine_id"] != str(machine_id):
         raise EvidenceNotFound("Job not found")
-    result = jobs.control(str(job_id), owner(request), action)
+    if action == "discard":
+        if not payload or payload.confirmation != "DISCARD STAGED UPLOAD":
+            raise EvidenceConflict("Review and confirm removal of this staged upload first")
+        result = jobs.discard(str(job_id), owner(request))
+    else:
+        result = jobs.control(str(job_id), owner(request), action)
     record(request, "machine_ingestion_" + action, str(job_id), {"machine_id": str(machine_id)})
     return result

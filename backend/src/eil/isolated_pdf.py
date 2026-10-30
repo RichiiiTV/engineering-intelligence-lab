@@ -27,6 +27,13 @@ class ParserWorkerError(RuntimeError):
 
 def docker():
     executable = shutil.which("docker")
+    if executable is None and os.name == "nt":
+        candidate = (
+            Path(os.environ.get("ProgramFiles", r"C:\Program Files"))
+            / "Docker/Docker/resources/bin/docker.exe"
+        )
+        if candidate.is_file():
+            executable = str(candidate)
     if executable is None:
         raise RuntimeError("Docker Desktop/Linux engine is required for isolated PDF parsing")
     endpoint = (
