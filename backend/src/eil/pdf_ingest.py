@@ -22,7 +22,7 @@ class PDFBusy(PDFUnavailable):
     pass
 
 
-def normalize_document(document):
+def normalize_document(document, *, max_pages=MAX_PDF_PAGES):
     """Keep item/page/bbox provenance, including explicit multi-page item ranges."""
     chunks = []
     for item, _ in document.iterate_items():
@@ -41,7 +41,7 @@ def normalize_document(document):
             raise ValueError("PDF item has no page provenance")
         pages = sorted({p.page_no for p in provenance})
         for page in pages:
-            if not 1 <= page <= MAX_PDF_PAGES or page not in document.pages:
+            if not 1 <= page <= max_pages or page not in document.pages:
                 raise ValueError("PDF exceeds the page limit")
         for page in pages[:1]:
             for offset in range(0, len(text), 1200):
@@ -73,7 +73,9 @@ def normalize_document(document):
     }
 
 
-def convert_pdf_bytes(content, artifacts=DOCLING_ARTIFACTS):
+def convert_pdf_bytes(
+    content, artifacts=DOCLING_ARTIFACTS, *, page_range=None, max_pages=MAX_PDF_PAGES
+):
     from docling.datamodel.accelerator_options import AcceleratorOptions
     from docling.datamodel.base_models import DocumentStream, InputFormat
     from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
@@ -100,15 +102,17 @@ def convert_pdf_bytes(content, artifacts=DOCLING_ARTIFACTS):
     )
     result = converter.convert(
         DocumentStream(name="source.pdf", stream=io.BytesIO(content)),
-        max_num_pages=MAX_PDF_PAGES,
+        max_num_pages=max_pages,
         max_file_size=MAX_PDF_BYTES,
+        **({"page_range": page_range} if page_range else {}),
     )
     if getattr(result.status, "value", result.status) != "success":
         raise ValueError("PDF conversion did not complete successfully")
     from importlib.metadata import version
 
     return {
-        **normalize_document(result.document),
+        **normalize_document(result.document, max_pages=max_pages),
+        "total_page_count": result.input.page_count,
         "parser_version": version("docling"),
         "core_version": version("docling-core"),
         "table_mode": "fast",

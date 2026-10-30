@@ -20,8 +20,9 @@ MAX_DOCUMENTS, MAX_PASSAGES = 100, 10000
 
 
 class KnowledgeStore:
-    def __init__(self, directory):
+    def __init__(self, directory, *, machine_id=None, owner_id=None):
         self.evidence = EvidenceStore(directory)
+        self.machine_id, self.owner_id = machine_id, owner_id
         with self.evidence.connection() as conn:
             conn.executescript("""
                 CREATE TABLE IF NOT EXISTS knowledge_documents (
@@ -40,12 +41,23 @@ class KnowledgeStore:
                 conn.execute(
                     "ALTER TABLE knowledge_passages ADD COLUMN metadata TEXT NOT NULL DEFAULT '{}'"
                 )
+            if "machine_id" not in {
+                r[1] for r in conn.execute("PRAGMA table_info(knowledge_documents)")
+            }:
+                conn.execute("ALTER TABLE knowledge_documents ADD COLUMN machine_id TEXT")
+            if machine_id is not None:
+                checked_id(machine_id)
+                machine = conn.execute(
+                    "SELECT owner_id FROM machines WHERE id=?", (machine_id,)
+                ).fetchone()
+                if not machine or machine["owner_id"] != owner_id:
+                    raise EvidenceNotFound("Machine not found")
 
     def list(self, *, all_documents=False):
         with self.evidence.connection() as conn:
             rows = conn.execute(
-                "SELECT d.*,count(p.vector) indexed_count,count(p.id) passages FROM knowledge_documents d LEFT JOIN knowledge_passages p ON p.document_id=d.id WHERE d.active=1 OR ? GROUP BY d.id ORDER BY json_extract(d.metadata,'$.title'),d.id",
-                (all_documents,),
+                "SELECT d.*,count(p.vector) indexed_count,count(p.id) passages FROM knowledge_documents d LEFT JOIN knowledge_passages p ON p.document_id=d.id WHERE (d.active=1 OR ?) AND d.machine_id IS ? GROUP BY d.id ORDER BY json_extract(d.metadata,'$.title'),d.id",
+                (all_documents, self.machine_id),
             ).fetchall()
         return [
             {
@@ -61,8 +73,8 @@ class KnowledgeStore:
         checked_id(identity)
         with self.evidence.connection() as conn:
             row = conn.execute(
-                "SELECT * FROM knowledge_documents WHERE id=? AND (active=1 OR ?)",
-                (identity, include_inactive),
+                "SELECT * FROM knowledge_documents WHERE id=? AND (active=1 OR ?) AND machine_id IS ?",
+                (identity, include_inactive, self.machine_id),
             ).fetchone()
         if not row:
             raise EvidenceNotFound("Library document not found")
@@ -82,6 +94,8 @@ class KnowledgeStore:
         pdf_parser=parse_pdf,
         identity=None,
         profile=None,
+        publish=True,
+        job_id=None,
     ):
         if (
             not filename
@@ -95,10 +109,40 @@ class KnowledgeStore:
             for v, maximum in ((title, 160), (family, 60), (version, 80), (license_note, 300))
         ):
             raise ValueError("Title, product family, version and licence are required and bounded")
-        if data_policy not in {"synthetic", "licensed-public"}:
+        if data_policy not in (
+            {"synthetic", "licensed-public", "internal"}
+            if self.machine_id
+            else {"synthetic", "licensed-public"}
+        ):
             raise ValueError("Only generated or explicitly licensed public documents may be shared")
         suffix = Path(filename).suffix.lower()
-        if not content or len(content) > MAX_PDF_BYTES or suffix not in {".pdf", ".md", ".txt"}:
+        code_types = (
+            {
+                ".scl",
+                ".st",
+                ".awl",
+                ".py",
+                ".js",
+                ".ts",
+                ".c",
+                ".cpp",
+                ".h",
+                ".xml",
+                ".json",
+                ".yaml",
+                ".yml",
+                ".ini",
+                ".cfg",
+                ".csv",
+            }
+            if self.machine_id
+            else set()
+        )
+        if (
+            not content
+            or len(content) > MAX_PDF_BYTES
+            or suffix not in {".pdf", ".md", ".txt", *code_types}
+        ):
             raise ValueError("Upload a PDF, Markdown or text document up to 10 MiB")
         if suffix == ".pdf":
             if not content.startswith(b"%PDF-"):
@@ -117,6 +161,10 @@ class KnowledgeStore:
                 for start in range(0, len(page), 1000)
                 if page[start : start + 1200].strip()
             ]
+            if suffix in code_types:
+                from .code_sources import chunks
+
+                passages = chunks(text)
         if not passages or len(passages) > 2000:
             raise ValueError("Document must have 1-2000 readable passages")
         identity = identity or str(uuid.uuid4())
@@ -135,11 +183,16 @@ class KnowledgeStore:
             kind=suffix[1:],
             size=len(content),
             profile=ProductContext.model_validate(profile or {}).model_dump(exclude_defaults=True),
+            machine_id=self.machine_id,
+            ingestion_job_id=job_id,
         )
         with self.evidence.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             if (
-                conn.execute("SELECT count(*) FROM knowledge_documents").fetchone()[0]
+                conn.execute(
+                    "SELECT count(*) FROM knowledge_documents WHERE active=1 AND machine_id IS ?",
+                    (self.machine_id,),
+                ).fetchone()[0]
                 >= MAX_DOCUMENTS
                 or conn.execute("SELECT count(*) FROM knowledge_passages").fetchone()[0]
                 + len(passages)
@@ -147,13 +200,13 @@ class KnowledgeStore:
             ):
                 raise EvidenceConflict("Library capacity reached (100 documents / 10,000 passages)")
             if conn.execute(
-                "SELECT 1 FROM knowledge_documents WHERE json_extract(metadata,'$.sha256')=?",
-                (metadata["sha256"],),
+                "SELECT 1 FROM knowledge_documents WHERE json_extract(metadata,'$.sha256')=? AND machine_id IS ?",
+                (metadata["sha256"], self.machine_id),
             ).fetchone():
                 raise EvidenceConflict("This document is already in the library")
             conn.execute(
-                "INSERT INTO knowledge_documents VALUES (?,?,?,1)",
-                (identity, json.dumps(metadata), content),
+                "INSERT INTO knowledge_documents(id,metadata,raw,active,machine_id) VALUES (?,?,?,?,?)",
+                (identity, json.dumps(metadata), content, int(publish), self.machine_id),
             )
             conn.executemany(
                 "INSERT INTO knowledge_passages(id,document_id,page,text,metadata) VALUES (?,?,?,?,?)",
@@ -199,12 +252,22 @@ class KnowledgeStore:
     def set_active(self, identity, active):
         self.document(identity, include_inactive=True)
         with self.evidence.connection() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            if (
+                active
+                and conn.execute(
+                    "SELECT count(*) FROM knowledge_documents WHERE machine_id IS ? AND active=1 AND id<>?",
+                    (self.machine_id, identity),
+                ).fetchone()[0]
+                >= MAX_DOCUMENTS
+            ):
+                raise EvidenceConflict("Active source limit reached (100 per workspace)")
             conn.execute(
                 "UPDATE knowledge_documents SET active=? WHERE id=?", (int(active), identity)
             )
 
-    def index(self, identity):
-        document = self.document(identity)
+    def index(self, identity, *, progress=None, cancelled=None):
+        document = self.document(identity, include_inactive=True)
         with self.evidence.connection() as conn:
             passages = conn.execute(
                 "SELECT id,text FROM knowledge_passages WHERE document_id=? ORDER BY id",
@@ -212,6 +275,8 @@ class KnowledgeStore:
             ).fetchall()
         output, key, deadline = [], None, time.monotonic() + 90
         for start in range(0, len(passages), 16):
+            if cancelled and cancelled():
+                raise EmbeddingUnavailable("Indexing canceled; no partial index was published")
             if time.monotonic() > deadline:
                 raise EmbeddingUnavailable(
                     "Indexing exceeded its deadline; no partial index was saved"
@@ -225,6 +290,8 @@ class KnowledgeStore:
                 raise EmbeddingUnavailable("Embedding model changed while indexing")
             key = current
             output.extend((v, key, p["id"]) for p, v in zip(batch, vectors, strict=True))
+            if progress:
+                progress(min(start + 16, len(passages)), len(passages))
         with self.evidence.connection() as conn:
             conn.executemany("UPDATE knowledge_passages SET vector=?,model=? WHERE id=?", output)
         return {"document_id": identity, "indexed_passages": len(output), "model": key}

@@ -102,4 +102,11 @@ publish internal material, enable remote tracing or introduce production control
   citation/block-quotation contracts and visible review/unsupported outcomes.
   Targeted backend acceptance: **28 passed in 12.46 seconds**. Frontend: **33
   passed**, TypeScript/Vite build passed. General claim entailment remains unverified.
-- M8 in progress. Later stages start after preceding targeted acceptance passes.
+- M8 implemented: owner-scoped machine sources, local embedding centroid groups
+  (complete-link cosine threshold 0.82), bounded text/code inspection with line
+  references, atomic background indexing, explicit retry/cancel and archived-source
+  lifecycle. Reviewed purge rejects investigation/notebook references. Targeted
+  backend gate: **29 passed in 13.38 seconds**; frontend build passed. PDFs are
+  capped at 200 pages, 10 MiB and 2,000 passages; installation storage quotas apply.
+  Similarity groups never merge identities or automatically share evidence.
+- M9 in progress. M10 starts after the notebook acceptance gate.

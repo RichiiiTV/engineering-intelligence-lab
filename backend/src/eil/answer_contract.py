@@ -10,7 +10,11 @@ def assess(run, answer):
     lookup = run.get("library_lookup")
     if not run.get("use_library") and not run.get("machine_id"):
         return {"outcome": "references_unchecked", "issues": [], "claim_entailment": "not_verified"}
-    hits = (lookup or {}).get("hits", []) + ((run.get("machine_lookup") or {}).get("hits", []))
+    hits = (
+        (lookup or {}).get("hits", [])
+        + ((run.get("machine_lookup") or {}).get("hits", []))
+        + run.get("machine_source_reads", [])
+    )
     observed = {h["citation_id"]: h for h in hits}
     cited = set(re.findall(r"\[(kb:[^\]]+)\]", answer))
     issues = []

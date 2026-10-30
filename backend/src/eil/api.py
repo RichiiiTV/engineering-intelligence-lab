@@ -42,6 +42,7 @@ from .drafts import DraftStore
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore
 from .exports import export_investigation
 from .library_api import router as library_router
+from .machine_api import router as machine_router
 from .pdf_ingest import MAX_PDF_BYTES, PDFBusy, PDFUnavailable, parse_pdf
 from .runs import STOPPED, QueueFull, RunConflict, RunLimits, RunNotFound
 from .service import RunService
@@ -63,6 +64,8 @@ class InvestigationRequest(BaseModel):
     chat_mode: bool = Field(default=False, strict=True)
     use_library: bool = Field(default=False, strict=True)
     library_document_ids: list[UUID] | None = Field(default=None, max_length=100)
+    machine_id: UUID | None = None
+    machine_document_ids: list[UUID] | None = Field(default=None, max_length=100)
 
     @model_validator(mode="after")
     def validate_chat_scope(self):
@@ -222,6 +225,10 @@ def investigate(payload: InvestigationRequest, request: Request):
                 use_library=payload.use_library,
                 library_document_ids=[str(i) for i in payload.library_document_ids]
                 if payload.library_document_ids is not None
+                else None,
+                machine_id=str(payload.machine_id) if payload.machine_id else None,
+                machine_document_ids=[str(i) for i in payload.machine_document_ids]
+                if payload.machine_document_ids is not None
                 else None,
             )
             return run
@@ -537,13 +544,21 @@ def create_app(service_factory=RunService):
             from .knowledge import KnowledgeStore
 
             KnowledgeStore(runner.store.directory).seed()
-            yield
+            from .ingestion import IngestionService
+
+            jobs = IngestionService(runner.store.directory).start()
+            app.state.ingestion = jobs
+            try:
+                yield
+            finally:
+                jobs.close()
 
     app = FastAPI(title="Engineering Intelligence Lab", version="0.5.0", lifespan=lifespan)
     app.add_middleware(UploadBodyLimit)
     app.include_router(router)
     app.include_router(auth_router)
     app.include_router(library_router)
+    app.include_router(machine_router)
 
     @app.middleware("http")
     async def local_browser_origin(request, call_next):
@@ -616,7 +631,7 @@ def create_app(service_factory=RunService):
             "PATCH",
             "DELETE",
         } and request.url.path.startswith("/api/")
-        exclusive = request.url.path in {
+        exclusive = request.url.path.endswith("/purge") or request.url.path in {
             "/api/admin/backups",
             "/api/retention/apply",
             "/api/admin/audit/archive",

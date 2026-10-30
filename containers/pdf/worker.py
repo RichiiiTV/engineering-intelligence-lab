@@ -47,7 +47,17 @@ else:
     raw = sys.stdin.buffer.read(MAX_PDF_BYTES + 1)
     if not raw.startswith(b"%PDF-") or len(raw) > MAX_PDF_BYTES:
         raise ValueError("Invalid or oversized PDF")
-    result = convert_pdf_bytes(raw, Path("/models"))
+    page_range = None
+    if "--pages" in sys.argv:
+        if len(sys.argv) != 4 or sys.argv[1] != "--pages":
+            raise ValueError("Invalid batch arguments")
+        start, end = map(int, sys.argv[2:])
+        if not 1 <= start <= end <= 200 or end - start >= 20:
+            raise ValueError("Invalid page batch")
+        page_range = (start, end)
+    result = convert_pdf_bytes(
+        raw, Path("/models"), page_range=page_range, max_pages=200 if page_range else 20
+    )
     print(
         json.dumps(
             {**result, "isolation": "docker-network-none-readonly-nonroot-v1"}, ensure_ascii=False

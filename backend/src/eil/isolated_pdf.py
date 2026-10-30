@@ -41,10 +41,12 @@ def flags():
     return {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
 
 
-def command(name, *, self_test=False):
+def command(name, *, self_test=False, image=IMAGE):
+    if image not in {IMAGE, "eil-pdf-worker:2"}:
+        raise ValueError("Unapproved parser image")
     base = docker()
     image = subprocess.run(
-        [*base, "image", "inspect", IMAGE, "--format", "{{.Id}}"],
+        [*base, "image", "inspect", image, "--format", "{{.Id}}"],
         capture_output=True,
         timeout=10,
         **flags(),
@@ -99,10 +101,22 @@ def command(name, *, self_test=False):
     return args
 
 
-def convert(content, *, timeout=120, self_test=False):
-    name = "eil-pdf-" + uuid.uuid4().hex
+def convert(content, *, timeout=120, self_test=False, page_range=None, container_name=None):
+    name = container_name or "eil-pdf-" + uuid.uuid4().hex
+    if not re.fullmatch(r"eil-(?:pdf|ingest)-[a-f0-9-]{1,50}(?:-p\d+)?", name):
+        raise ValueError("Invalid generated parser name")
+    args = (
+        command(name, self_test=self_test)
+        if page_range is None
+        else command(name, image="eil-pdf-worker:2")
+    )
+    if page_range is not None:
+        start, end = page_range
+        if not 1 <= start <= end <= 200 or end - start >= 20:
+            raise ValueError("Invalid page batch")
+        args.extend(["--pages", str(start), str(end)])
     process = subprocess.Popen(
-        command(name, self_test=self_test),
+        args,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

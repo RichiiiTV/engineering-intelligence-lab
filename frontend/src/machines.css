@@ -1,0 +1,165 @@
+.machine-main {
+  max-width: 1160px;
+}
+.machine-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #587267;
+}
+.machine-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+  margin-top: 24px;
+}
+.machine-card {
+  background: white;
+  border: 1px solid #dfe6e2;
+  border-radius: 18px;
+  padding: 26px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 16px #16332605;
+}
+.machine-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  margin-top: 0;
+}
+.machine-link {
+  display: flex;
+  width: 100%;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  padding: 18px 0;
+  border: 0;
+  border-top: 1px solid #edf0ed;
+  background: none;
+  color: #203e35;
+  cursor: pointer;
+}
+.machine-link span:nth-child(2) {
+  flex: 1;
+}
+.machine-link small,
+.machine-source small {
+  display: block;
+  color: #6c7c74;
+  margin-top: 5px;
+}
+.machine-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 1fr);
+  gap: 24px;
+}
+.machine-empty {
+  text-align: center;
+  max-width: 540px;
+  margin: 64px auto;
+  color: #526d60;
+}
+.machine-form {
+  display: grid;
+  gap: 17px;
+}
+.machine-form label {
+  display: grid;
+  gap: 7px;
+  font-size: 14px;
+}
+.machine-form input:not([type="checkbox"]),
+.machine-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 13px;
+  border: 1px solid #cdd9d1;
+  border-radius: 9px;
+  background: #fff;
+  font: inherit;
+  color: inherit;
+}
+.machine-form .machine-check {
+  display: flex;
+  gap: 9px;
+  align-items: start;
+  font-size: 13px;
+}
+.machine-upload {
+  margin-top: 22px;
+  border-top: 1px solid #e5ebe7;
+  padding-top: 18px;
+}
+.machine-upload summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.machine-source {
+  border-top: 1px solid #edf0ed;
+  padding: 15px 0;
+}
+.machine-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+}
+.machine-actions button,
+.machine-source > button {
+  border: 0;
+  background: transparent;
+  color: #286c56;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+}
+.machine-actions a {
+  font-size: 13px;
+  color: #286c56;
+}
+.machine-code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 500px;
+  overflow: auto;
+  font-size: 13px;
+  background: #f4f7f5;
+  border-radius: 10px;
+  padding: 18px;
+}
+.machine-source progress {
+  width: 100%;
+  margin-top: 10px;
+}
+.ux-header a {
+  text-decoration: none;
+  color: inherit;
+}
+.ux-header nav a {
+  font-size: 14px;
+  margin-left: 20px;
+}
+.machine-main .ux-text-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.machine-main button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+@media (max-width: 800px) {
+  .machine-layout {
+    grid-template-columns: 1fr;
+  }
+  .machine-card {
+    padding: 20px;
+  }
+  .ux-header nav a {
+    margin-left: 10px;
+  }
+}

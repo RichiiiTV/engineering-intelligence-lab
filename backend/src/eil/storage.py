@@ -70,6 +70,16 @@ class StorageManager:
             )
 
     def assert_idle(self):
+        from .evidence import EvidenceStore
+
+        with EvidenceStore(self.directory).connection() as conn:
+            if (
+                conn.execute("SELECT 1 FROM sqlite_master WHERE name='ingestion_jobs'").fetchone()
+                and conn.execute(
+                    "SELECT 1 FROM ingestion_jobs WHERE status IN ('queued','running') LIMIT 1"
+                ).fetchone()
+            ):
+                raise RunConflict("Finish or cancel document ingestion before maintenance")
         with self.runs.connection() as conn:
             if conn.execute(
                 "SELECT 1 FROM runs WHERE status IN ('running','queued') LIMIT 1"

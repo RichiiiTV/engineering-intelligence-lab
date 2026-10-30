@@ -106,13 +106,31 @@ def export_investigation(run_store, run_id):
 
     library_ids = run.get("library_document_ids", [])
     library_cited = set(re.findall(r"\[(kb:[^\]]+)\]", str(answer)))
-    library_supplied = {h["citation_id"] for h in (run.get("library_lookup") or {}).get("hits", [])}
+    library_supplied = {
+        h["citation_id"]
+        for h in [
+            *(run.get("library_lookup") or {}).get("hits", []),
+            *(run.get("machine_lookup") or {}).get("hits", []),
+            *run.get("machine_source_reads", []),
+        ]
+    }
     library_resolved, library_unknown = [], []
-    if library_ids:
-        library = KnowledgeStore(run_store.directory)
+    scopes = [(KnowledgeStore(run_store.directory), library_ids)] if library_ids else []
+    if run.get("machine_id"):
+        from .machines import MachineStore
+
+        scopes.append(
+            (
+                MachineStore(run_store.directory).documents(run["machine_id"], run["owner_id"]),
+                run["machine_document_ids"],
+            )
+        )
+    for library, scope_ids in scopes:
         for cid in sorted(library_cited | library_supplied):
+            if cid.split(":")[1] not in scope_ids:
+                continue
             try:
-                ref = library.resolve(cid, library_ids)
+                ref = library.resolve(cid, scope_ids)
                 library_resolved.append(
                     ref
                     | {
@@ -159,6 +177,17 @@ def export_investigation(run_store, run_id):
             }
             for identity in library_ids
         ],
+        "machine_snapshot": [
+            {
+                k: v
+                for k, v in library.document(identity, include_inactive=True).items()
+                if k not in {"raw", "active"}
+            }
+            for library, ids in scopes
+            for identity in ids
+            if library.machine_id
+        ],
+        "machine_id": run.get("machine_id"),
         "library_citations": library_resolved,
         "library_retrieval": {
             k: v for k, v in (run.get("library_lookup") or {}).items() if k != "hits"

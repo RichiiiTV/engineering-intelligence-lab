@@ -130,6 +130,14 @@ def document_file(document_id: str, request: Request):
 @router.get("/api/investigations/{run_id}/library/documents/{document_id}/file")
 def run_document_file(run_id: str, document_id: str, request: Request):
     run = request.app.state.runs.store.get(run_id)
+    if document_id in run.get("machine_document_ids", []) and run.get("machine_id"):
+        from .machines import MachineStore
+
+        return file_response(
+            MachineStore(request.app.state.runs.store.directory)
+            .documents(run["machine_id"], run["owner_id"])
+            .document(document_id, include_inactive=True)
+        )
     if document_id not in run.get("library_document_ids", []):
         raise EvidenceNotFound("Document is outside this investigation's library snapshot")
     return file_response(store(request).document(document_id, include_inactive=True))

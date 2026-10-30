@@ -157,6 +157,8 @@ class RunStore:
         chat_mode=False,
         use_library=False,
         library_document_ids=None,
+        machine_id=None,
+        machine_document_ids=None,
     ):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
@@ -189,6 +191,21 @@ class RunStore:
         from .auth import local_owner
 
         owner_id = owner_id or local_owner(self.directory)
+        machine_ids = []
+        product_context = {}
+        if machine_id:
+            if url.hostname not in {"localhost", "127.0.0.1", "::1"}:
+                raise ValueError("Private machine investigations require a loopback model endpoint")
+            from .machines import MachineStore
+
+            machines = MachineStore(self.directory)
+            machine = machines.get(machine_id, owner_id)
+            machine_ids = machines.documents(machine_id, owner_id).snapshot(machine_document_ids)
+            product_context = machine["profile"]
+            if case_id is None:
+                chat_mode = True
+        elif machine_document_ids is not None:
+            raise ValueError("Select a machine before choosing machine sources")
         source_ids = [] if chat_mode else None
         if case_id is not None:
             from .evidence import EvidenceStore
@@ -205,6 +222,9 @@ class RunStore:
             siemens=siemens,
             use_library=use_library,
             library_document_ids=library_ids,
+            machine_id=machine_id,
+            machine_document_ids=machine_ids,
+            product_context=product_context,
             use_mock_mcp=use_mock_mcp,
             status="queued",
             created_at=now(),

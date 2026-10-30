@@ -177,6 +177,7 @@ export default function UserApp() {
           <span>Engineering Intelligence Lab</span>
         </button>
         <nav aria-label="Main navigation">
+          <a href="/?page=machines">My machines</a>
           <button
             onClick={() =>
               navigate({ page: "investigations", caseId: "", runId: "" })
