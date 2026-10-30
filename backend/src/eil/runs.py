@@ -159,6 +159,7 @@ class RunStore:
         library_document_ids=None,
         machine_id=None,
         machine_document_ids=None,
+        notebook_context=None,
     ):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
@@ -225,6 +226,7 @@ class RunStore:
             machine_id=machine_id,
             machine_document_ids=machine_ids,
             product_context=product_context,
+            notebook_context=notebook_context,
             use_mock_mcp=use_mock_mcp,
             status="queued",
             created_at=now(),

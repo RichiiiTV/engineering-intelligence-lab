@@ -188,6 +188,10 @@ def export_investigation(run_store, run_id):
             if library.machine_id
         ],
         "machine_id": run.get("machine_id"),
+        "notebook_context": run.get("notebook_context"),
+        "machine_retrieval": {
+            k: v for k, v in (run.get("machine_lookup") or {}).items() if k != "hits"
+        },
         "library_citations": library_resolved,
         "library_retrieval": {
             k: v for k, v in (run.get("library_lookup") or {}).items() if k != "hits"

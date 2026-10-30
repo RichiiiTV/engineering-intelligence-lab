@@ -146,9 +146,17 @@ def machine_tools(directory, run_id):
         current = runs.get(run_id)
         if current.get("machine_lookup") is not None:
             return json.dumps(current["machine_lookup"])
-        result = documents.search(
-            current["question"], allowed, product_context=current.get("product_context")
+        previous = [
+            h["question"] for h in (current.get("notebook_context") or {}).get("history", [])[-2:]
+        ]
+        query = (
+            current["question"]
+            if not previous
+            else current["question"][:2000]
+            + "\nPrevious human questions: "
+            + "\n".join(previous)[-1800:]
         )
+        result = documents.search(query, allowed, product_context=current.get("product_context"))
         runs.change(run_id, lambda r, c: r.update(machine_lookup=result))
         return json.dumps(result)
 

@@ -152,6 +152,80 @@
   opacity: 0.5;
   cursor: wait;
 }
+.notebook-panel .ux-list-heading {
+  margin-bottom: 12px;
+}
+.notebook-panel h3 {
+  font-size: 21px;
+  line-height: 1.35;
+}
+.notebook-selection {
+  font-size: 13px;
+  border-bottom: 1px solid #e5ebe7;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+.notebook-selection summary {
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.notebook-turn {
+  padding: 20px 0;
+  border-bottom: 1px solid #e5ebe7;
+}
+.notebook-question {
+  background: #eff5ef;
+  padding: 15px 18px;
+  border-radius: 13px;
+  white-space: pre-wrap;
+  font-weight: 600;
+}
+.notebook-composer {
+  margin-top: 24px;
+}
+.notebook-composer summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: #527162;
+}
+.notebook-turn .ux-siemens-references {
+  margin: 18px 0 0;
+  padding: 15px;
+  font-size: 13px;
+}
+.notebook-turn .ux-siemens-references h2 {
+  font-size: 15px;
+}
+.safe-answer {
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+}
+.safe-answer p {
+  white-space: pre-wrap;
+}
+.safe-answer pre {
+  white-space: pre-wrap;
+  background: #f3f6f4;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 12px;
+  overflow: auto;
+}
+.safe-answer code {
+  font-family: Consolas, monospace;
+  font-size: 0.9em;
+}
+.source-inline {
+  border: 0;
+  border-radius: 5px;
+  background: #e8f1e8;
+  color: #25674c;
+  font-size: 11px;
+  padding: 2px 6px;
+  cursor: pointer;
+  vertical-align: middle;
+}
 @media (max-width: 800px) {
   .machine-layout {
     grid-template-columns: 1fr;

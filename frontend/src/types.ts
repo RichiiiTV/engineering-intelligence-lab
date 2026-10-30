@@ -97,6 +97,13 @@ export interface Hit extends Citation {
   lexical_score: number;
 }
 export interface EvidenceReport {
+  machine_id?: string;
+  machine_snapshot?: { id: string; title: string; version: string }[];
+  machine_retrieval?: {
+    method?: string;
+    notice?: string | null;
+    semantic_available?: boolean;
+  };
   answer_contract?: {
     outcome: string;
     issues: string[];

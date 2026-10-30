@@ -109,4 +109,11 @@ publish internal material, enable remote tracing or introduce production control
   backend gate: **29 passed in 13.38 seconds**; frontend build passed. PDFs are
   capped at 200 pages, 10 MiB and 2,000 passages; installation storage quotas apply.
   Similarity groups never merge identities or automatically share evidence.
-- M9 in progress. M10 starts after the notebook acceptance gate.
+- M9 implemented: named machine notebooks, explicit source revisions, four bounded
+  prior completed exchanges, immutable per-turn snapshots and independent run
+  budgets/checkpoints. Submission IDs recover duplicate retries. The UI includes
+  notebook follow-ups, safe code/rich-text display, direct source navigation and
+  a separate explicit Siemens public question. User creation is consolidated under
+  Administration and failed user forms retain inputs. Backend gate: **15 passed
+  in 9.86 seconds**; complete frontend suite: **37 passed**; build passed.
+- M10 in progress: reproducible generated coverage suite and final release checks.

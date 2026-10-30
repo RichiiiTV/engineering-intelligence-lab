@@ -258,8 +258,10 @@ function Users({ currentUserId }: { currentUserId: string }) {
       await work();
       await refresh();
       setNotice(message);
+      return true;
     } catch (e) {
       setError(String(e));
+      return false;
     } finally {
       setBusy(false);
     }
@@ -268,11 +270,11 @@ function Users({ currentUserId }: { currentUserId: string }) {
     e.preventDefault();
     const form = e.currentTarget;
     const fields = new FormData(form);
-    await action(
+    const success = await action(
       () => post("/api/auth/users", Object.fromEntries(fields)),
       "User account created.",
     );
-    form.reset();
+    if (success) form.reset();
   }
   return (
     <section aria-label="User administration">

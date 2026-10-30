@@ -3,6 +3,7 @@ import { Beaker, FolderLock, Plus, FileText, ArrowLeft } from "lucide-react";
 import { api, post } from "./api";
 import "./user.css";
 import "./machines.css";
+import NotebookPanel from "./NotebookPanel";
 
 export type Machine = {
   id: string;
@@ -404,26 +405,24 @@ export default function MachineApp() {
                   </details>
                 )}
               </section>
-              <section className="machine-card">
-                <h2>Investigate this machine</h2>
-                <p>
-                  Select the sources you need and keep related questions in a
-                  notebook.
-                </p>
-                <p className="ux-small">
-                  Notebook conversations are being connected to this private
-                  source selection.
-                </p>
-                <MachineProfile
-                  detail={detail}
-                  busy={busy}
-                  save={(data) =>
-                    action(() =>
-                      post(`/api/machines/${selected}/profile`, data),
-                    )
-                  }
+              <div>
+                <NotebookPanel
+                  key={selected}
+                  machineId={selected}
+                  sources={detail.documents}
                 />
-              </section>
+                <section className="machine-card">
+                  <MachineProfile
+                    detail={detail}
+                    busy={busy}
+                    save={(data) =>
+                      action(() =>
+                        post(`/api/machines/${selected}/profile`, data),
+                      )
+                    }
+                  />
+                </section>
+              </div>
             </div>
             {preview && (
               <section className="machine-card">

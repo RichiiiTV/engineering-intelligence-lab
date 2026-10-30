@@ -43,6 +43,7 @@ from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore
 from .exports import export_investigation
 from .library_api import router as library_router
 from .machine_api import router as machine_router
+from .notebook_api import router as notebook_router
 from .pdf_ingest import MAX_PDF_BYTES, PDFBusy, PDFUnavailable, parse_pdf
 from .runs import STOPPED, QueueFull, RunConflict, RunLimits, RunNotFound
 from .service import RunService
@@ -559,6 +560,7 @@ def create_app(service_factory=RunService):
     app.include_router(auth_router)
     app.include_router(library_router)
     app.include_router(machine_router)
+    app.include_router(notebook_router)
 
     @app.middleware("http")
     async def local_browser_origin(request, call_next):

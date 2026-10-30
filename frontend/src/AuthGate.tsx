@@ -197,10 +197,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
 function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
-  const [name, setName] = useState("");
-  const [initial, setInitial] = useState("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   async function password(event: FormEvent) {
     event.preventDefault();
     setError("");
@@ -212,22 +209,6 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
       setCurrent("");
       setNext("");
       onChanged();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  }
-  async function add(event: FormEvent) {
-    event.preventDefault();
-    setError("");
-    try {
-      await post("/api/auth/users", {
-        username: name,
-        password: initial,
-        role: "member",
-      });
-      setInitial("");
-      setNotice(`Account created for ${name}.`);
-      setName("");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -263,37 +244,9 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
         </button>
       </form>
       {user.role === "admin" && (
-        <form className="siemens-form" onSubmit={(e) => void add(e)}>
-          <h3>Add a workspace user</h3>
-          <label htmlFor="new-user">Username</label>
-          <input
-            id="new-user"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            minLength={3}
-            maxLength={40}
-          />
-          <label htmlFor="initial-password">Password for the new user</label>
-          <input
-            id="initial-password"
-            type="password"
-            autoComplete="new-password"
-            value={initial}
-            onChange={(e) => setInitial(e.target.value)}
-            required
-            minLength={14}
-            maxLength={128}
-          />
-          <button className="ux-secondary">Create user</button>
-          <p>
-            Each account sees its own cases and records its own approval
-            decisions.
-          </p>
-        </form>
+        <p>Manage workspace users in Administration / Users.</p>
       )}
       {error && <p role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
     </section>
   );
 }

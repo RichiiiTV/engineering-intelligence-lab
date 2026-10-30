@@ -97,28 +97,46 @@ export function LibraryChooser({
 export function LibraryReferences({
   report,
   runId,
+  prefix = "",
 }: {
   report: EvidenceReport;
   runId: string;
+  prefix?: string;
 }) {
-  if (!report.library_snapshot?.length && !report.library_retrieval?.method)
+  if (
+    !report.library_snapshot?.length &&
+    !report.library_retrieval?.method &&
+    !report.machine_snapshot?.length &&
+    !report.machine_retrieval?.method
+  )
     return null;
   const references = report.library_citations || [];
   return (
     <section className="ux-siemens-references" aria-label="Library sources">
-      <h2>From your knowledge library</h2>
+      <h2>
+        {report.machine_id
+          ? "From your selected sources"
+          : "From your knowledge library"}
+      </h2>
+      {report.machine_retrieval?.notice && (
+        <p className="ux-small">{report.machine_retrieval.notice}</p>
+      )}
       {report.library_retrieval?.notice && (
         <p className="ux-small">{report.library_retrieval.notice}</p>
       )}
       {!references.length && (
         <p>
-          {report.library_retrieval?.method
+          {report.library_retrieval?.method || report.machine_retrieval?.method
             ? "No supporting passages were found in the selected documents. This does not prove the information is absent."
             : "Library sources were selected, but retrieval was not completed. This answer needs a source check."}
         </p>
       )}
       {references.map((r, i) => (
-        <details key={r.citation_id} id={"source-" + r.citation_id}>
+        <details
+          key={r.citation_id}
+          id={prefix + "source-" + r.citation_id}
+          tabIndex={-1}
+        >
           <summary>
             Library source {i + 1}: {r.title} ·{" "}
             {r.line_start
@@ -131,7 +149,9 @@ export function LibraryReferences({
             {r.family} · {r.version} ·{" "}
             {r.data_policy === "synthetic"
               ? "Generated demonstration material"
-              : "Licensed public reference"}
+              : r.data_policy === "internal"
+                ? "Private internal source"
+                : "Licensed public reference"}
           </p>
           <blockquote>{r.text}</blockquote>
           <p className="ux-small">{r.license_note}</p>
