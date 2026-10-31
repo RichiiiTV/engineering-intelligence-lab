@@ -177,19 +177,19 @@ function server(withCase = false) {
 it("asks a Siemens question in the normal composer and shows its answer/references inline", async () => {
   const api = server();
   render(<App />);
-  await userEvent.type(screen.getByLabelText("Your question"), QUERY);
+  await userEvent.type(screen.getByLabelText("Deine Frage"), QUERY);
   expect(
     (
       screen.getByRole("checkbox", {
-        name: /Use Siemens public documentation/,
+        name: /Öffentliche Siemens-Dokumentation/,
       }) as HTMLInputElement
     ).checked,
   ).toBe(true);
   expect(screen.queryByRole("link", { name: "SPS help" })).toBeNull();
-  await userEvent.click(screen.getByRole("button", { name: "Ask" }));
-  await screen.findByText("Answer ready");
+  await userEvent.click(screen.getByRole("button", { name: "Fragen" }));
+  await screen.findByText("Antwort bereit");
   const references = await screen.findByRole("region", {
-    name: "Siemens documentation",
+    name: "Siemens-Dokumentation",
   });
   expect(
     within(references)
@@ -197,7 +197,7 @@ it("asks a Siemens question in the normal composer and shows its answer/referenc
       .getAttribute("href"),
   ).toBe("https://docs.tia.siemens.cloud/r/manual");
   expect(
-    screen.getByText(/Review the cycle manual \[Siemens source 1\]/),
+    screen.getByText(/Review the cycle manual \[Siemens-Quelle 1\]/),
   ).toBeTruthy();
   expect(api.getPayload()).toMatchObject({
     question: QUERY,
@@ -212,8 +212,8 @@ it("asks a Siemens question in the normal composer and shows its answer/referenc
   ).toBe(false);
   await userEvent.click(
     within(
-      screen.getByRole("navigation", { name: "Main navigation" }),
-    ).getByRole("button", { name: "My investigations" }),
+      screen.getByRole("navigation", { name: "Hauptnavigation" }),
+    ).getByRole("button", { name: "Meine Untersuchungen" }),
   );
   expect(
     await screen.findByRole("button", { name: new RegExp("How does OB1") }),
@@ -226,24 +226,27 @@ it("keeps file questions local and requires a separate public query before enabl
   render(<App />);
   await screen.findByText("inspection.csv");
   await userEvent.type(
-    screen.getByLabelText("Your question"),
+    screen.getByLabelText("Deine Frage"),
     "PRIVATE station log: why did the PLC stop?",
   );
   const toggle = screen.getByRole("checkbox", {
-    name: /Use Siemens public documentation/,
+    name: /Öffentliche Siemens-Dokumentation/,
   }) as HTMLInputElement;
   expect(toggle.checked).toBe(false);
   await userEvent.click(toggle);
   expect(
     (
       screen.getByRole("button", {
-        name: "Investigate",
+        name: "Untersuchen",
       }) as HTMLButtonElement
     ).disabled,
   ).toBe(true);
-  await userEvent.type(screen.getByLabelText("Public Siemens question"), QUERY);
-  await userEvent.click(screen.getByRole("button", { name: "Investigate" }));
-  await screen.findByText("Investigation complete");
+  await userEvent.type(
+    screen.getByLabelText("Öffentliche Siemens-Frage"),
+    QUERY,
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Untersuchen" }));
+  await screen.findByText("Untersuchung abgeschlossen");
   expect(api.getPayload()).toMatchObject({
     case_id: CASE,
     question: "PRIVATE station log: why did the PLC stop?",
@@ -261,18 +264,18 @@ it("supports opting out and routes old SPS links to the normal composer", async 
   render(<App />);
   expect(
     screen.getByRole("heading", {
-      name: "What would you like to investigate?",
+      name: "Was möchtest du untersuchen?",
     }),
   ).toBeTruthy();
-  await userEvent.type(screen.getByLabelText("Your question"), QUERY);
+  await userEvent.type(screen.getByLabelText("Deine Frage"), QUERY);
   await userEvent.click(
-    screen.getByRole("checkbox", { name: /Use Siemens public documentation/ }),
+    screen.getByRole("checkbox", { name: /Öffentliche Siemens-Dokumentation/ }),
   );
-  await userEvent.click(screen.getByRole("button", { name: "Ask" }));
-  await screen.findByText("Answer ready");
+  await userEvent.click(screen.getByRole("button", { name: "Fragen" }));
+  await screen.findByText("Antwort bereit");
   expect(api.getPayload()).not.toHaveProperty("siemens");
   expect(
-    screen.queryByRole("region", { name: "Siemens documentation" }),
+    screen.queryByRole("region", { name: "Siemens-Dokumentation" }),
   ).toBeNull();
 });
 

@@ -32,7 +32,7 @@ it("renders source links and code safely without interpreting HTML or URLs", asy
   const details = screen.getByText("Passage")
     .parentElement as HTMLDetailsElement;
   details.scrollIntoView = scroll;
-  await user.click(screen.getByRole("button", { name: "[Source 1]" }));
+  await user.click(screen.getByRole("button", { name: "[Quelle 1]" }));
   expect(details.open).toBe(true);
   expect(scroll).toHaveBeenCalled();
   expect(document.querySelector("img")).toBeNull();
@@ -72,27 +72,27 @@ it("keeps a rejected follow-up and sends only the separately entered Siemens que
   const user = userEvent.setup();
   render(<NotebookPanel machineId="m" sources={[]} />);
   const question = await screen.findByRole("textbox", {
-    name: "Ask about this machine",
+    name: "Frage zu dieser Maschine stellen",
   });
   await user.type(question, "Our private line fails");
   await user.click(
-    screen.getByText("Check Siemens public documentation (optional)"),
+    screen.getByText("Öffentliche Siemens-Dokumentation prüfen (optional)"),
   );
   await user.click(
     screen.getByRole("checkbox", {
-      name: "Use this public question for this answer",
+      name: "Diese öffentliche Frage für diese Antwort verwenden",
     }),
   );
   await user.type(
-    screen.getByRole("textbox", { name: "Public Siemens question" }),
+    screen.getByRole("textbox", { name: "Öffentliche Siemens-Frage" }),
     "S7-1200 cycle manual",
   );
-  await user.click(screen.getByRole("button", { name: /Ask question/ }));
+  await user.click(screen.getByRole("button", { name: /Frage stellen/ }));
   expect(await screen.findByRole("alert")).toBeTruthy();
   expect((question as HTMLTextAreaElement).value).toBe(
     "Our private line fails",
   );
   expect(requests[0].siemens).toEqual({ question: "S7-1200 cycle manual" });
-  await user.click(screen.getByRole("button", { name: /Ask question/ }));
+  await user.click(screen.getByRole("button", { name: /Frage stellen/ }));
   expect(requests[1].request_id).toBe(requests[0].request_id);
 });

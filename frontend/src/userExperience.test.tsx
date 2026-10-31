@@ -233,19 +233,19 @@ function mockServer(
 }
 async function fillForm() {
   await userEvent.type(
-    screen.getByLabelText("Your question"),
+    screen.getByLabelText("Deine Frage"),
     "Where did rates increase?",
   );
   await userEvent.upload(
-    screen.getByLabelText("Add CSV or PDF files"),
+    screen.getByLabelText("CSV- oder PDF-Dateien hinzufügen"),
     new File(["x"], "inspection.csv", { type: "text/csv" }),
   );
   const button = screen.getByRole("button", {
-    name: "Investigate",
+    name: "Untersuchen",
   }) as HTMLButtonElement;
   expect(button.disabled).toBe(true);
   await userEvent.click(
-    screen.getByRole("checkbox", { name: /I confirm these files/ }),
+    screen.getByRole("checkbox", { name: /Ich bestätige, dass diese Dateien/ }),
   );
   expect(button.disabled).toBe(false);
   return button;
@@ -301,14 +301,14 @@ it("loads another page of cases and deduplicates records", async () => {
   );
   render(<UserApp />);
   await userEvent.click(
-    await screen.findByRole("button", { name: "Load more investigations" }),
+    await screen.findByRole("button", { name: "Weitere Untersuchungen laden" }),
   );
   await screen.findByRole("button", { name: /Older saved case/ });
   expect(
     screen.getAllByRole("button", { name: /First saved case/ }),
   ).toHaveLength(1);
   expect(
-    screen.queryByRole("button", { name: "Load more investigations" }),
+    screen.queryByRole("button", { name: "Weitere Untersuchungen laden" }),
   ).toBeNull();
 });
 
@@ -317,14 +317,14 @@ it("shows the approved simple entry point without case setup or technical contro
   render(<UserApp />);
   expect(
     screen.getByRole("heading", {
-      name: "What would you like to investigate?",
+      name: "Was möchtest du untersuchen?",
     }),
   ).toBeTruthy();
-  expect(screen.queryByLabelText("Case name")).toBeNull();
+  expect(screen.queryByLabelText("Fallname")).toBeNull();
   expect(screen.queryByText(/model calls/)).toBeNull();
   expect(
     screen
-      .getByRole("link", { name: "Advanced workspace" })
+      .getByRole("link", { name: "Erweiterter Arbeitsbereich" })
       .getAttribute("href"),
   ).toContain("view=advanced");
 });
@@ -333,7 +333,7 @@ it("creates the case automatically, uploads confirmed files, and opens grounded 
   render(<UserApp />);
   await userEvent.click(await fillForm());
   await screen.findByRole("heading", {
-    name: "False rejects increased most at S04",
+    name: "Fehlausschuss stieg am stärksten bei S04",
   });
   expect(screen.getAllByText("2.00%")).toHaveLength(2);
   expect(screen.getAllByText("5.00%")).toHaveLength(2);
@@ -346,7 +346,7 @@ it("creates the case automatically, uploads confirmed files, and opens grounded 
     limits: { max_output_tokens: 2048 },
   });
   await userEvent.click(
-    screen.getByRole("button", { name: "Before: source row" }),
+    screen.getByRole("button", { name: "Vorher: Quellzeile" }),
   );
   const modal = await screen.findByRole("dialog");
   expect(within(modal).getByText("EXAMPLE-ROW")).toBeTruthy();
@@ -355,15 +355,15 @@ it("keeps an upload failure recoverable and retries without creating a second ca
   const fetcher = mockServer({ uploadFailure: true });
   render(<UserApp />);
   await userEvent.click(await fillForm());
-  await screen.findByText(/CSV columns do not match/);
+  await screen.findByText(/CSV-Spalten entsprechen nicht/);
   expect(
     fetcher.mock.calls.some(
       (c) => c[0] === "/api/investigations" && c[1]?.method === "POST",
     ),
   ).toBe(false);
-  await userEvent.click(screen.getByRole("button", { name: "Investigate" }));
+  await userEvent.click(screen.getByRole("button", { name: "Untersuchen" }));
   await screen.findByRole("heading", {
-    name: "False rejects increased most at S04",
+    name: "Fehlausschuss stieg am stärksten bei S04",
   });
   expect(
     fetcher.mock.calls.filter(
@@ -376,7 +376,7 @@ it("uses the saved run snapshot even when new files have since been uploaded", a
   const fetcher = mockServer({ extraSource: true });
   render(<UserApp />);
   await screen.findByRole("heading", {
-    name: "False rejects increased most at S04",
+    name: "Fehlausschuss stieg am stärksten bei S04",
   });
   expect(
     fetcher.mock.calls.some((c) =>
@@ -393,7 +393,7 @@ it("does not show findings from a run in a different case", async () => {
   history.replaceState(null, "", `/?case=${CASE}&run=${RUN}`);
   const fetcher = mockServer({ foreign: true });
   render(<UserApp />);
-  await screen.findByText(/belongs to a different case/);
+  await screen.findByText(/gehört zu einem anderen Fall/);
   expect(fetcher.mock.calls.some((c) => String(c[0]).endsWith("/export"))).toBe(
     false,
   );
@@ -403,23 +403,27 @@ it("shows a controlled failure without pretending a report is complete", async (
   mockServer({ status: "budget_exceeded" });
   render(<UserApp />);
   await screen.findByRole("heading", {
-    name: "This investigation needs attention.",
+    name: "Diese Untersuchung benötigt Aufmerksamkeit.",
   });
-  expect(screen.queryByRole("button", { name: "Download report" })).toBeNull();
   expect(
-    screen.getByRole("button", { name: /Ask another question/ }),
+    screen.queryByRole("button", { name: "Bericht herunterladen" }),
+  ).toBeNull();
+  expect(
+    screen.getByRole("button", { name: /Weitere Frage stellen/ }),
   ).toBeTruthy();
 });
 it("pauses and resumes the selected investigation through the existing control API", async () => {
   history.replaceState(null, "", `/?case=${CASE}&run=${RUN}`);
   const fetcher = mockServer({ status: "running" });
   render(<UserApp />);
-  await userEvent.click(await screen.findByRole("button", { name: "Pause" }));
-  await screen.findByRole("heading", { name: "Ready when you are." });
   await userEvent.click(
-    screen.getByRole("button", { name: "Resume investigation" }),
+    await screen.findByRole("button", { name: "Pausieren" }),
   );
-  await screen.findByRole("heading", { name: "Following the evidence." });
+  await screen.findByRole("heading", { name: "Bereit für deine Frage." });
+  await userEvent.click(
+    screen.getByRole("button", { name: "Untersuchung fortsetzen" }),
+  );
+  await screen.findByRole("heading", { name: "Belege werden geprüft." });
   expect(
     fetcher.mock.calls.some(
       (c) => String(c[0]).endsWith("/pause") && c[1]?.method === "POST",
@@ -436,9 +440,9 @@ it("continues a legacy token stop in the same investigation without reuploading"
   const fetcher = mockServer({ status: "budget_exceeded", tokenStop: true });
   render(<UserApp />);
   await userEvent.click(
-    await screen.findByRole("button", { name: "Continue investigation" }),
+    await screen.findByRole("button", { name: "Untersuchung fortsetzen" }),
   );
-  await screen.findByRole("heading", { name: "Following the evidence." });
+  await screen.findByRole("heading", { name: "Belege werden geprüft." });
   const call = fetcher.mock.calls.find(
     (c) => String(c[0]).endsWith("/continue") && c[1]?.method === "POST",
   );
@@ -478,17 +482,19 @@ it("starts a fresh investigation without silently reusing the previous case file
   mockServer();
   render(<UserApp />);
   await screen.findByRole("heading", {
-    name: "False rejects increased most at S04",
+    name: "Fehlausschuss stieg am stärksten bei S04",
   });
   await userEvent.click(
     screen.getByRole("button", { name: "Engineering Intelligence Lab" }),
   );
   await screen.findByRole("heading", {
-    name: "What would you like to investigate?",
+    name: "Was möchtest du untersuchen?",
   });
   expect(screen.queryByText("inspection.csv")).toBeNull();
   expect(
-    screen.queryByRole("checkbox", { name: /I confirm these files/ }),
+    screen.queryByRole("checkbox", {
+      name: /Ich bestätige, dass diese Dateien/,
+    }),
   ).toBeNull();
   expect(location.search).toBe("");
 });
@@ -522,7 +528,7 @@ it("recovers a lost upload response by content hash rather than trusting a match
 });
 it("validates files and keeps untrusted markup escaped in the readable download", () => {
   expect(() => validateFiles([], [new File(["x"], "program.exe")])).toThrow(
-    "CSV or PDF",
+    "CSV- oder PDF",
   );
   const hostile = {
     ...report,
@@ -544,6 +550,6 @@ it("validates files and keeps untrusted markup escaped in the readable download"
   expect(html).toContain("&lt;script&gt;");
   expect(html).toContain("S04");
   expect(readableAnswer(`See csv:${SOURCE}:r0.`, hostile.citations)).toBe(
-    "See Source 1.",
+    "See Quelle 1.",
   );
 });

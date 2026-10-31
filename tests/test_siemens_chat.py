@@ -176,7 +176,7 @@ def test_tool_has_no_query_arguments_and_interrupted_lookup_is_not_resent(tmp_pa
     monkeypatch.setattr("eil.siemens_mcp.search", forbidden)
     store.change(run["id"], lambda r, c: r.update(siemens_lookup={"status": "started"}))
     result = json.loads(function())
-    assert "will not be resent" in result["error"] and result["references"] == []
+    assert "nicht automatisch erneut gesendet" in result["error"] and result["references"] == []
 
 
 def test_budget_prevents_network_and_outage_is_saved_once(tmp_path, monkeypatch):

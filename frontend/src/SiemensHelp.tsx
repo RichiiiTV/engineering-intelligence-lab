@@ -63,7 +63,11 @@ export default function SiemensHelp() {
       if (mounted.current) setResult(answer);
     } catch (e) {
       if (mounted.current)
-        setError(e instanceof Error ? e.message : "Search failed. Try again.");
+        setError(
+          e instanceof Error
+            ? e.message
+            : "Suche fehlgeschlagen. Bitte erneut versuchen.",
+        );
     } finally {
       if (mounted.current) setBusy(false);
     }
@@ -79,19 +83,19 @@ export default function SiemensHelp() {
           <Beaker size={29} />
           <span>Engineering Intelligence Lab</span>
         </a>
-        <nav aria-label="Main navigation">
-          <a href="/">Investigate files</a>
-          <a href="/?page=investigations">My investigations</a>
+        <nav aria-label="Hauptnavigation">
+          <a href="/">Dateien untersuchen</a>
+          <a href="/?page=investigations">Meine Untersuchungen</a>
         </nav>
       </header>
       <main className="ux-main">
         <div className="ux-intro">
           <BookOpen size={30} />
-          <h1>Siemens SPS / PLC help</h1>
-          <p>Find Siemens information for SIMATIC, S7 and TIA Portal.</p>
+          <h1>Siemens SPS-Hilfe</h1>
+          <p>Siemens-Informationen zu SIMATIC, S7 und TIA Portal finden.</p>
         </div>
         <form className="siemens-form" onSubmit={(e) => void submit(e)}>
-          <label htmlFor="siemens-question">Your SPS / PLC question</label>
+          <label htmlFor="siemens-question">Deine SPS-Frage</label>
           <textarea
             id="siemens-question"
             value={question}
@@ -99,41 +103,41 @@ export default function SiemensHelp() {
             maxLength={500}
             required
             rows={4}
-            placeholder="For example: Where is OB1 cycle-time behavior documented for S7-1500?"
+            placeholder="Zum Beispiel: Wo ist das OB1-Zykluszeitverhalten der S7-1500 dokumentiert?"
           />
           <div className="siemens-examples">
             <button
               type="button"
               onClick={() =>
-                setQuestion("SIMATIC S7-1500 OB1 cycle time documentation")
+                setQuestion("SIMATIC S7-1500 OB1 Zykluszeit Dokumentation")
               }
             >
-              OB1 cycle time
+              OB1-Zykluszeit
             </button>
             <button
               type="button"
               onClick={() =>
-                setQuestion("TIA Portal S7-1200 programming manual")
+                setQuestion("TIA Portal S7-1200 Programmierhandbuch")
               }
             >
-              S7-1200 programming
+              S7-1200-Programmierung
             </button>
           </div>
           <details>
-            <summary>Product and version (optional)</summary>
-            <label htmlFor="siemens-family">SIMATIC family</label>
+            <summary>Produkt und Version (optional)</summary>
+            <label htmlFor="siemens-family">SIMATIC-Familie</label>
             <select
               id="siemens-family"
               value={family}
               onChange={(e) => setFamily(e.target.value)}
             >
-              <option value="">Not specified</option>
+              <option value="">Nicht angegeben</option>
               {["S7-1200", "S7-1200 G2", "S7-1500"].map((f) => (
                 <option key={f}>{f}</option>
               ))}
             </select>
             <label htmlFor="siemens-cpu">
-              Public CPU model or order number
+              Öffentliches CPU-Modell oder Bestellnummer
             </label>
             <input
               id="siemens-cpu"
@@ -141,7 +145,7 @@ export default function SiemensHelp() {
               onChange={(e) => setCpu(e.target.value)}
               maxLength={50}
             />
-            <label htmlFor="siemens-firmware">Firmware version</label>
+            <label htmlFor="siemens-firmware">Firmware-Version</label>
             <input
               id="siemens-firmware"
               value={firmware}
@@ -149,26 +153,27 @@ export default function SiemensHelp() {
               maxLength={12}
               placeholder="V3.1"
             />
-            <label htmlFor="siemens-tia">TIA Portal version</label>
+            <label htmlFor="siemens-tia">TIA-Portal-Version</label>
             <select
               id="siemens-tia"
               value={tia}
               onChange={(e) => setTia(e.target.value)}
             >
-              <option value="">Not specified</option>
+              <option value="">Nicht angegeben</option>
               {[17, 18, 19, 20, 21].map((v) => (
                 <option key={v}>V{v}</option>
               ))}
             </select>
             <p>
-              These fields are sent with your question. The combined query has a
-              500-character limit.
+              Diese Felder werden mit deiner Frage gesendet. Die gesamte
+              Suchanfrage ist auf 500 Zeichen begrenzt.
             </p>
           </details>
           <p className="siemens-disclosure">
-            Search sends the question and selected product context above to
-            Siemens’s public MCP service. Use public product questions. Case
-            files and investigation history are kept separate.
+            Die Suche sendet die obige Frage und den ausgewählten Produktkontext
+            an den öffentlichen MCP-Dienst von Siemens. Verwende öffentliche
+            Produktfragen. Falldateien und Untersuchungsverlauf bleiben
+            getrennt.
           </p>
           <button
             className="ux-primary"
@@ -180,7 +185,7 @@ export default function SiemensHelp() {
             ) : (
               <Search size={18} />
             )}
-            {busy ? "Searching Siemens…" : "Search Siemens"}
+            {busy ? "Siemens wird durchsucht…" : "Siemens durchsuchen"}
           </button>
         </form>
         {error && (
@@ -188,17 +193,19 @@ export default function SiemensHelp() {
             {error}
           </div>
         )}
-        {busy && <p role="status">Waiting for Siemens documentation search…</p>}
+        {busy && (
+          <p role="status">Wartet auf die Siemens-Dokumentationssuche…</p>
+        )}
         {result && (
           <section
             className="siemens-results"
-            aria-label="Siemens search results"
+            aria-label="Siemens-Suchergebnisse"
           >
             <h2>{result.question}</h2>
             {result.version_notice && <p>{result.version_notice}</p>}
             {(result.curated_references?.length || 0) > 0 && (
-              <section aria-label="Reviewed manual candidates">
-                <h3>Reviewed manual candidates</h3>
+              <section aria-label="Geprüfte Handbuchkandidaten">
+                <h3>Geprüfte Handbuchkandidaten</h3>
                 {result
                   .curated_references!.filter((s) => siemensUrl(s.url))
                   .map((s) => (
@@ -207,33 +214,33 @@ export default function SiemensHelp() {
                         {s.title}
                       </a>
                       <br />
-                      {s.tia_version} · {s.edition} · {s.language} · Check exact
-                      CPU and firmware validity
+                      {s.tia_version} · {s.edition} · {s.language} · Gültigkeit
+                      für genaue CPU und Firmware prüfen
                     </p>
                   ))}
               </section>
             )}
             {result.outbound_query && (
               <details>
-                <summary>Exact submitted query</summary>
+                <summary>Exakt übermittelte Suchanfrage</summary>
                 <pre>{result.outbound_query}</pre>
               </details>
             )}
             {result.connection_verified && (
               <p className="siemens-meta">
-                Retrieved from Siemens MCP ·{" "}
-                {new Date(result.retrieved_at).toLocaleString()}
+                Von Siemens MCP abgerufen ·{" "}
+                {new Date(result.retrieved_at).toLocaleString("de-DE")}
               </p>
             )}
             {sources.length > 0 ? (
               <>
                 {result.summary && (
                   <div className="siemens-summary">
-                    <h3>Siemens-generated search summary</h3>
+                    <h3>Von Siemens generierte Suchzusammenfassung</h3>
                     <p>{result.summary}</p>
                   </div>
                 )}
-                <h3>Sources returned by Siemens</h3>
+                <h3>Von Siemens zurückgegebene Quellen</h3>
                 <div className="siemens-sources">
                   {sources.map((source) => (
                     <article key={source.url}>
@@ -249,8 +256,8 @@ export default function SiemensHelp() {
                       <small>
                         {new URL(source.url).hostname} ·{" "}
                         {source.kind === "product"
-                          ? "Product information"
-                          : "Documentation / web content"}
+                          ? "Produktinformationen"
+                          : "Dokumentation / Webinhalte"}
                       </small>
                     </article>
                   ))}
@@ -258,15 +265,15 @@ export default function SiemensHelp() {
               </>
             ) : (
               <p>
-                No eligible Siemens sources were returned. Try a shorter
-                question with the CPU family, firmware or TIA Portal version.
+                Keine zulässigen Siemens-Quellen zurückgegeben. Versuche eine
+                kürzere Frage mit CPU-Familie, Firmware oder TIA-Portal-Version.
               </p>
             )}
             <p className="siemens-disclosure">{result.limitations}</p>
           </section>
         )}
         <footer className="ux-footer">
-          <a href="/?view=advanced">Advanced workspace</a>
+          <a href="/?view=advanced">Erweiterter Arbeitsbereich</a>
         </footer>
       </main>
     </div>

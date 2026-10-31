@@ -35,16 +35,16 @@ it("requires review and exact content-bound confirmation before permanent deleti
   render(<StorageSettings admin={false} />);
   await userEvent.click(
     await screen.findByRole("button", {
-      name: "Review Trash older than 90 days",
+      name: "Papierkorbeinträge älter als 90 Tage prüfen",
     }),
   );
   const approve = await screen.findByRole("button", {
-    name: "Approve reviewed deletion",
+    name: "Geprüfte Löschung freigeben",
   });
   expect(approve.hasAttribute("disabled")).toBe(true);
   expect(calls.some((c) => c.path === "/api/retention/apply")).toBe(false);
   await userEvent.type(
-    screen.getByLabelText(/Type PERMANENTLY/),
+    screen.getByLabelText(/Eingabe: PERMANENTLY/),
     "PERMANENTLY PURGE REVIEWED TRASH",
   );
   await userEvent.click(approve);
@@ -55,6 +55,6 @@ it("requires review and exact content-bound confirmation before permanent deleti
     confirmation: "PERMANENTLY PURGE REVIEWED TRASH",
   });
   expect(
-    screen.queryByRole("button", { name: "Create verified backup" }),
+    screen.queryByRole("button", { name: "Verifizierte Sicherung erstellen" }),
   ).toBeNull();
 });

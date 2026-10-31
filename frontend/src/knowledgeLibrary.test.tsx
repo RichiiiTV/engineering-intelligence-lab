@@ -59,14 +59,14 @@ it("selects a shared library by default and lets the user narrow or disable it",
     );
   }
   render(<Form />);
-  await userEvent.click(screen.getByText("Knowledge library"));
+  await userEvent.click(screen.getByText("Wissensbibliothek"));
   const source = await screen.findByRole("checkbox", { name: /Timing guide/ });
   expect((source as HTMLInputElement).checked).toBe(true);
   await userEvent.click(source);
   expect(selection.documentIds).toEqual([]);
   await userEvent.click(
     screen.getByRole("checkbox", {
-      name: "Search the workspace document library",
+      name: "Dokumentbibliothek des Arbeitsbereichs durchsuchen",
     }),
   );
   expect(selection.enabled).toBe(false);
@@ -98,15 +98,15 @@ it("renders scoped library passages and escapes document text in the report", as
     library_retrieval: { method: "hybrid", semantic_available: true },
   } as EvidenceReport;
   render(<LibraryReferences report={report} runId="my-run" />);
-  await userEvent.click(screen.getByText(/Library source 1:/));
+  await userEvent.click(screen.getByText(/Bibliotheksquelle 1:/));
   expect(screen.getByText("<script>untrusted()</script>")).toBeTruthy();
   expect(
     screen
-      .getByRole("link", { name: "Download source document" })
+      .getByRole("link", { name: "Quelldokument herunterladen" })
       .getAttribute("href"),
   ).toBe(`/api/investigations/my-run/library/documents/${document.id}/file`);
   expect(readableAnswer(report.answer, report.library_citations!)).toContain(
-    "Library source 1",
+    "Bibliotheksquelle 1",
   );
   const html = userReport(
     { id: "run", question: "Test", status: "completed" } as Run,
@@ -114,7 +114,7 @@ it("renders scoped library passages and escapes document text in the report", as
     null,
     "",
   );
-  expect(html).toContain("Knowledge library passages");
+  expect(html).toContain("Abschnitte der Wissensbibliothek");
   expect(html).toContain("&lt;script&gt;");
   expect(html).not.toContain("<script>untrusted()");
 });
@@ -157,9 +157,9 @@ it("shows user permissions and sends explicit changes while protecting the curre
     }),
   );
   render(<AdminWorkspace currentUserId="self" onClose={() => {}} />);
-  await userEvent.click(screen.getByRole("button", { name: "Users" }));
+  await userEvent.click(screen.getByRole("button", { name: "Benutzer" }));
   await screen.findByText("member");
-  const disable = screen.getAllByRole("button", { name: "Disable account" });
+  const disable = screen.getAllByRole("button", { name: "Konto deaktivieren" });
   expect((disable[0] as HTMLButtonElement).disabled).toBe(true);
   await userEvent.click(disable[1]);
   expect(calls).toContainEqual({
@@ -167,7 +167,7 @@ it("shows user permissions and sends explicit changes while protecting the curre
     body: { active: false },
   });
   await userEvent.click(
-    screen.getByRole("button", { name: "Make administrator" }),
+    screen.getByRole("button", { name: "Als Administrator festlegen" }),
   );
   expect(calls).toContainEqual({
     path: "/api/auth/users/other/update",
@@ -202,10 +202,12 @@ it("displays audit integrity and paginates with the returned cursor", async () =
     }),
   );
   render(<AdminWorkspace currentUserId="self" onClose={() => {}} />);
-  await userEvent.click(screen.getByRole("button", { name: "Audit trail" }));
-  await screen.findByText(/Audit chain verified/);
   await userEvent.click(
-    screen.getByRole("button", { name: "Load more audit events" }),
+    screen.getByRole("button", { name: "Audit-Protokoll" }),
+  );
+  await screen.findByText(/Audit-Kette verifiziert/);
+  await userEvent.click(
+    screen.getByRole("button", { name: "Weitere Audit-Ereignisse laden" }),
   );
   expect(paths.some((path) => path.includes("after=7"))).toBe(true);
   expect(await screen.findByText("#8 user_updated")).toBeTruthy();

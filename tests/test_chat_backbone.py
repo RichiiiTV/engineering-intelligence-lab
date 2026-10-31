@@ -323,7 +323,7 @@ def test_graph_enforces_short_clarification_instead_of_guessed_diagnosis(tmp_pat
     runs.claim()
     execute_run(tmp_path, r["id"], model=Probe(model="controlled"))
     final = runs.get(r["id"])
-    assert final["status"] == "completed" and "Which machine" in final["result"]["answer"]
+    assert final["status"] == "completed" and "Welche Maschine" in final["result"]["answer"]
     assert "definitely broken" not in final["result"]["answer"] and final["tokens"] == 200
     assert final["result"]["answer_contract"]["outcome"] == "clarification_required"
 

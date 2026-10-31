@@ -16,6 +16,7 @@ import { friendlyStatus } from "./userFlow";
 import SafeAnswer from "./SafeAnswer";
 import { LibraryReferences } from "./KnowledgeLibrary";
 import SiemensReferences from "./SiemensReferences";
+import { displayNotice } from "./locale";
 import "./user.css";
 import "./machines.css";
 import "./chat.css";
@@ -89,11 +90,11 @@ export default function ChatApp() {
       all.length > 4 ||
       all.reduce((n, f) => n + f.size, 0) > 10 * 1024 * 1024
     ) {
-      setError("Attach up to four files, 10 MiB in total.");
+      setError("Bis zu vier Dateien mit insgesamt 10 MiB anhängen.");
       return;
     }
     if (all.filter((f) => f.type.startsWith("image/")).length > 2) {
-      setError("Attach at most two images.");
+      setError("Höchstens zwei Bilder anhängen.");
       return;
     }
     setFiles(all);
@@ -142,27 +143,27 @@ export default function ChatApp() {
           <Beaker size={28} />
           <span>Engineering Intelligence Lab</span>
         </a>
-        <nav aria-label="Chat navigation">
+        <nav aria-label="Chat-Navigation">
           <button onClick={() => setHistoryOpen(!historyOpen)}>
             <MessageSquare size={17} />
-            Your chats
+            Deine Chats
           </button>
           <button onClick={() => select("")} disabled={busy}>
             <Plus size={17} />
-            New chat
+            Neuer Chat
           </button>
-          {user?.role === "admin" && <a href="/?view=advanced">Advanced</a>}
+          {user?.role === "admin" && <a href="/?view=advanced">Erweitert</a>}
         </nav>
       </header>
       {historyOpen && (
         <aside className="chat-history">
-          <h2>Your chats</h2>
+          <h2>Deine Chats</h2>
           {rows.map((r) => (
             <button key={r.id} onClick={() => select(r.id)}>
               {r.title}
             </button>
           ))}
-          {!rows.length && <p>No chats yet.</p>}
+          {!rows.length && <p>Noch keine Chats.</p>}
         </aside>
       )}
       <main className={"chat-main" + (!selected ? " chat-empty" : "")}>
@@ -171,20 +172,19 @@ export default function ChatApp() {
             <span className="chat-mark">
               <Beaker size={27} />
             </span>
-            <h1>What’s happening with your machine?</h1>
+            <h1>Was ist mit deiner Maschine los?</h1>
             <p>
-              Describe the problem. Add a photo or error log if it helps.
+              Beschreibe das Problem. Füge bei Bedarf ein Foto oder
+              Fehlerprotokoll hinzu.
               <br />
-              I’ll find the relevant machine knowledge and help you investigate.
+              Ich suche das passende Maschinenwissen und helfe dir bei der
+              Untersuchung.
             </p>
           </div>
         ) : !detail ? (
-          <p className="ux-loading">Opening your chat…</p>
+          <p className="ux-loading">Chat wird geöffnet…</p>
         ) : (
-          <section
-            className="chat-conversation"
-            aria-label="Problem conversation"
-          >
+          <section className="chat-conversation" aria-label="Problemgespräch">
             {detail.turns.map((run) => (
               <ChatTurn
                 key={run.id}
@@ -199,13 +199,13 @@ export default function ChatApp() {
         )}
         <form className="chat-composer" onSubmit={ask}>
           <label className="chat-question-label" htmlFor="problem-question">
-            {selected ? "Continue the conversation" : "Describe your problem"}
+            {selected ? "Gespräch fortsetzen" : "Beschreibe dein Problem"}
           </label>
           <textarea
             id="problem-question"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="e.g. The packaging line stops after a few cycles. This is the error on the screen…"
+            placeholder="z. B. Meine Maschine XY mit Siemens S7-1500 zeigt den Fehlercode 16#80A1. Was soll ich prüfen?"
             rows={3}
             required
             maxLength={4000}
@@ -218,7 +218,7 @@ export default function ChatApp() {
                   {f.name}
                   <button
                     type="button"
-                    aria-label={"Remove " + f.name}
+                    aria-label={"Entfernen: " + f.name}
                     onClick={() => setFiles(files.filter((_, n) => n !== i))}
                   >
                     <X size={14} />
@@ -230,7 +230,7 @@ export default function ChatApp() {
           <div className="chat-composer-actions">
             <input
               ref={input}
-              aria-label="Attach images or error logs"
+              aria-label="Bilder oder Fehlerprotokolle anhängen"
               type="file"
               multiple
               accept=".png,.jpg,.jpeg,.webp,.log,.txt,.csv,.json"
@@ -244,11 +244,11 @@ export default function ChatApp() {
               disabled={busy}
             >
               <Paperclip size={19} />
-              Add images or logs
+              Bilder oder Protokolle hinzufügen
             </button>
             <button
               className="chat-send"
-              aria-label="Send problem"
+              aria-label="Problem senden"
               disabled={busy || active || !question.trim()}
             >
               {busy || active ? (
@@ -261,9 +261,9 @@ export default function ChatApp() {
         </form>
         {/^\/siemens\b/i.test(question) && (
           <p className="ux-caution">
-            Only the public question after /siemens will be sent to Siemens.
-            Keep internal names and details out of that question. Images, logs
-            and chat history stay local.
+            Nur die öffentliche Frage nach /siemens wird an Siemens gesendet.
+            Interne Namen und Details bitte weglassen. Bilder, Protokolle und
+            Chatverlauf bleiben lokal.
           </p>
         )}
         {(error || loadError) && (
@@ -272,8 +272,11 @@ export default function ChatApp() {
           </p>
         )}
         <p className="chat-footnote">
-          Your chats and attachments stay private. Review suggested checks
-          before applying them.
+          Bei eindeutiger Siemens-SPS-Diagnose suche ich automatisch öffentlich
+          nach Produktfamilie und eingegebenem Fehlercode. Interne Namen und
+          Anhänge werden dabei nicht übertragen. Mit „nur lokal“ bleibt die
+          Frage lokal. Chats und Anhänge bleiben privat. Prüfe vorgeschlagene
+          Maßnahmen, bevor du sie umsetzt.
         </p>
       </main>
     </div>
@@ -334,8 +337,8 @@ function ChatTurn({
           <LoaderCircle size={17} className="chat-spinner" />
           <span>
             {run.status === "queued"
-              ? "Waiting to investigate…"
-              : "Checking your problem and machine knowledge…"}
+              ? "Wartet auf die Untersuchung…"
+              : "Problem und Maschinenwissen werden geprüft…"}
           </span>
           <button
             onClick={() =>
@@ -344,7 +347,7 @@ function ChatTurn({
                 .catch((e) => setError(message(e)))
             }
           >
-            Stop
+            Stoppen
           </button>
         </div>
       ) : (
@@ -353,32 +356,32 @@ function ChatTurn({
             <p className="ux-caution">
               {friendlyStatus(run.status)}.{" "}
               {run.status === "budget_exceeded"
-                ? "Ask a narrower follow-up to continue the investigation."
+                ? "Stelle eine gezieltere Rückfrage, um die Untersuchung fortzusetzen."
                 : run.status === "cancelled"
-                  ? "You can continue with another question."
-                  : "The investigation could not finish. Try again or add the relevant error details."}
+                  ? "Du kannst mit einer weiteren Frage fortfahren."
+                  : "Die Untersuchung konnte nicht abgeschlossen werden. Versuche es erneut oder ergänze relevante Fehlerangaben."}
             </p>
           )}
           {report?.catalog_routing?.machine && (
             <p className="chat-machine-tag">
               {report.catalog_routing.machine.basis.includes("inference") ||
               report.catalog_routing.machine.basis.includes("model")
-                ? "Likely machine: "
-                : "Machine: "}
+                ? "Vermutete Maschine: "
+                : "Maschine: "}
               {report.catalog_routing.machine.name}
             </p>
           )}
           {run.status === "completed" &&
             report?.answer_contract?.outcome === "needs_review" && (
               <p className="ux-caution">
-                This answer needs a source check.{" "}
-                {report.answer_contract.issues.join(" ")}
+                Die Quellen dieser Antwort müssen geprüft werden.{" "}
+                {report.answer_contract.issues.map(displayNotice).join(" ")}
               </p>
             )}
           {report?.answer_contract?.outcome === "budget_limited" && (
             <p className="ux-caution">
-              Partial evidence review: this answer reached its investigation
-              limit.
+              Teilweise Belegprüfung: Diese Antwort hat ihr Untersuchungsbudget
+              erreicht.
             </p>
           )}
           {(report?.answer || run.result?.answer) && (
@@ -386,18 +389,23 @@ function ChatTurn({
               text={
                 report?.answer ||
                 run.result?.answer ||
-                "No final answer was returned."
+                "Keine abschließende Antwort erhalten."
               }
               references={refs}
               prefix={run.id + "-"}
             />
           )}
           {report?.attachment_notice && (
-            <p className="ux-caution">{report.attachment_notice}</p>
+            <p className="ux-caution">
+              {displayNotice(report.attachment_notice)}
+            </p>
+          )}
+          {report?.integrations?.siemens?.enabled && refs.length === 0 && (
+            <SiemensReferences report={report} />
           )}
           {report && refs.length > 0 && (
             <details className="chat-sources">
-              <summary>Sources · {refs.length}</summary>
+              <summary>Quellen · {refs.length}</summary>
               {((report.library_citations || []).length > 0 ||
                 report.catalog_routing?.status === "identified") && (
                 <LibraryReferences
@@ -416,8 +424,8 @@ function ChatTurn({
                   <summary>
                     {r.filename}
                     {r.line_start
-                      ? ` · lines ${r.line_start}–${r.line_end}`
-                      : " · submitted image"}
+                      ? ` · Zeilen ${r.line_start}–${r.line_end}`
+                      : " · eingereichtes Bild"}
                   </summary>
                   {r.kind === "image" && (
                     <img
@@ -428,13 +436,13 @@ function ChatTurn({
                   )}
                   {r.kind === "image" && (
                     <p className="ux-small">
-                      Model-extracted text. Verify the original image when an
-                      exact character matters.
+                      Vom Modell erkannter Text. Prüfe das Originalbild, wenn
+                      einzelne Zeichen entscheidend sind.
                     </p>
                   )}
                   <blockquote>{r.text}</blockquote>
                   <a href={"/api/chat/attachments/" + r.id + "/file"}>
-                    Download original attachment
+                    Originalanhang herunterladen
                   </a>
                 </details>
               ))}

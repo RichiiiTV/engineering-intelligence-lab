@@ -120,7 +120,7 @@ export default function App() {
         <a
           className="brand"
           href="/?view=advanced"
-          aria-label="Engineering Intelligence Lab home"
+          aria-label="Startseite von Engineering Intelligence Lab"
         >
           <span className="brand-mark">
             <Beaker size={22} />
@@ -134,26 +134,26 @@ export default function App() {
         <div className="workspace-label">
           <span className="workspace-avatar">RL</span>
           <span>
-            Local workspace<small>Synthetic research environment</small>
+            Lokaler Arbeitsbereich<small>Synthetische Forschungsumgebung</small>
           </span>
           <ChevronDown size={14} />
         </div>
-        <div className="sidebar-heading">WORKSPACE</div>
+        <div className="sidebar-heading">ARBEITSBEREICH</div>
         <div className="nav-item active">
           <LayoutDashboard size={17} />
-          Investigations<span className="count">{cases.length}</span>
+          Untersuchungen<span className="count">{cases.length}</span>
         </div>
         <div className="case-heading">
-          <span>YOUR CASES</span>
+          <span>DEINE FÄLLE</span>
           <button
             className="icon-button"
-            aria-label="Create case"
+            aria-label="Fall erstellen"
             onClick={() => setNewCase(true)}
           >
             <Plus size={16} />
           </button>
         </div>
-        <nav className="case-list" aria-label="Cases">
+        <nav className="case-list" aria-label="Fälle">
           {cases.map((c) => (
             <button
               key={c.id}
@@ -171,21 +171,21 @@ export default function App() {
         </nav>
         <button className="new-case-button" onClick={() => setNewCase(true)}>
           <Plus size={16} />
-          New case
+          Neuer Fall
         </button>
         <div className="sidebar-bottom">
           <div className="local-card">
             <span className="online-dot" />
-            <strong>Local by design</strong>
+            <strong>Lokal konzipiert</strong>
             <p>
-              Read-only agents.
+              Agenten mit rein lesendem Zugriff.
               <br />
-              Your evidence stays here.
+              Deine Daten bleiben hier.
             </p>
           </div>
           <button className="help-button" onClick={() => setHelp(true)}>
             <CircleHelp size={17} />
-            Workbench guide
+            Anleitung zum Arbeitsbereich
             <ArrowRight size={14} />
           </button>
           <div className="build-label">
@@ -196,19 +196,19 @@ export default function App() {
       <div className="main-shell">
         <header className="topbar">
           <span>
-            Workspace <ChevronRight size={13} /> Investigations
+            Arbeitsbereich <ChevronRight size={13} /> Untersuchungen
           </span>
           <span className="environment">
-            <a href={simpleHref}>Simple view</a>
+            <a href={simpleHref}>Einfache Ansicht</a>
             <span className="online-dot" />
-            LOCAL DEMO
+            LOKALE DEMO
             <LockKeyhole size={13} />
           </span>
         </header>
         {error && !newCase && (
           <div className="banner error" role="alert">
             {error}
-            <button onClick={() => setError("")}>Dismiss</button>
+            <button onClick={() => setError("")}>Schließen</button>
           </div>
         )}
         {caseId ? (
@@ -217,45 +217,49 @@ export default function App() {
           <main className="welcome">
             <span className="eyebrow">ENGINEERING INTELLIGENCE LAB</span>
             <h1>
-              Start with a question.
+              Beginne mit einer Frage.
               <br />
-              Build a case with evidence.
+              Untersuche einen Fall anhand von Belegen.
             </h1>
             <p>
-              A local workbench for investigating inspection data, reviewing
-              source documents, and developing traceable findings.
+              Ein lokaler Arbeitsbereich für die Analyse von Prüfdaten,
+              Quelldokumenten und nachvollziehbaren Ergebnissen.
             </p>
             <button className="primary" onClick={() => setNewCase(true)}>
               <Plus size={17} />
-              Create your first case
+              Ersten Fall erstellen
             </button>
             <div className="welcome-steps">
               <div>
                 <span>01</span>
-                <h3>Bring your evidence</h3>
-                <p>Upload synthetic or licensed public CSV and PDF files.</p>
+                <h3>Daten hinzufügen</h3>
+                <p>
+                  Synthetische oder lizenzierte öffentliche CSV- und PDF-Dateien
+                  hochladen.
+                </p>
               </div>
               <div>
                 <span>02</span>
-                <h3>Follow the investigation</h3>
-                <p>Inspect calculations, tool calls, and source citations.</p>
+                <h3>Untersuchung verfolgen</h3>
+                <p>Berechnungen, Werkzeugaufrufe und Quellenangaben prüfen.</p>
               </div>
               <div>
                 <span>03</span>
-                <h3>Review the findings</h3>
-                <p>Approve a report draft and export the evidence record.</p>
+                <h3>Ergebnisse prüfen</h3>
+                <p>Berichtsentwurf freigeben und Belegübersicht exportieren.</p>
               </div>
             </div>
           </main>
         )}
       </div>
       {newCase && (
-        <Modal title="Create a case" onClose={() => setNewCase(false)}>
+        <Modal title="Fall erstellen" onClose={() => setNewCase(false)}>
           <form onSubmit={create}>
             <p className="muted">
-              Give this investigation a clear name. You can add evidence next.
+              Gib dieser Untersuchung einen eindeutigen Namen. Belege kannst du
+              anschließend hinzufügen.
             </p>
-            <label htmlFor="case-title">Case name</label>
+            <label htmlFor="case-title">Fallname</label>
             <input
               id="case-title"
               autoFocus
@@ -263,7 +267,7 @@ export default function App() {
               maxLength={120}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. S03 inspection rate investigation"
+              placeholder="z. B. Untersuchung der Prüfquote S03"
             />
             {error && (
               <p className="error-text" role="alert">
@@ -276,51 +280,51 @@ export default function App() {
                 className="secondary"
                 onClick={() => setNewCase(false)}
               >
-                Cancel
+                Abbrechen
               </button>
               <button className="primary" disabled={busy || !title.trim()}>
-                {busy ? "Creating…" : "Create case"}
+                {busy ? "Wird erstellt…" : "Fall erstellen"}
               </button>
             </div>
           </form>
         </Modal>
       )}
       {help && (
-        <Modal
-          title="Your investigation workbench"
-          onClose={() => setHelp(false)}
-        >
+        <Modal title="Dein Untersuchungsbereich" onClose={() => setHelp(false)}>
           <ol className="guide">
             <li>
-              Create a case and upload inspection CSVs or text-based PDFs. Only
-              synthetic or licensed public data is supported.
+              Erstelle einen Fall und lade Prüf-CSV-Dateien oder textbasierte
+              PDFs hoch. Hier werden nur synthetische oder lizenzierte
+              öffentliche Daten unterstützt.
             </li>
             <li>
-              Compare station rates and search documents in Overview. Open any
-              citation to inspect its original location and source hash.
+              Vergleiche Stationsquoten und durchsuche Dokumente in der
+              Übersicht. Öffne Quellenangaben, um die Originalstelle und
+              Prüfsumme zu sehen.
             </li>
             <li>
-              Ask Ollama to investigate. Activity shows persistent tool
-              arguments, observations, and checkpoints. Pause, resume, or cancel
-              without resetting the run’s budgets.
+              Lass Ollama untersuchen. Unter Aktivitäten siehst du gespeicherte
+              Werkzeugargumente, Beobachtungen und Checkpoints. Pausieren,
+              Fortsetzen und Abbrechen setzen keine Budgets zurück.
             </li>
             <li>
-              Review the model answer in Report. Edit a draft, preview the exact
-              content, then approve its save. JSON exports include source
-              snapshots and citation checks.
+              Prüfe die Modellantwort im Bericht. Bearbeite einen Entwurf, prüfe
+              die genaue Vorschau und gib das Speichern frei. JSON-Exporte
+              enthalten Quellstände und Quellenprüfungen.
             </li>
           </ol>
           <p className="notice">
-            The MCP option reads a fixed fictional maintenance dataset. No live
-            systems are connected. Correlation does not establish causation.
+            Die MCP-Option liest einen festen fiktiven Wartungsdatensatz. Es
+            sind keine realen Anlagen verbunden. Korrelation belegt keine
+            Ursache.
           </p>
           <p>
             <a href="/api/examples/inspection.csv" download>
-              Download sample CSV
+              Beispiel-CSV herunterladen
             </a>{" "}
             ·{" "}
             <a href="/api/examples/maintenance.pdf" download>
-              Download sample PDF
+              Beispiel-PDF herunterladen
             </a>
           </p>
         </Modal>
@@ -349,7 +353,7 @@ function Workspace({ id }: { id: string }) {
   const [uploadOpen, setUploadOpen] = useState(false),
     [askOpen, setAskOpen] = useState(false);
   const [question, setQuestion] = useState(
-    "Which station changed most between baseline and incident? Use the uploaded evidence, cite sources, and distinguish observations from hypotheses.",
+    "Welche Station hat sich zwischen Ausgangs- und Störungszeitraum am stärksten verändert? Nutze die hochgeladenen Belege, zitiere Quellen und trenne Beobachtungen von Hypothesen.",
   );
   const [useMcp, setUseMcp] = useState(false),
     [seconds, setSeconds] = useState(120);
@@ -426,7 +430,7 @@ function Workspace({ id }: { id: string }) {
         setReport(r);
         setDraftBody(r.answer);
         setDraftTitle(
-          `${detail?.title || "Investigation"} — report`.slice(0, 120),
+          `${detail?.title || "Untersuchung"} — Bericht`.slice(0, 120),
         );
       })
       .catch((e) => {
@@ -511,8 +515,8 @@ function Workspace({ id }: { id: string }) {
       setRevision((x) => x + 1);
       setMessage(
         decision === "approve"
-          ? "Report draft approved and saved."
-          : "Proposal rejected. No draft was saved.",
+          ? "Berichtsentwurf freigegeben und gespeichert."
+          : "Vorschlag abgelehnt. Kein Entwurf gespeichert.",
       );
     });
   }
@@ -529,7 +533,7 @@ function Workspace({ id }: { id: string }) {
   if (!detail)
     return (
       <main className="content">
-        <p className="muted">{error || "Loading case…"}</p>
+        <p className="muted">{error || "Fall wird geladen…"}</p>
       </main>
     );
   return (
@@ -541,7 +545,7 @@ function Workspace({ id }: { id: string }) {
             {id.slice(0, 8).toUpperCase()}
           </div>
           <h1>{detail.title}</h1>
-          <p>Bring the data together. Follow the evidence.</p>
+          <p>Daten zusammenführen. Belege nachvollziehen.</p>
         </div>
         <button
           className="primary"
@@ -549,13 +553,13 @@ function Workspace({ id }: { id: string }) {
           disabled={!sources.length || !!busy}
         >
           <Plus size={17} />
-          New investigation
+          Neue Untersuchung
         </button>
       </div>
       {error && (
         <div className="banner error" role="alert">
           {error}
-          <button onClick={() => setError("")}>Dismiss</button>
+          <button onClick={() => setError("")}>Schließen</button>
         </div>
       )}
       {message && (
@@ -567,8 +571,8 @@ function Workspace({ id }: { id: string }) {
       <div className="case-meta">
         <span>
           <FolderClosed size={14} />
-          Created{" "}
-          {new Date(detail.created_at).toLocaleDateString([], {
+          Erstellt{" "}
+          {new Date(detail.created_at).toLocaleDateString("de-DE", {
             month: "short",
             day: "numeric",
             year: "numeric",
@@ -576,19 +580,19 @@ function Workspace({ id }: { id: string }) {
         </span>
         <span>
           <ShieldCheck size={14} />
-          Read-only investigation
+          Untersuchung mit rein lesendem Zugriff
         </span>
         <span>
           <BookOpen size={14} />
-          {sources.length} evidence sources
+          {sources.length} Belegquellen
         </span>
       </div>
       <div className="tabs-and-run">
-        <div className="tabs" role="tablist" aria-label="Case views">
+        <div className="tabs" role="tablist" aria-label="Fallansichten">
           {[
-            ["overview", LayoutDashboard, "Overview"],
-            ["activity", Activity, "Activity"],
-            ["report", FileText, "Report"],
+            ["overview", LayoutDashboard, "Übersicht"],
+            ["activity", Activity, "Aktivitäten"],
+            ["report", FileText, "Bericht"],
           ].map(([value, Icon, label]) => {
             const TabIcon = Icon as typeof Activity;
             return (
@@ -606,13 +610,13 @@ function Workspace({ id }: { id: string }) {
           })}
         </div>
         <div className="run-select">
-          <label htmlFor="run-select">Investigation</label>
+          <label htmlFor="run-select">Untersuchung</label>
           <select
             id="run-select"
             value={runId}
             onChange={(e) => setRunId(e.target.value)}
           >
-            <option value="">Select a run</option>
+            <option value="">Untersuchung auswählen</option>
             {runs.map((r) => (
               <option value={r.id} key={r.id}>
                 {time(r.created_at)} · {r.question.slice(0, 40)}
@@ -642,7 +646,8 @@ function Workspace({ id }: { id: string }) {
                 }
               >
                 <Play size={14} />
-                Continue{tokenContinuation(run) ? " with extra capacity" : ""}
+                Fortsetzen
+                {tokenContinuation(run) ? " mit zusätzlicher Kapazität" : ""}
               </button>
             )}
             {active && (
@@ -653,13 +658,13 @@ function Workspace({ id }: { id: string }) {
                   disabled={!!busy}
                 >
                   <Pause size={14} />
-                  Pause
+                  Pausieren
                 </button>
                 <button
                   className="icon-button"
                   onClick={() => control("cancel")}
                   disabled={!!busy}
-                  aria-label="Cancel investigation"
+                  aria-label="Untersuchung abbrechen"
                 >
                   <Square size={14} />
                 </button>
@@ -673,14 +678,14 @@ function Workspace({ id }: { id: string }) {
                   disabled={!!busy}
                 >
                   <Play size={14} />
-                  Resume
+                  Fortsetzen
                 </button>
                 <button
                   className="secondary compact"
                   onClick={() => control("cancel")}
                   disabled={!!busy}
                 >
-                  Cancel
+                  Abbrechen
                 </button>
               </>
             )}
@@ -697,7 +702,7 @@ function Workspace({ id }: { id: string }) {
           <div className="stat-grid">
             <div className="stat">
               <span>
-                Evidence sources
+                Belegquellen
                 <FileText size={16} />
               </span>
               <strong>{sources.length.toString().padStart(2, "0")}</strong>
@@ -708,17 +713,17 @@ function Workspace({ id }: { id: string }) {
             </div>
             <div className="stat">
               <span>
-                Stations compared
+                Verglichene Stationen
                 <Table2 size={16} />
               </span>
               <strong>
                 {comparison?.ranking.length.toString().padStart(2, "0") || "—"}
               </strong>
-              <small>Baseline against incident</small>
+              <small>Ausgangs- und Störungszeitraum</small>
             </div>
             <div className="stat">
               <span>
-                Highest station delta
+                Größte Stationsabweichung
                 <Activity size={16} />
               </span>
               <strong>
@@ -729,8 +734,8 @@ function Workspace({ id }: { id: string }) {
               </strong>
               <small>
                 {top
-                  ? `${top.station_id} · descriptive finding`
-                  : "Upload a CSV to compare"}
+                  ? `${top.station_id} · beschreibender Befund`
+                  : "CSV zum Vergleichen hochladen"}
               </small>
             </div>
           </div>
@@ -739,18 +744,16 @@ function Workspace({ id }: { id: string }) {
               <section className="panel">
                 <div className="panel-heading">
                   <div>
-                    <h2>Station performance</h2>
-                    <p>
-                      Compare false-ejection rates across inspection stations.
-                    </p>
+                    <h2>Stationsleistung</h2>
+                    <p>Fehlausschussquoten der Prüfstationen vergleichen.</p>
                   </div>
-                  <span className="subtle-tag">CSV ANALYSIS</span>
+                  <span className="subtle-tag">CSV-ANALYSE</span>
                 </div>
                 {csvSources.length > 0 && (
                   <label className="source-select">
-                    Source
+                    Quelle
                     <select
-                      aria-label="Chart CSV source"
+                      aria-label="CSV-Quelle des Diagramms"
                       value={sourceId}
                       onChange={(e) => setSourceId(e.target.value)}
                     >
@@ -765,25 +768,25 @@ function Workspace({ id }: { id: string }) {
                 {comparison ? (
                   <StationChart data={comparison} onCitation={viewCitation} />
                 ) : (
-                  <Empty title={chartError || "No station data yet"}>
-                    Upload an inspection CSV to calculate baseline and incident
-                    rates.
+                  <Empty title={chartError || "Noch keine Stationsdaten"}>
+                    Prüf-CSV hochladen, um Quoten für Ausgangs- und
+                    Störungszeitraum zu berechnen.
                   </Empty>
                 )}
               </section>
               <section className="panel">
                 <div className="panel-heading">
                   <div>
-                    <h2>Search the documents</h2>
-                    <p>Find excerpts with traceable page references.</p>
+                    <h2>Dokumente durchsuchen</h2>
+                    <p>Auszüge mit nachvollziehbaren Seitenangaben finden.</p>
                   </div>
                   <BookOpen size={19} />
                 </div>
                 <form className="search-form" onSubmit={search}>
                   <Search size={17} />
                   <input
-                    aria-label="Document search"
-                    placeholder="Search evidence, e.g. illumination exposure…"
+                    aria-label="Dokumentsuche"
+                    placeholder="Belege durchsuchen, z. B. Beleuchtung Belichtung…"
                     value={query}
                     maxLength={500}
                     onChange={(e) => setQuery(e.target.value)}
@@ -793,13 +796,13 @@ function Workspace({ id }: { id: string }) {
                     className="secondary compact"
                     disabled={!!busy || !query.trim()}
                   >
-                    Search
+                    Suchen
                   </button>
                 </form>
                 {hits === null ? (
                   <p className="hint">
-                    Searches this case’s PDFs using literal words. Relevance is
-                    not factual confidence.
+                    Durchsucht die PDFs dieses Falls nach Wörtern. Relevanz
+                    bedeutet keine sachliche Gewissheit.
                   </p>
                 ) : hits.length ? (
                   <div className="search-hits">
@@ -811,19 +814,19 @@ function Workspace({ id }: { id: string }) {
                       >
                         <span>
                           {h.filename}
-                          <b>Page {(h.pages || [h.page]).join(", ")}</b>
+                          <b>Seite {(h.pages || [h.page]).join(", ")}</b>
                         </span>
                         <p>{h.text}</p>
                         <small>
-                          Inspect citation <ArrowRight size={13} />
+                          Quellenangabe prüfen <ArrowRight size={13} />
                         </small>
                       </button>
                     ))}
                   </div>
                 ) : (
                   <p className="hint">
-                    No matching excerpts. An empty result is not proof of
-                    absence.
+                    Keine passenden Auszüge. Ein leeres Ergebnis beweist nicht,
+                    dass etwas nicht vorhanden ist.
                   </p>
                 )}
               </section>
@@ -831,7 +834,7 @@ function Workspace({ id }: { id: string }) {
             <aside className="right-column">
               <section className="panel evidence-panel">
                 <div className="panel-heading">
-                  <h2>Evidence library</h2>
+                  <h2>Belegbibliothek</h2>
                   <span className="count">{sources.length}</span>
                 </div>
                 <div className="source-list">
@@ -839,9 +842,9 @@ function Workspace({ id }: { id: string }) {
                     <SourceRow key={s.id} source={s} caseId={id} />
                   ))}
                   {!sources.length && (
-                    <Empty title="Add your first source">
-                      Build the case with inspection data and supporting
-                      documents.
+                    <Empty title="Erste Quelle hinzufügen">
+                      Prüfdaten und unterstützende Dokumente zum Fall
+                      hinzufügen.
                     </Empty>
                   )}
                 </div>
@@ -850,34 +853,35 @@ function Workspace({ id }: { id: string }) {
                   onClick={() => setUploadOpen(true)}
                 >
                   <Upload size={16} />
-                  Upload evidence
+                  Belege hochladen
                 </button>
                 <p className="hint">
-                  PDF up to 10 MiB · CSV up to 2 MiB
+                  PDF bis 10 MiB · CSV bis 2 MiB
                   <br />
-                  Synthetic or licensed public data only.
+                  Nur synthetische oder lizenzierte öffentliche Daten.
                 </p>
               </section>
               <section className="insight-card">
                 <span className="eyebrow">
                   <ShieldCheck size={14} />
-                  EVIDENCE BEFORE INFERENCE
+                  BELEGE VOR SCHLUSSFOLGERUNGEN
                 </span>
-                <h3>A finding is a starting point.</h3>
+                <h3>Ein Befund ist ein Ausgangspunkt.</h3>
                 <p>
-                  Concurrent changes can suggest a hypothesis. They do not prove
-                  the cause. Review original sources and define the next check.
+                  Gleichzeitige Änderungen können eine Hypothese nahelegen. Sie
+                  beweisen keine Ursache. Prüfe Originalquellen und lege die
+                  nächste Prüfung fest.
                 </p>
               </section>
               <div className="mock-note">
                 <Wrench size={16} />
                 <div>
-                  <strong>MCP sandbox</strong>
+                  <strong>MCP-Testumgebung</strong>
                   <p>
                     {run?.use_mock_mcp
-                      ? "Mock enabled for the selected run."
-                      : "Optional local mock. Enable when starting a run."}{" "}
-                    No live systems connected.
+                      ? "Simulation für die ausgewählte Untersuchung aktiviert."
+                      : "Optionale lokale Simulation. Beim Start einer Untersuchung aktivieren."}{" "}
+                    Keine realen Anlagen verbunden.
                   </p>
                 </div>
               </div>
@@ -893,13 +897,13 @@ function Workspace({ id }: { id: string }) {
                 <b>
                   {run.model_calls}/{run.limits.max_model_calls}
                 </b>{" "}
-                model calls
+                Modellaufrufe
               </span>
               <span>
                 <b>
                   {run.tool_calls}/{run.limits.max_tool_calls}
                 </b>{" "}
-                tool calls
+                Werkzeugaufrufe
               </span>
               <span>
                 <b>
@@ -911,7 +915,7 @@ function Workspace({ id }: { id: string }) {
                 <b>
                   {elapsed.toFixed(1)}/{run.limits.timeout_seconds}s
                 </b>{" "}
-                active time
+                aktive Zeit
               </span>
               <span>
                 <b>
@@ -922,16 +926,16 @@ function Workspace({ id }: { id: string }) {
             </div>
             {streamError && (
               <p className="notice">
-                Event connection: {streamError}. Reconnecting automatically
-                while the run is active.
+                Ereignisverbindung: {streamError}. Bei aktiver Untersuchung wird
+                automatisch neu verbunden.
               </p>
             )}
             <div className="activity-grid">
               <section className="panel">
                 <div className="panel-heading">
                   <div>
-                    <h2>Investigation timeline</h2>
-                    <p>Persisted events · {events.length} recorded</p>
+                    <h2>Untersuchungsverlauf</h2>
+                    <p>Gespeicherte Ereignisse · {events.length} recorded</p>
                   </div>
                   {active && <LoaderCircle className="spin" size={17} />}
                 </div>
@@ -944,8 +948,10 @@ function Workspace({ id }: { id: string }) {
               <section className="panel tool-detail">
                 <div className="panel-heading">
                   <div>
-                    <h2>Event details</h2>
-                    <p>Inspect tool arguments and returned observations.</p>
+                    <h2>Ereignisdetails</h2>
+                    <p>
+                      Werkzeugargumente und zurückgegebene Beobachtungen prüfen.
+                    </p>
                   </div>
                   <Wrench size={18} />
                 </div>
@@ -955,11 +961,11 @@ function Workspace({ id }: { id: string }) {
                       {selectedEvent.type.replaceAll("_", " ")}
                     </span>
                     <p className="muted small">
-                      {time(selectedEvent.at)} · event {selectedEvent.id}
+                      {time(selectedEvent.at)} · Ereignis {selectedEvent.id}
                     </p>
                     {selectedEvent.data.tool_call_id && (
                       <>
-                        <label>Tool call</label>
+                        <label>Werkzeugaufruf</label>
                         <code className="break">
                           {String(selectedEvent.data.tool_call_id)}
                         </code>
@@ -967,7 +973,7 @@ function Workspace({ id }: { id: string }) {
                     )}
                     {selectedEvent.type === "tool_finished" && (
                       <>
-                        <label>Arguments</label>
+                        <label>Argumente</label>
                         <Json
                           value={
                             events.find(
@@ -978,7 +984,7 @@ function Workspace({ id }: { id: string }) {
                             )?.data.arguments || {}
                           }
                         />
-                        <label>Observation</label>
+                        <label>Beobachtung</label>
                       </>
                     )}
                     <Json
@@ -988,16 +994,16 @@ function Workspace({ id }: { id: string }) {
                     />
                   </>
                 ) : (
-                  <Empty title="Select an event">
-                    Open a tool call to review its inputs and evidence.
+                  <Empty title="Ereignis auswählen">
+                    Werkzeugaufruf öffnen, um Eingaben und Belege zu prüfen.
                   </Empty>
                 )}
               </section>
             </div>
           </>
         ) : (
-          <Empty title="No investigation selected">
-            Start an investigation to see the agent’s activity.
+          <Empty title="Keine Untersuchung ausgewählt">
+            Starte eine Untersuchung, um die Aktivitäten des Agenten zu sehen.
           </Empty>
         ))}
       {tab === "report" && (
@@ -1005,8 +1011,8 @@ function Workspace({ id }: { id: string }) {
           <section className="panel report-panel">
             <div className="panel-heading">
               <div>
-                <h2>Investigation report</h2>
-                <p>Model findings · review against the cited evidence.</p>
+                <h2>Untersuchungsbericht</h2>
+                <p>Modellbefunde · anhand der zitierten Belege prüfen.</p>
               </div>
               {report && (
                 <button
@@ -1024,7 +1030,7 @@ function Workspace({ id }: { id: string }) {
                   }
                 >
                   <ArrowDownToLine size={15} />
-                  Export JSON
+                  JSON exportieren
                 </button>
               )}
             </div>
@@ -1032,20 +1038,21 @@ function Workspace({ id }: { id: string }) {
               <>
                 <div className="report-answer">{report.answer}</div>
                 <p className="notice">
-                  Correlation does not establish causation. Citation resolution
-                  checks source location, not claim validity.
+                  Korrelation belegt keine Ursache. Quellenprüfungen bestätigen
+                  Fundstellen, nicht die Richtigkeit einer Aussage.
                 </p>
-                <h3>Source citations</h3>
+                <h3>Quellenangaben</h3>
                 {!report.citation_checks.has_answer_citations && (
                   <p className="notice">
-                    The answer contains no recognized case citations.
+                    Die Antwort enthält keine erkannten Quellenangaben dieses
+                    Falls.
                   </p>
                 )}
                 {(report.citation_checks.unresolved.length > 0 ||
                   report.citation_checks.malformed.length > 0 ||
                   report.citation_checks.not_returned_by_tools.length > 0) && (
                   <details open className="notice">
-                    <summary>Citations need review</summary>
+                    <summary>Quellenangaben prüfen</summary>
                     <Json value={report.citation_checks} />
                   </details>
                 )}
@@ -1060,12 +1067,12 @@ function Workspace({ id }: { id: string }) {
                         {c.filename}
                         <small>
                           {c.citation_id.startsWith("pdf:")
-                            ? `Page ${(c.pages || [c.page]).join(", ")}`
-                            : `Row ${c.row?.row_id} · line ${c.row?.csv_line}`}{" "}
+                            ? `Seite ${(c.pages || [c.page]).join(", ")}`
+                            : `Zeile ${c.row?.row_id} · Zeile ${c.row?.csv_line}`}{" "}
                           ·{" "}
                           {c.cited_in_answer
-                            ? "Cited in answer"
-                            : "Returned by tool"}
+                            ? "In der Antwort zitiert"
+                            : "Vom Werkzeug zurückgegeben"}
                         </small>
                       </span>
                       <ChevronRight size={15} />
@@ -1073,7 +1080,7 @@ function Workspace({ id }: { id: string }) {
                   ))}
                 </div>
                 <details className="method">
-                  <summary>Uncertainty & limitations</summary>
+                  <summary>Unsicherheit und Einschränkungen</summary>
                   <ul>
                     {report.uncertainty.limitations.map((x) => (
                       <li key={x}>{x}</li>
@@ -1083,32 +1090,32 @@ function Workspace({ id }: { id: string }) {
               </>
             ) : (
               <Empty
-                title={active ? "Investigation in progress" : "No findings yet"}
+                title={active ? "Untersuchung läuft" : "Noch keine Befunde"}
               >
                 {active
-                  ? "Review the agent’s progress in Activity. Findings appear here when the run stops."
-                  : "Complete an investigation to review and export its findings."}
+                  ? "Prüfe den Fortschritt unter Aktivitäten. Befunde erscheinen hier, sobald die Untersuchung endet."
+                  : "Schließe eine Untersuchung ab, um ihre Befunde zu prüfen und zu exportieren."}
               </Empty>
             )}
           </section>
           <section className="panel draft-panel">
             <div className="panel-heading">
               <div>
-                <h2>Report draft</h2>
-                <p>Review, edit, then approve a save.</p>
+                <h2>Berichtsentwurf</h2>
+                <p>Prüfen, bearbeiten und Speichern freigeben.</p>
               </div>
               <FilePlus2 size={19} />
             </div>
             {run?.status === "completed" && report?.answer ? (
               <>
-                <label htmlFor="draft-title">Title</label>
+                <label htmlFor="draft-title">Titel</label>
                 <input
                   id="draft-title"
                   maxLength={120}
                   value={draftTitle}
                   onChange={(e) => setDraftTitle(e.target.value)}
                 />
-                <label htmlFor="draft-body">Draft text</label>
+                <label htmlFor="draft-body">Entwurfstext</label>
                 <textarea
                   id="draft-body"
                   rows={16}
@@ -1117,8 +1124,9 @@ function Workspace({ id }: { id: string }) {
                   onChange={(e) => setDraftBody(e.target.value)}
                 />
                 <p className="hint">
-                  Edits stay in this browser until you request a review. A
-                  separate approval saves the exact previewed content.
+                  Änderungen bleiben bis zur Prüfanforderung in diesem Browser.
+                  Eine separate Freigabe speichert exakt den Inhalt der
+                  Vorschau.
                 </p>
                 <button
                   className="primary full"
@@ -1126,17 +1134,18 @@ function Workspace({ id }: { id: string }) {
                   disabled={!!busy || !draftBody.trim() || !draftTitle.trim()}
                 >
                   <ShieldCheck size={16} />
-                  Review draft for approval
+                  Entwurf zur Freigabe prüfen
                 </button>
               </>
             ) : (
               <p className="muted">
-                A completed investigation is required to prepare a draft.
+                Für einen Entwurf ist eine abgeschlossene Untersuchung
+                erforderlich.
               </p>
             )}
             {proposals.filter((p) => p.status === "pending").length > 0 && (
               <div className="saved-drafts">
-                <h3>Pending approvals</h3>
+                <h3>Ausstehende Freigaben</h3>
                 {proposals
                   .filter((p) => p.status === "pending")
                   .map((p) => (
@@ -1148,7 +1157,7 @@ function Workspace({ id }: { id: string }) {
                       <ShieldCheck size={15} />
                       <span>
                         {p.title}
-                        <small>Awaiting your review</small>
+                        <small>Wartet auf deine Prüfung</small>
                       </span>
                       <ChevronRight size={15} />
                     </button>
@@ -1157,7 +1166,7 @@ function Workspace({ id }: { id: string }) {
             )}
             {drafts.length > 0 && (
               <div className="saved-drafts">
-                <h3>Approved drafts</h3>
+                <h3>Freigegebene Entwürfe</h3>
                 {drafts.map((d) => (
                   <button
                     className="saved-draft"
@@ -1165,7 +1174,16 @@ function Workspace({ id }: { id: string }) {
                     onClick={() =>
                       download(
                         `eil-draft-${d.id.slice(0, 8)}.md`,
-                        `# ${d.title}\n\n${d.body}\n\n---\nRun: ${d.run_id}\nApproved proposal: ${d.proposal_id}\nContent SHA-256: ${d.sha256}\n\nExperimental findings; review evidence. Correlation does not establish causation.\n`,
+                        `# ${d.title}\n\n${d.body}
+
+---
+Untersuchung: ${d.run_id}
+Freigegebener Vorschlag: ${d.proposal_id}
+SHA-256 des Inhalts: ${d.sha256}
+
+Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
+
+`,
                         "text/markdown",
                       )
                     }
@@ -1173,7 +1191,7 @@ function Workspace({ id }: { id: string }) {
                     <Check size={15} />
                     <span>
                       {d.title}
-                      <small>Approved · download Markdown</small>
+                      <small>Freigegeben · Markdown herunterladen</small>
                     </span>
                     <ArrowDownToLine size={15} />
                   </button>
@@ -1187,7 +1205,9 @@ function Workspace({ id }: { id: string }) {
         <span>
           <Beaker size={13} /> Engineering Intelligence Lab
         </span>
-        <span>Local research · Synthetic evidence · Human judgment</span>
+        <span>
+          Lokale Forschung · Synthetische Belege · Menschliche Beurteilung
+        </span>
       </footer>
       {uploadOpen && (
         <UploadModal
@@ -1197,15 +1217,15 @@ function Workspace({ id }: { id: string }) {
             setUploadOpen(false);
             setRevision((x) => x + 1);
             setMessage(
-              "Evidence uploaded and available to new investigations.",
+              "Belege hochgeladen und für neue Untersuchungen verfügbar.",
             );
           }}
         />
       )}
       {askOpen && (
-        <Modal title="Start an investigation" onClose={() => setAskOpen(false)}>
+        <Modal title="Untersuchung starten" onClose={() => setAskOpen(false)}>
           <form onSubmit={start}>
-            <label htmlFor="question">Investigation question</label>
+            <label htmlFor="question">Untersuchungsfrage</label>
             <textarea
               autoFocus
               id="question"
@@ -1216,10 +1236,10 @@ function Workspace({ id }: { id: string }) {
               onChange={(e) => setQuestion(e.target.value)}
             />
             <p className="hint">
-              This run uses a fixed snapshot of the {sources.length} current
-              evidence source(s).
+              Diese Untersuchung nutzt einen festen Stand der {sources.length}{" "}
+              aktuellen Belegquelle(n).
             </p>
-            <label htmlFor="timeout">Active time budget (seconds)</label>
+            <label htmlFor="timeout">Aktives Zeitbudget (Sekunden)</label>
             <input
               id="timeout"
               type="number"
@@ -1230,11 +1250,11 @@ function Workspace({ id }: { id: string }) {
               onChange={(e) => setSeconds(Number(e.target.value))}
             />
             <p className="hint">
-              8 model calls · 16 tool calls · 32,768 tokens · 35 steps. Budgets
-              persist across pause and resume.
+              8 Modellaufrufe · 16 Werkzeugaufrufe · 32.768 Token · 35 Schritte.
+              Budgets bleiben beim Pausieren und Fortsetzen erhalten.
             </p>
             <label htmlFor="output-tokens">
-              Maximum output tokens per model call
+              Maximale Ausgabetoken pro Modellaufruf
             </label>
             <select
               id="output-tokens"
@@ -1242,7 +1262,9 @@ function Workspace({ id }: { id: string }) {
               onChange={(e) => setOutputTokens(Number(e.target.value))}
             >
               <option value={1024}>1,024 (default)</option>
-              <option value={2048}>2,048 (longer reasoning / answers)</option>
+              <option value={2048}>
+                2.048 (längere Überlegungen / Antworten)
+              </option>
             </select>
             <label className="checkbox-label">
               <input
@@ -1251,10 +1273,11 @@ function Workspace({ id }: { id: string }) {
                 onChange={(e) => setUseMcp(e.target.checked)}
               />
               <span>
-                Allow read-only mock MCP context
+                Rein lesenden MCP-Simulationskontext erlauben
                 <small>
-                  Fixed local synthetic maintenance server. No case files are
-                  sent. This run can read fictional station notes.
+                  Fester lokaler synthetischer Wartungsserver. Keine Falldateien
+                  werden übertragen. Diese Untersuchung kann fiktive
+                  Stationsnotizen lesen.
                 </small>
               </span>
             </label>
@@ -1269,44 +1292,41 @@ function Workspace({ id }: { id: string }) {
                 type="button"
                 onClick={() => setAskOpen(false)}
               >
-                Cancel
+                Abbrechen
               </button>
               <button className="primary" disabled={!!busy || !question.trim()}>
                 <Play size={15} />
-                {busy === "start" ? "Starting…" : "Start investigation"}
+                {busy === "start" ? "Wird gestartet…" : "Untersuchung starten"}
               </button>
             </div>
           </form>
         </Modal>
       )}
       {citation && (
-        <Modal
-          title="Evidence reference"
-          onClose={() => setCitation(null)}
-          wide
-        >
+        <Modal title="Belegreferenz" onClose={() => setCitation(null)} wide>
           <CitationView citation={citation} />
         </Modal>
       )}
       {proposal && (
         <Modal
-          title="Approve report draft"
+          title="Berichtsentwurf freigeben"
           onClose={() => setProposal(null)}
           wide
         >
           <div className="approval-notice">
             <ShieldCheck size={20} />
             <div>
-              <strong>This action will save a report draft.</strong>
+              <strong>Diese Aktion speichert einen Berichtsentwurf.</strong>
               <p>
-                Review the full content below. Approval saves this exact version
-                to this case. It does not validate its claims.
+                Prüfe den vollständigen Inhalt unten. Die Freigabe speichert
+                exakt diese Version im Fall. Sie bestätigt nicht die Richtigkeit
+                der Aussagen.
               </p>
             </div>
           </div>
           <h3>{proposal.title}</h3>
           <div className="approval-preview">{proposal.body}</div>
-          <label>Content SHA-256</label>
+          <label>SHA-256 des Inhalts</label>
           <code className="break">{proposal.sha256}</code>
           {error && (
             <p className="error-text" role="alert">
@@ -1319,7 +1339,7 @@ function Workspace({ id }: { id: string }) {
               onClick={() => void decide("reject")}
               disabled={!!busy}
             >
-              Reject proposal
+              Vorschlag ablehnen
             </button>
             <button
               className="primary"
@@ -1327,7 +1347,9 @@ function Workspace({ id }: { id: string }) {
               disabled={!!busy}
             >
               <Check size={16} />
-              {busy === "decision" ? "Saving…" : "Approve & save draft"}
+              {busy === "decision"
+                ? "Wird gespeichert…"
+                : "Entwurf freigeben und speichern"}
             </button>
           </div>
         </Modal>
@@ -1349,8 +1371,8 @@ function SourceRow({ source, caseId }: { source: Source; caseId: string }) {
           <small>
             {source.kind.toUpperCase()} ·{" "}
             {source.row_count
-              ? `${fmt(source.row_count)} rows`
-              : `${source.page_count} pages`}
+              ? `${fmt(source.row_count)} Zeilen`
+              : `${source.page_count} Seiten`}
           </small>
         </span>
         <ChevronDown size={14} />
@@ -1363,7 +1385,7 @@ function SourceRow({ source, caseId }: { source: Source; caseId: string }) {
         <code className="break">{source.sha256}</code>
         <a href={`/api/cases/${caseId}/sources/${source.id}/file`} download>
           <ArrowDownToLine size={13} />
-          Download original
+          Original herunterladen
         </a>
       </div>
     </details>
@@ -1387,12 +1409,12 @@ function UploadModal({
     e.preventDefault();
     if (!file) return;
     if (!/\.(pdf|csv)$/i.test(file.name)) {
-      setError("Choose a PDF or CSV file.");
+      setError("PDF- oder CSV-Datei auswählen.");
       return;
     }
     const max = /\.pdf$/i.test(file.name) ? 10 : 2;
     if (file.size > max * 1024 * 1024) {
-      setError(`This file exceeds the ${max} MiB limit.`);
+      setError(`Diese Datei überschreitet die Grenze von ${max} MiB.`);
       return;
     }
     setBusy(true);
@@ -1410,16 +1432,16 @@ function UploadModal({
     }
   }
   return (
-    <Modal title="Upload evidence" onClose={onClose}>
+    <Modal title="Belege hochladen" onClose={onClose}>
       <form onSubmit={upload}>
         <p className="muted">
-          Sources are immutable and isolated to this case. New uploads are
-          available to new investigations.
+          Quellen sind unveränderlich und auf diesen Fall beschränkt. Neue
+          Uploads stehen neuen Untersuchungen zur Verfügung.
         </p>
         <label className="file-drop" htmlFor="evidence-file">
           <Upload size={25} />
-          <strong>{file?.name || "Choose a PDF or CSV"}</strong>
-          <span>PDF up to 10 MiB / 20 pages · CSV up to 2 MiB</span>
+          <strong>{file?.name || "PDF oder CSV auswählen"}</strong>
+          <span>PDF bis 10 MiB / 20 Seiten · CSV bis 2 MiB</span>
           <input
             id="evidence-file"
             type="file"
@@ -1428,15 +1450,15 @@ function UploadModal({
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
         </label>
-        <label htmlFor="data-policy">Data category</label>
+        <label htmlFor="data-policy">Datenkategorie</label>
         <select
           id="data-policy"
           value={policy}
           onChange={(e) => setPolicy(e.target.value)}
         >
-          <option value="synthetic">Synthetic / generated demo data</option>
+          <option value="synthetic">Synthetische / generierte Demodaten</option>
           <option value="licensed-public">
-            Explicitly licensed public data
+            Ausdrücklich lizenzierte öffentliche Daten
           </option>
         </select>
         <label className="checkbox-label">
@@ -1447,21 +1469,21 @@ function UploadModal({
             onChange={(e) => setConfirmed(e.target.checked)}
           />
           <span>
-            I confirm this file belongs to the selected data category and
-            contains no internal or sensitive information.
+            Ich bestätige, dass diese Datei zur gewählten Datenkategorie gehört
+            und keine internen oder sensiblen Informationen enthält.
           </span>
         </label>
         <p className="hint">
-          PDF conversion runs locally with OCR disabled. Scanned PDFs may have
-          no extractable text.
+          PDF-Konvertierung erfolgt lokal ohne OCR. Gescannte PDFs enthalten
+          möglicherweise keinen extrahierbaren Text.
         </p>
         <p className="hint">
           <a href="/api/examples/inspection.csv" download>
-            Sample CSV
+            Beispiel-CSV
           </a>{" "}
           ·{" "}
           <a href="/api/examples/maintenance.pdf" download>
-            Sample PDF
+            Beispiel-PDF
           </a>
         </p>
         {error && (
@@ -1471,18 +1493,18 @@ function UploadModal({
         )}
         <div className="modal-actions">
           <button type="button" className="secondary" onClick={onClose}>
-            Cancel
+            Abbrechen
           </button>
           <button className="primary" disabled={busy || !file || !confirmed}>
             {busy ? (
               <>
                 <LoaderCircle className="spin" size={16} />
-                Processing locally…
+                Lokale Verarbeitung…
               </>
             ) : (
               <>
                 <Upload size={16} />
-                Upload evidence
+                Belege hochladen
               </>
             )}
           </button>

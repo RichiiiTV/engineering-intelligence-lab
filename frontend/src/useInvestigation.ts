@@ -63,7 +63,9 @@ export function useInvestigation(id: string, revision: number) {
             { signal },
           );
           if (!response.ok || !response.body)
-            throw new Error(`Event stream unavailable (${response.status})`);
+            throw new Error(
+              `Ereignisstrom nicht verfügbar (${response.status})`,
+            );
           const reader = response.body.getReader(),
             decoder = new TextDecoder();
           let buffer = "";

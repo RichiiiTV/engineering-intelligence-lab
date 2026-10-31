@@ -18,20 +18,20 @@ export const fromSource = (source: Source): Attachment => ({
 });
 export function validateFiles(current: Attachment[], incoming: File[]) {
   if (current.length + incoming.length > 10)
-    throw new Error("Use up to 10 files in one investigation.");
+    throw new Error("Bis zu 10 Dateien pro Untersuchung verwenden.");
   if (
     current.reduce((n, f) => n + f.size, 0) +
       incoming.reduce((n, f) => n + f.size, 0) >
     30 * 1024 * 1024
   )
-    throw new Error("These files exceed the 30 MiB total limit.");
+    throw new Error("Diese Dateien überschreiten die Gesamtgrenze von 30 MiB.");
   for (const file of incoming) {
     if (!/\.(pdf|csv)$/i.test(file.name))
-      throw new Error(`${file.name}: choose a CSV or PDF file.`);
+      throw new Error(`${file.name}: CSV- oder PDF-Datei auswählen.`);
     const max = /\.pdf$/i.test(file.name) ? 10 : 2;
     if (!file.size || file.size > max * 1024 * 1024)
       throw new Error(
-        `${file.name}: use a non-empty file of at most ${max} MiB.`,
+        `${file.name}: eine nicht leere Datei mit höchstens ${max} MiB verwenden.`,
       );
   }
 }
@@ -41,7 +41,9 @@ async function hashFile(file: File) {
     reader.onload = () => resolve(reader.result as ArrayBuffer);
     reader.onerror = () =>
       reject(
-        new Error(`Could not read ${file.name}. Please choose the file again.`),
+        new Error(
+          `Datei konnte nicht gelesen werden: ${file.name}. Bitte wähle die Datei erneut aus.`,
+        ),
       );
     reader.readAsArrayBuffer(file);
   });
@@ -64,7 +66,7 @@ export async function startUserInvestigation(options: {
   const { question, files, policy, onCase, onProgress, onUploaded } = options;
   let caseId = options.caseId;
   if (!files.length) {
-    onProgress("Starting your question…");
+    onProgress("Deine Frage wird gestartet…");
     return post<Run>("/api/investigations", {
       question: question.trim(),
       chat_mode: true,
@@ -82,7 +84,7 @@ export async function startUserInvestigation(options: {
     });
   }
   if (!caseId) {
-    onProgress("Preparing your investigation…");
+    onProgress("Untersuchung wird vorbereitet…");
     const created = await post<Case>("/api/cases", {
       title: question.trim().slice(0, 120),
     });
@@ -94,7 +96,9 @@ export async function startUserInvestigation(options: {
   for (let index = 0; index < files.length; index++) {
     const item = files[index];
     if (item.source || !item.file) continue;
-    onProgress(`Adding file ${index + 1} of ${files.length}: ${item.name}`);
+    onProgress(
+      `Datei wird hinzugefügt: ${index + 1} of ${files.length}: ${item.name}`,
+    );
     const digest = await hashFile(item.file);
     let source = existing.sources.find((s) => s.sha256 === digest);
     if (!source) {
@@ -109,7 +113,7 @@ export async function startUserInvestigation(options: {
     }
     onUploaded(item.key, source);
   }
-  onProgress("Starting the investigation…");
+  onProgress("Untersuchung wird gestartet…");
   return post<Run>("/api/investigations", {
     case_id: caseId,
     question: question.trim(),
@@ -131,15 +135,15 @@ export function friendlyStatus(status: string) {
   return (
     (
       {
-        queued: "Waiting to start",
-        running: "Investigating",
-        paused: "Paused",
-        completed: "Completed",
-        failed: "Needs attention",
-        cancelled: "Cancelled",
-        interrupted: "Interrupted",
-        timed_out: "Time limit reached",
-        budget_exceeded: "Limit reached",
+        queued: "Wartet auf den Start",
+        running: "Wird untersucht",
+        paused: "Pausiert",
+        completed: "Abgeschlossen",
+        failed: "Aufmerksamkeit erforderlich",
+        cancelled: "Abgebrochen",
+        interrupted: "Unterbrochen",
+        timed_out: "Zeitlimit erreicht",
+        budget_exceeded: "Budget erreicht",
       } as Record<string, string>
     )[status] || status
   );
@@ -156,19 +160,19 @@ export function readableAnswer(
           .filter((c) => c.citation_id.startsWith("kb:"))
           .findIndex((c) => c.citation_id === id);
         return index < 0
-          ? "Unverified library reference"
-          : `Library source ${index + 1}`;
+          ? "Ungeprüfte Bibliotheksreferenz"
+          : `Bibliotheksquelle ${index + 1}`;
       }
       if (id.startsWith("siemens:")) {
         const index = citations
           .filter((c) => c.citation_id.startsWith("siemens:"))
           .findIndex((c) => c.citation_id === id);
         return index < 0
-          ? "Unverified Siemens reference"
-          : `Siemens source ${index + 1}`;
+          ? "Ungeprüfte Siemens-Referenz"
+          : `Siemens-Quelle ${index + 1}`;
       }
       const index = citations.findIndex((c) => c.citation_id === id);
-      return index < 0 ? "Unverified source" : `Source ${index + 1}`;
+      return index < 0 ? "Ungeprüfte Quelle" : `Quelle ${index + 1}`;
     },
   );
 }

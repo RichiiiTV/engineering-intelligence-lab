@@ -83,7 +83,7 @@ def reference_tool(directory, run_id):
                 return agent_observation(previous["observation"])
             return json.dumps(
                 {
-                    "error": "The lookup was interrupted. Its external outcome is unknown, so it will not be resent automatically. Ask a new question to retry.",
+                    "error": "Die Suche wurde unterbrochen. Ihr externer Ausgang ist unbekannt; sie wird nicht automatisch erneut gesendet. Stelle für einen neuen Versuch eine neue Frage.",
                     "references": [],
                     "connection_verified": False,
                 }
@@ -108,7 +108,7 @@ def reference_tool(directory, run_id):
             )
             result["remote_search_status"] = "unavailable"
             result["error"] = (
-                "Siemens live search is unavailable. Only any reviewed local manual candidates are available; do not invent a technical answer."
+                "Die Siemens-Livesuche ist nicht verfügbar. Es stehen nur etwaige lokal geprüfte Handbuchkandidaten zur Verfügung; daraus keine technische Diagnose erfinden."
             )
         references, seen = [], set()
         for source in [*result["curated_references"], *result["sources"]]:
@@ -152,5 +152,8 @@ def reference_snapshot(run):
         "enabled": True,
         "outbound_query": query.outbound(),
         "status": lookup.get("status", "not_started"),
+        "query_origin": (run.get("chat_context") or {}).get(
+            "siemens_routing", "explicit-public-question"
+        ),
         **observation,
     }

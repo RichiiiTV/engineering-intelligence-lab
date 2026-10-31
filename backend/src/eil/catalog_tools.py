@@ -102,12 +102,19 @@ def route(directory, run, machine_hint=""):
         except EmbeddingUnavailable:
             pass
     if len(selected) != 1 or selected[0]["identity_kind"] == "unknown":
+        if (run.get("chat_context") or {}).get("siemens_routing") == "canonical-human-diagnostic":
+            return {
+                "status": "public_reference",
+                "hits": [],
+                "machine": None,
+                "notice": "Eine öffentliche SPS-Diagnose ist möglich. Die konkrete Maschine ist noch nicht eindeutig zugeordnet; keine maschinenspezifischen Ursachen behaupten.",
+            }
         candidates = selected or [m for _, m in scores[:3]] or machines[:3]
         names = [m["name"] for m in candidates]
         question = (
-            "Which machine is affected"
+            "Welche Maschine ist betroffen"
             + (" — " + ", ".join(names) + "?" if names else "?")
-            + " Please give its machine/line identifier or model from the label or error log."
+            + " Bitte nenne die Maschinen-/Anlagenkennung oder das Modell vom Typenschild oder Fehlerprotokoll."
         )
         return {
             "status": "needs_clarification",

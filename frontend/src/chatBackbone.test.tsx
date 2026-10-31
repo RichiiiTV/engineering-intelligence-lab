@@ -18,7 +18,7 @@ beforeEach(() => {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status });
 
-it("a member only describes a problem and attaches a log; no automatic public disclosure", async () => {
+it("a member asks a German PLC question in normal chat; the backend owns public routing", async () => {
   history.replaceState(null, "", "/?view=advanced&page=machines");
   const bodies: FormData[] = [];
   const paths: string[] = [];
@@ -37,23 +37,83 @@ it("a member only describes a problem and attaches a log; no automatic public di
   );
   const user = userEvent.setup();
   render(<App />);
-  expect(screen.queryByText("Advanced")).toBeNull();
-  expect(screen.queryByText("Machine knowledge")).toBeNull();
-  expect(screen.queryByText("Notebooks")).toBeNull();
+  expect(screen.queryByText("Erweitert")).toBeNull();
+  expect(screen.queryByText("Maschinenwissen")).toBeNull();
+  expect(screen.queryByText("Notizbücher")).toBeNull();
   await user.type(
-    screen.getByRole("textbox", { name: "Describe your problem" }),
-    "Our private S7 line reports E17",
+    screen.getByRole("textbox", { name: "Beschreibe dein Problem" }),
+    "Meine Maschine XY mit S7-1500 zeigt Fehlercode 16#80A1",
   );
   const file = new File(["ERROR E17 private log"], "error.log", {
     type: "text/plain",
   });
-  await user.upload(screen.getByLabelText("Attach images or error logs"), file);
-  await user.click(screen.getByRole("button", { name: "Send problem" }));
-  expect(bodies[0].get("question")).toBe("Our private S7 line reports E17");
+  await user.upload(
+    screen.getByLabelText("Bilder oder Fehlerprotokolle anhängen"),
+    file,
+  );
+  await user.click(screen.getByRole("button", { name: "Problem senden" }));
+  expect(bodies[0].get("question")).toBe(
+    "Meine Maschine XY mit S7-1500 zeigt Fehlercode 16#80A1",
+  );
   expect((bodies[0].get("files") as File).name).toBe("error.log");
   expect(bodies[0].has("machine_id")).toBe(false);
   expect(bodies[0].has("document_ids")).toBe(false);
   expect(paths.some((p) => p.includes("siemens"))).toBe(false);
+  expect(
+    screen.getByText(/Mit „nur lokal“ bleibt die Frage lokal/),
+  ).toBeTruthy();
+});
+
+it("shows an unavailable automatic Siemens lookup in German even without source links", async () => {
+  history.replaceState(null, "", "/?chat=c");
+  const run = {
+    id: "r",
+    question: "S7-1500 Fehler 16#80A1",
+    status: "completed",
+    result: { answer: "Die öffentliche Suche ist derzeit nicht verfügbar." },
+    chat_context: { id: "c" },
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (path: string) => {
+      if (path.endsWith("/export"))
+        return json({
+          answer: run.result.answer,
+          library_citations: [],
+          problem_citations: [],
+          external_references: [],
+          integrations: {
+            siemens: {
+              enabled: true,
+              query_origin: "canonical-human-diagnostic",
+              status: "finished",
+              remote_search_status: "unavailable",
+              connection_verified: false,
+              outbound_query: "SIMATIC S7-1500: Diagnose zu 16#80A1.",
+            },
+          },
+        });
+      if (path === "/api/chat/conversations/c")
+        return json({
+          id: "c",
+          title: "Diagnose",
+          turns: [run],
+          attachments: [],
+        });
+      return json({ conversations: [] });
+    }),
+  );
+  render(<App />);
+  expect(
+    await screen.findByRole("heading", { name: "Siemens-Dokumentation" }),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(/Siemens-Livesuche war nicht verfügbar/),
+  ).toBeTruthy();
+  expect(screen.getByText(/Automatische Suche: nur die erkannte/)).toBeTruthy();
+  expect(
+    screen.getByText("SIMATIC S7-1500: Diagnose zu 16#80A1."),
+  ).toBeTruthy();
 });
 
 it("preserves the problem and attachments after failure with an idempotent retry", async () => {
@@ -70,17 +130,19 @@ it("preserves the problem and attachments after failure with an idempotent retry
   );
   const user = userEvent.setup();
   render(<App />);
-  const input = screen.getByRole("textbox", { name: "Describe your problem" });
+  const input = screen.getByRole("textbox", {
+    name: "Beschreibe dein Problem",
+  });
   await user.type(input, "The drive stops");
   await user.upload(
-    screen.getByLabelText("Attach images or error logs"),
+    screen.getByLabelText("Bilder oder Fehlerprotokolle anhängen"),
     new File(["E17"], "error.txt", { type: "text/plain" }),
   );
-  await user.click(screen.getByRole("button", { name: "Send problem" }));
+  await user.click(screen.getByRole("button", { name: "Problem senden" }));
   expect(await screen.findByRole("alert")).toBeTruthy();
   expect((input as HTMLTextAreaElement).value).toBe("The drive stops");
   expect(screen.getByText("error.txt")).toBeTruthy();
-  await user.click(screen.getByRole("button", { name: "Send problem" }));
+  await user.click(screen.getByRole("button", { name: "Problem senden" }));
   expect(bodies[1].get("request_id")).toBe(bodies[0].get("request_id"));
 });
 
@@ -100,23 +162,23 @@ it("an administrator uploads machine data without naming or selecting a machine"
   );
   const user = userEvent.setup();
   render(<App />);
-  expect(screen.queryByRole("textbox", { name: "Machine name" })).toBeNull();
+  expect(screen.queryByRole("textbox", { name: "Maschinenname" })).toBeNull();
   await user.upload(
-    screen.getByLabelText("Machine source files"),
+    screen.getByLabelText("Maschinen-Quelldateien"),
     new File(["Machine ID: XR7"], "manual.md", { type: "text/markdown" }),
   );
   await user.click(
     screen.getByRole("checkbox", {
-      name: /authorized to make these files available/,
+      name: /berechtigt, diese Dateien/,
     }),
   );
   const fileInput = screen.getByLabelText(
-    "Machine source files",
+    "Maschinen-Quelldateien",
   ) as HTMLInputElement;
   expect(fileInput.files?.length).toBe(1);
   expect(fileInput.form?.checkValidity()).toBe(true);
   await user.click(
-    screen.getByRole("button", { name: "Upload and organize automatically" }),
+    screen.getByRole("button", { name: "Hochladen und automatisch zuordnen" }),
   );
   expect(await screen.findByRole("status")).toBeTruthy();
   expect((bodies[0].get("file") as File).name).toBe("manual.md");
@@ -129,7 +191,7 @@ it("machine ambiguity is a conversational question, with no source or notebook s
     id: "r",
     question: "The line stops",
     status: "completed",
-    result: { answer: "Which machine is affected — XR7 or AB9?" },
+    result: { answer: "Welche Maschine ist betroffen — XR7 oder AB9?" },
     chat_context: { id: "c" },
   };
   vi.stubGlobal(
@@ -155,10 +217,12 @@ it("machine ambiguity is a conversational question, with no source or notebook s
   );
   render(<App />);
   expect(
-    await screen.findByText("Which machine is affected — XR7 or AB9?"),
+    await screen.findByText("Welche Maschine ist betroffen — XR7 oder AB9?"),
   ).toBeTruthy();
   expect(
-    screen.getByRole("textbox", { name: "Continue the conversation" }),
+    screen.getByRole("textbox", { name: "Gespräch fortsetzen" }),
   ).toBeTruthy();
-  expect(screen.queryByText("Save selection for next answer")).toBeNull();
+  expect(
+    screen.queryByText("Auswahl für nächste Antwort speichern"),
+  ).toBeNull();
 });

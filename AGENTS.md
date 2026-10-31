@@ -36,6 +36,16 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The 2026-10-31 user refinement adds German operation and automatic Siemens MCP
+diagnostic routing in normal chat. Automatic external queries may use only fixed
+template words plus canonical public PLC family/diagnostic identifiers explicitly
+typed by the human in the current question. Never derive outbound terms from
+catalogs, attachments, images, logs, history or model output. Respect external-search
+opt-out; ambiguous/generic alarms need clarification. Preserve cached bounded
+lookups, budgets, citations and ownership. See `docs/german-siemens-routing.md` for
+276 backend/42 frontend checks, the live public-MCP result and coverage limits.
+Stop after reporting; no later milestone, production or equipment work is authorized.
+
 The admin-ingestion/chat-backbone clarification below is implemented and locally
 validated on 2026-10-30. See `docs/chat-backbone.md` for behavior, 254 backend/41
 frontend checks, live local classification/vision results and remaining limits.

@@ -44,33 +44,33 @@ export default function AdminWorkspace({
     <div className="user-app">
       <main className="ux-main admin-main">
         <button className="ux-link" onClick={onClose}>
-          ← Back to questions
+          ← Zurück zu den Fragen
         </button>
-        <h1>Workspace administration</h1>
+        <h1>Arbeitsbereich verwalten</h1>
         <nav aria-label="Administration">
           <button
             aria-pressed={tab === "catalog"}
             onClick={() => setTab("catalog")}
           >
-            Machine knowledge
+            Maschinenwissen
           </button>
           <button
             aria-pressed={tab === "documents"}
             onClick={() => setTab("documents")}
           >
-            Public references
+            Öffentliche Referenzen
           </button>
           <button
             aria-pressed={tab === "users"}
             onClick={() => setTab("users")}
           >
-            Users
+            Benutzer
           </button>
           <button
             aria-pressed={tab === "audit"}
             onClick={() => setTab("audit")}
           >
-            Audit trail
+            Audit-Protokoll
           </button>
         </nav>
         {tab === "catalog" ? (
@@ -121,41 +121,42 @@ function Documents() {
     const body = new FormData(form);
     await action(
       () => api("/api/library/documents", { method: "POST", body }),
-      "Document added. Index it to enable semantic search.",
+      "Dokument hinzugefügt. Für die semantische Suche bitte indexieren.",
     );
   }
   return (
-    <section aria-label="Document administration">
-      <h2>Knowledge documents</h2>
+    <section aria-label="Dokumentverwaltung">
+      <h2>Wissensdokumente</h2>
       <p>
-        Active documents are available to every workspace user. Each question
-        keeps its own document snapshot. Replace an edition by adding a new
-        document and disabling the old one.
+        Aktive Dokumente stehen allen Benutzern dieses Arbeitsbereichs zur
+        Verfügung. Jede Frage behält ihren eigenen Dokumentstand. Neue Versionen
+        werden als neues Dokument hinzugefügt; die alte Version kann deaktiviert
+        werden.
       </p>
       <div className="admin-list">
         {rows.map((d) => (
           <article key={d.id}>
             <h3>{d.title}</h3>
             <p>
-              {d.family} · {d.version} · {d.active ? "Active" : "Disabled"}
+              {d.family} · {d.version} · {d.active ? "Aktiv" : "Deaktiviert"}
             </p>
             <p className="ux-small">{d.license_note}</p>
             <p>
-              {d.indexed_passages}/{d.passages} passages indexed for semantic
-              search
+              {d.indexed_passages}/{d.passages} Abschnitte für die semantische
+              Suche indexiert
             </p>
             <div className="admin-actions">
-              <a href={`/api/library/documents/${d.id}/file`}>Download</a>
+              <a href={`/api/library/documents/${d.id}/file`}>Herunterladen</a>
               <button
                 disabled={busy || !d.active}
                 onClick={() =>
                   void action(
                     () => post(`/api/library/documents/${d.id}/index`),
-                    "Semantic index saved.",
+                    "Semantischer Index gespeichert.",
                   )
                 }
               >
-                Index document
+                Dokument indexieren
               </button>
               <button
                 disabled={busy}
@@ -166,78 +167,79 @@ function Documents() {
                         active: !d.active,
                       }),
                     d.active
-                      ? "Document disabled for new questions."
-                      : "Document enabled.",
+                      ? "Dokument für neue Fragen deaktiviert."
+                      : "Dokument aktiviert.",
                   )
                 }
               >
-                {d.active ? "Disable" : "Enable"}
+                {d.active ? "Deaktivieren" : "Aktivieren"}
               </button>
             </div>
           </article>
         ))}
       </div>
       <details className="admin-add">
-        <summary>Add a shared document</summary>
+        <summary>Gemeinsames Dokument hinzufügen</summary>
         <form onSubmit={(e) => void upload(e)} className="siemens-form">
           <label>
-            Document title
+            Dokumenttitel
             <input name="title" required maxLength={160} />
           </label>
           <label>
-            Product family
+            Produktfamilie
             <input
               name="family"
               required
               maxLength={60}
-              placeholder="For example, SIMATIC S7-1500"
+              placeholder="Zum Beispiel SIMATIC S7-1500"
             />
           </label>
           <label>
-            Version / manual edition
+            Version / Handbuchausgabe
             <input name="version" required maxLength={80} />
           </label>
           <label>
-            Licence and provenance
+            Lizenz und Herkunft
             <input
               name="license_note"
               required
               maxLength={300}
-              placeholder="State the licence that permits use and redistribution"
+              placeholder="Lizenz für Nutzung und Weitergabe angeben"
             />
           </label>
           <label>
-            Content type
+            Inhaltstyp
             <select name="data_policy">
               <option value="synthetic">
-                Generated demonstration material
+                Generiertes Demonstrationsmaterial
               </option>
               <option value="licensed-public">
-                Explicitly licensed public material
+                Ausdrücklich lizenziertes öffentliches Material
               </option>
             </select>
           </label>
           <label>
-            Source file
+            Quelldatei
             <input type="file" name="file" accept=".pdf,.md,.txt" required />
           </label>
           <p className="ux-small">
-            PDF: up to 10 MiB / 20 pages. UTF-8 text or Markdown: up to 1 MiB.
-            No OCR. Text page numbers follow form-feed boundaries.
+            PDF: bis 10 MiB / 20 Seiten. UTF-8-Text oder Markdown: bis 1 MiB.
+            Keine OCR. Seitenzahlen in Textdateien folgen den
+            Seitenumbruchzeichen.
           </p>
           <label className="ux-confirm">
             <input type="checkbox" name="confirmed" value="true" required />
             <span>
-              I confirm the licence permits sharing this document with all
-              workspace users.
+              Ich bestätige, dass die Lizenz die Freigabe für alle Benutzer
+              dieses Arbeitsbereichs erlaubt.
             </span>
           </label>
           <button className="ux-primary" disabled={busy}>
-            Add document
+            Dokument hinzufügen
           </button>
         </form>
       </details>
-      {busy && <p role="status">Working locally…</p>}
+      {busy && <p role="status">Lokale Verarbeitung…</p>}
       {error && <p role="alert">{error}</p>}
       {notice && <p role="status">{notice}</p>}
     </section>
@@ -281,17 +283,17 @@ function Users({ currentUserId }: { currentUserId: string }) {
     const fields = new FormData(form);
     const success = await action(
       () => post("/api/auth/users", Object.fromEntries(fields)),
-      "User account created.",
+      "Benutzerkonto erstellt.",
     );
     if (success) form.reset();
   }
   return (
-    <section aria-label="User administration">
-      <h2>Workspace users</h2>
+    <section aria-label="Benutzerverwaltung">
+      <h2>Benutzer des Arbeitsbereichs</h2>
       <p>
-        Members see their own investigations and the shared library.
-        Administrators also manage users, documents, storage and the workspace
-        audit trail.
+        Mitglieder sehen ihre eigenen Untersuchungen und die gemeinsame
+        Bibliothek. Administratoren verwalten zusätzlich Benutzer, Dokumente,
+        Speicher und Audit-Protokolle.
       </p>
       <div className="admin-list">
         {rows.map((u) => (
@@ -301,8 +303,8 @@ function Users({ currentUserId }: { currentUserId: string }) {
               {u.id === currentUserId ? " (you)" : ""}
             </h3>
             <p>
-              {u.role} · {u.active ? "Active" : "Disabled"} · {u.sessions}{" "}
-              active sessions
+              {u.role} · {u.active ? "Aktiv" : "Deaktiviert"} · {u.sessions}{" "}
+              aktive Sitzungen
             </p>
             <div className="admin-actions">
               <button
@@ -313,11 +315,13 @@ function Users({ currentUserId }: { currentUserId: string }) {
                       post(`/api/auth/users/${u.id}/update`, {
                         role: u.role === "admin" ? "member" : "admin",
                       }),
-                    "Role updated; existing sessions revoked.",
+                    "Rolle aktualisiert; bestehende Sitzungen widerrufen.",
                   )
                 }
               >
-                {u.role === "admin" ? "Make member" : "Make administrator"}
+                {u.role === "admin"
+                  ? "Als Mitglied festlegen"
+                  : "Als Administrator festlegen"}
               </button>
               <button
                 disabled={busy || u.id === currentUserId}
@@ -327,22 +331,22 @@ function Users({ currentUserId }: { currentUserId: string }) {
                       post(`/api/auth/users/${u.id}/update`, {
                         active: !u.active,
                       }),
-                    "Account availability updated; disabled account sessions revoked.",
+                    "Kontoverfügbarkeit aktualisiert; Sitzungen deaktivierter Konten widerrufen.",
                   )
                 }
               >
-                {u.active ? "Disable account" : "Enable account"}
+                {u.active ? "Konto deaktivieren" : "Konto aktivieren"}
               </button>
               <button
                 disabled={busy}
                 onClick={() =>
                   void action(
                     () => post(`/api/auth/users/${u.id}/revoke-sessions`),
-                    "Sessions revoked.",
+                    "Sitzungen widerrufen.",
                   )
                 }
               >
-                Sign out all sessions
+                Alle Sitzungen abmelden
               </button>
             </div>
           </article>
@@ -350,14 +354,14 @@ function Users({ currentUserId }: { currentUserId: string }) {
       </div>
       {next !== null && (
         <button disabled={busy} onClick={() => void refresh(next)}>
-          Load more users
+          Weitere Benutzer laden
         </button>
       )}
       <details className="admin-add">
-        <summary>Create a user</summary>
+        <summary>Benutzer anlegen</summary>
         <form className="siemens-form" onSubmit={(e) => void create(e)}>
           <label>
-            Username
+            Benutzername
             <input
               name="username"
               minLength={3}
@@ -367,7 +371,7 @@ function Users({ currentUserId }: { currentUserId: string }) {
             />
           </label>
           <label>
-            Initial password
+            Anfangspasswort
             <input
               name="password"
               type="password"
@@ -378,13 +382,13 @@ function Users({ currentUserId }: { currentUserId: string }) {
             />
           </label>
           <label>
-            Role
+            Rolle
             <select name="role">
-              <option value="member">Member</option>
+              <option value="member">Mitglied</option>
               <option value="admin">Administrator</option>
             </select>
           </label>
-          <button disabled={busy}>Create account</button>
+          <button disabled={busy}>Konto erstellen</button>
         </form>
       </details>
       {error && <p role="alert">{error}</p>}
@@ -415,12 +419,12 @@ function Audit() {
     void refresh();
   }, []);
   return (
-    <section aria-label="Workspace audit trail">
-      <h2>Audit trail</h2>
+    <section aria-label="Audit-Protokoll des Arbeitsbereichs">
+      <h2>Audit-Protokoll</h2>
       <p>
-        Records sign-ins, account changes, document administration, application
-        writes, downloads and access denials. Questions, document contents,
-        passwords and session tokens are excluded.
+        Erfasst Anmeldungen, Kontoänderungen, Dokumentverwaltung, Änderungen,
+        Downloads und verweigerte Zugriffe. Fragen, Dokumentinhalte, Passwörter
+        und Sitzungstoken werden nicht protokolliert.
       </p>
       <form
         className="admin-filters"
@@ -430,42 +434,42 @@ function Audit() {
         }}
       >
         <label>
-          Event type
+          Ereignistyp
           <input
             value={kind}
             onChange={(e) => setKind(e.target.value)}
-            placeholder="For example, user_updated"
+            placeholder="Zum Beispiel user_updated"
           />
         </label>
         <label>
-          Actor ID
+          Akteur-ID
           <input
             value={actor}
             onChange={(e) => setActor(e.target.value)}
             maxLength={40}
           />
         </label>
-        <button>Apply filters</button>
+        <button>Filter anwenden</button>
       </form>
       {page && (
         <p role="status">
           {page.integrity.valid
-            ? "Audit chain verified"
-            : "Audit integrity check failed"}{" "}
-          · {page.integrity.checked} events checked
+            ? "Audit-Kette verifiziert"
+            : "Audit-Integritätsprüfung fehlgeschlagen"}{" "}
+          · {page.integrity.checked} Ereignisse geprüft
         </p>
       )}
       <p className="ux-small">
-        Append-only through the app. A local database administrator can replace
-        the database; retain exported hashes independently for stronger
-        assurance.
+        Die Anwendung fügt Einträge nur an. Ein lokaler Datenbankadministrator
+        kann die Datenbank ersetzen; exportierte Prüfsummen sollten unabhängig
+        aufbewahrt werden.
       </p>
       <a href="/api/admin/audit/export">
-        Download first audit page (JSON, up to 100 events)
+        Erste Audit-Seite herunterladen (JSON, bis 100 Ereignisse)
       </a>
       <p>
         <a href="/api/admin/audit/complete">
-          Download complete audit history (JSONL)
+          Vollständiges Audit-Protokoll herunterladen (JSONL)
         </a>
       </p>
       <button
@@ -475,14 +479,14 @@ function Audit() {
             .catch((e) => setError(String(e)))
         }
       >
-        Archive current segment (history retained)
+        Aktuelles Segment archivieren (Verlauf bleibt erhalten)
       </button>
       {page?.delivery &&
         (!page.delivery.healthy || page.delivery.pending > 0) && (
           <p role="alert">
-            Audit delivery needs attention: {page.delivery.pending} pending
-            events; {page.delivery.overflow_events} aggregated overflow events.
-            Sign-in remains available.
+            Audit-Zustellung benötigt Aufmerksamkeit: {page.delivery.pending}{" "}
+            ausstehende Ereignisse; {page.delivery.overflow_events}{" "}
+            zusammengefasste Überlaufereignisse. Die Anmeldung bleibt verfügbar.
           </p>
         )}
       <div className="admin-audit">
@@ -492,12 +496,12 @@ function Audit() {
               #{e.id} {e.kind}
             </strong>
             <small>
-              {new Date(e.at * 1000).toLocaleString()} ·{" "}
-              {e.actor || e.actor_id || "Unauthenticated"}
+              {new Date(e.at * 1000).toLocaleString("de-DE")} ·{" "}
+              {e.actor || e.actor_id || "Nicht authentifiziert"}
             </small>
             <p>{e.subject_id}</p>
             <details>
-              <summary>Event metadata and integrity hash</summary>
+              <summary>Ereignismetadaten und Integritätsprüfsumme</summary>
               <pre>{JSON.stringify(e.details, null, 2)}</pre>
               <code>{e.entry_hash}</code>
             </details>
@@ -506,7 +510,7 @@ function Audit() {
       </div>
       {page?.next_after != null && (
         <button onClick={() => void refresh(page.next_after!)}>
-          Load more audit events
+          Weitere Audit-Ereignisse laden
         </button>
       )}
       {error && <p role="alert">{error}</p>}

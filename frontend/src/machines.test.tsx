@@ -31,9 +31,11 @@ it("shows automatic groups with explicit machine choices", async () => {
     ),
   );
   render(<MachineApp />);
-  expect(await screen.findByText("AUTOMATIC SIMILARITY GROUP")).toBeTruthy();
+  expect(
+    await screen.findByText("AUTOMATISCHE ÄHNLICHKEITSGRUPPE"),
+  ).toBeTruthy();
   expect(screen.getByRole("button", { name: /Packaging A/ })).toBeTruthy();
-  expect(screen.getByText(/do not combine investigation sources/)).toBeTruthy();
+  expect(screen.getByText(/keine Untersuchungsquellen zusammen/)).toBeTruthy();
 });
 it("retains machine creation input after a server rejection", async () => {
   vi.stubGlobal(
@@ -48,11 +50,13 @@ it("retains machine creation input after a server rejection", async () => {
   );
   const user = userEvent.setup();
   render(<MachineApp />);
-  await user.click(await screen.findByRole("button", { name: "Add machine" }));
-  const input = screen.getByRole("textbox", { name: "Machine name" });
+  await user.click(
+    await screen.findByRole("button", { name: "Maschine hinzufügen" }),
+  );
+  const input = screen.getByRole("textbox", { name: "Maschinenname" });
   await user.type(input, "Line 3");
   await user.click(
-    screen.getByRole("button", { name: "Create private workspace" }),
+    screen.getByRole("button", { name: "Privaten Arbeitsbereich erstellen" }),
   );
   expect(await screen.findByRole("alert")).toBeTruthy();
   expect((input as HTMLInputElement).value).toBe("Line 3");

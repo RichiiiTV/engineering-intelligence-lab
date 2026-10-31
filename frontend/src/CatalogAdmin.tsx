@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Upload, FileText, FolderCheck, LoaderCircle } from "lucide-react";
 import { api, post } from "./api";
+import { statusLabel, requestError } from "./locale";
 import "./machines.css";
 type Source = {
   id: string;
@@ -82,11 +83,13 @@ export default function CatalogAdmin() {
     const form = e.currentTarget,
       files = chosen.filter((f) => f.size);
     if (!(form.elements.namedItem("authorized") as HTMLInputElement).checked) {
-      setError("Confirm that you may publish these files to this workspace.");
+      setError(
+        "Bestätige die Berechtigung zur Freigabe dieser Dateien im Arbeitsbereich.",
+      );
       return;
     }
     if (!files.length || files.length > 4) {
-      setError("Choose one to four source files per batch.");
+      setError("Pro Stapel eine bis vier Quelldateien auswählen.");
       return;
     }
     let accepted = 0;
@@ -105,34 +108,34 @@ export default function CatalogAdmin() {
       form.reset();
       setChosen([]);
       setNotice(
-        `${accepted} file${accepted === 1 ? "" : "s"} queued. The backbone will extract, index and identify the machine automatically.`,
+        `${accepted} Datei${accepted === 1 ? "" : "s"} eingereiht. Das System extrahiert und indexiert die Inhalte und ordnet sie automatisch einer Maschine zu.`,
       );
     });
     if (accepted && accepted < files.length) {
       setChosen(files.slice(accepted));
       setNotice(
-        `${accepted} files were accepted. Wait for indexing before submitting the remaining files; accepted files remain in Upload activity.`,
+        `${accepted} Dateien angenommen. Warte vor dem Hochladen weiterer Dateien die Indexierung ab; angenommene Dateien bleiben unter Upload-Aktivitäten sichtbar.`,
       );
     }
   }
   return (
-    <section aria-label="Machine knowledge administration">
-      <h2>Machine knowledge</h2>
+    <section aria-label="Maschinenwissen verwalten">
+      <h2>Maschinenwissen</h2>
       <p>
-        Add manuals, documentation and code exports. The backbone reads the
-        files, creates local embeddings and assigns them to machine knowledge
-        automatically.
+        Handbücher, Dokumentation und Code-Exporte hinzufügen. Das System liest
+        die Dateien, erstellt lokale Embeddings und ordnet sie automatisch dem
+        Maschinenwissen zu.
       </p>
       <form className="machine-card machine-form" onSubmit={upload}>
         <h3>
           <Upload size={19} />
-          Add machine data
+          Maschinendaten hinzufügen
         </h3>
         <label>
-          Source files
+          Quelldateien
           <input
             name="files"
-            aria-label="Machine source files"
+            aria-label="Maschinen-Quelldateien"
             type="file"
             multiple
             onChange={(e) => setChosen(Array.from(e.target.files || []))}
@@ -141,21 +144,22 @@ export default function CatalogAdmin() {
         </label>
         {chosen.length > 0 && (
           <p className="ux-small">
-            Pending files: {chosen.map((f) => f.name).join(", ")}
+            Vorgemerkte Dateien: {chosen.map((f) => f.name).join(", ")}
           </p>
         )}
         <p className="ux-small">
-          Up to four files per batch. No machine name or source selection is
-          required. Files are published to signed-in users in this workspace
-          after processing.
+          Bis zu vier Dateien pro Stapel. Keine Maschinenbenennung oder
+          Quellenauswahl erforderlich. Nach der Verarbeitung stehen die Dateien
+          angemeldeten Benutzern dieses Arbeitsbereichs zur Verfügung.
         </p>
         <label className="machine-check">
-          <input name="authorized" type="checkbox" required />I am authorized to
-          make these files available to users in this workspace.
+          <input name="authorized" type="checkbox" required />
+          Ich bin berechtigt, diese Dateien für Benutzer dieses Arbeitsbereichs
+          freizugeben.
         </label>
         <button className="ux-primary" disabled={busy}>
-          {busy ? <LoaderCircle size={17} /> : <Upload size={17} />}Upload and
-          organize automatically
+          {busy ? <LoaderCircle size={17} /> : <Upload size={17} />}Hochladen
+          und automatisch zuordnen
         </button>
       </form>
       {(error || loadError) && (
@@ -166,25 +170,27 @@ export default function CatalogAdmin() {
       {notice && <p role="status">{notice}</p>}
       {jobs.length > 0 && (
         <section className="machine-card">
-          <h3>Upload activity</h3>
+          <h3>Upload-Aktivitäten</h3>
           {jobs.slice(0, 15).map((j) => (
             <div className="machine-source" key={j.id}>
               <strong>{j.filename}</strong>
               <small>
                 {j.status === "completed"
-                  ? "Ready"
+                  ? "Bereit"
                   : j.phase === "classifying"
-                    ? "Identifying machine…"
-                    : j.phase}{" "}
+                    ? "Maschine wird erkannt…"
+                    : statusLabel(j.phase)}{" "}
                 · {j.progress}%
                 {j.classifier_calls
-                  ? ` · classification attempts ${j.classifier_calls}/3`
+                  ? ` · Zuordnungsversuche ${j.classifier_calls}/3`
                   : ""}
               </small>
               {!terminal.has(j.status) && (
                 <progress value={j.progress} max={100} />
               )}{" "}
-              {j.error && <p className="ux-caution">{j.error}</p>}{" "}
+              {j.error && (
+                <p className="ux-caution">{requestError(j.error, 400)}</p>
+              )}{" "}
               {j.status !== "completed" && j.phase !== "discarded" && (
                 <div className="machine-actions">
                   <button
@@ -197,15 +203,16 @@ export default function CatalogAdmin() {
                       )
                     }
                   >
-                    {terminal.has(j.status) ? "Retry" : "Cancel"}
+                    {terminal.has(j.status) ? "Erneut versuchen" : "Abbrechen"}
                   </button>
                   {terminal.has(j.status) && (
                     <details>
-                      <summary>Discard staged upload</summary>
+                      <summary>Zwischengespeicherten Upload verwerfen</summary>
                       <p>
-                        Discard only the staged upload bytes. This job cannot be
-                        retried afterwards. Published sources and answers are
-                        retained.
+                        Nur die zwischengespeicherten Upload-Daten verwerfen.
+                        Danach kann dieser Auftrag nicht erneut gestartet
+                        werden. Veröffentlichte Quellen und Antworten bleiben
+                        erhalten.
                       </p>
                       <button
                         onClick={() =>
@@ -217,7 +224,7 @@ export default function CatalogAdmin() {
                           )
                         }
                       >
-                        Confirm discard
+                        Verwerfen bestätigen
                       </button>
                     </details>
                   )}
@@ -229,12 +236,12 @@ export default function CatalogAdmin() {
       )}
       <h3>
         <FolderCheck size={20} />
-        Automatically organized knowledge
+        Automatisch zugeordnetes Wissen
       </h3>
       {!machines.length && (
         <p className="ux-small">
-          Upload files to build the machine knowledge backbone. Existing private
-          workspaces are kept separate.
+          Lade Dateien hoch, um das Maschinenwissen aufzubauen. Bestehende
+          private Arbeitsbereiche bleiben getrennt.
         </p>
       )}
       <div className="machine-groups">
@@ -242,33 +249,40 @@ export default function CatalogAdmin() {
           <section className="machine-card" key={m.id}>
             <span className="machine-eyebrow">
               {m.identity_kind === "unknown"
-                ? "IDENTITY NOT ESTABLISHED"
+                ? "IDENTITÄT NICHT BELEGT"
                 : m.identity_kind === "product_family"
-                  ? "PRODUCT FAMILY"
-                  : "MACHINE KNOWLEDGE"}
+                  ? "PRODUKTFAMILIE"
+                  : "MASCHINENWISSEN"}
             </span>
             <h2>{m.name}</h2>
             {m.identity_kind === "unknown" && (
               <p className="ux-caution">
-                No supported machine identity was found. The chat will ask for
-                clarification rather than assume a machine.
+                Keine belegte Maschinenkennung gefunden. Der Chat fragt nach,
+                anstatt eine Maschine anzunehmen.
               </p>
             )}
             {m.documents.map((d) => (
               <details className="machine-source" key={d.id}>
                 <summary>
                   <FileText size={14} /> {d.filename} ·{" "}
-                  {d.active ? "Available" : "Archived"}
+                  {d.active ? "Verfügbar" : "Archiviert"}
                 </summary>
                 <p className="ux-small">
-                  Assignment:{" "}
+                  Zuordnung:{" "}
                   {d.assignment_basis === "semantic-inference"
-                    ? "Embedding and LLM inference"
+                    ? "Schlussfolgerung aus Embeddings und LLM"
                     : d.assignment_basis === "source-identity"
-                      ? "Identifier found in source"
-                      : "Unidentified"}{" "}
-                  · {d.classification?.confidence || "unknown"} extraction
-                  confidence
+                      ? "Kennung in der Quelle gefunden"
+                      : "Nicht zugeordnet"}{" "}
+                  ·{" "}
+                  {(
+                    {
+                      high: "hohe",
+                      medium: "mittlere",
+                      low: "niedrige",
+                    } as Record<string, string>
+                  )[d.classification?.confidence || ""] || "unbekannte"}{" "}
+                  Extraktionskonfidenz
                 </p>
                 {d.classification?.identity_evidence && (
                   <blockquote>{d.classification.identity_evidence}</blockquote>
@@ -277,7 +291,7 @@ export default function CatalogAdmin() {
                   <a
                     href={`/api/admin/machine-knowledge/documents/${d.id}/file`}
                   >
-                    Download original
+                    Original herunterladen
                   </a>
                   <button
                     disabled={busy}
@@ -290,7 +304,9 @@ export default function CatalogAdmin() {
                       )
                     }
                   >
-                    {d.active ? "Archive for future answers" : "Enable"}
+                    {d.active
+                      ? "Für zukünftige Antworten archivieren"
+                      : "Aktivieren"}
                   </button>
                 </div>
               </details>
@@ -299,10 +315,10 @@ export default function CatalogAdmin() {
         ))}
       </div>
       <p className="ux-small">
-        Users only describe their problem and attach images or logs. Machine
-        matching, source retrieval and conversation context are handled by the
-        backbone. Their chats and attachments are not added to this shared
-        knowledge.
+        Benutzer beschreiben nur ihr Problem und fügen bei Bedarf Bilder oder
+        Protokolle hinzu. Das System übernimmt Maschinenzuordnung, Quellensuche
+        und Gesprächskontext. Chats und Anhänge werden nicht in dieses
+        gemeinsame Wissen aufgenommen.
       </p>
     </section>
   );

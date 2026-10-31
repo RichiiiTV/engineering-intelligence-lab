@@ -28,7 +28,7 @@ export default function SafeAnswer({
         )
           return (
             <a key={i} href={ref.url} target="_blank" rel="noopener noreferrer">
-              [Siemens source{" "}
+              [Siemens-Quelle{" "}
               {references
                 .filter((r) => r.citation_id.startsWith("siemens:"))
                 .indexOf(ref) + 1}
@@ -40,7 +40,7 @@ export default function SafeAnswer({
             <button
               className="source-inline"
               key={i}
-              title={ref.title || "Open source passage"}
+              title={ref.title || "Quellabschnitt öffnen"}
               onClick={() => {
                 const target = document.getElementById(
                   prefix + "source-" + ref.citation_id,
@@ -61,7 +61,7 @@ export default function SafeAnswer({
                 }
               }}
             >
-              [Source {references.indexOf(ref) + 1}]
+              [Quelle {references.indexOf(ref) + 1}]
             </button>
           );
         if (part.startsWith("**") && part.endsWith("**"))

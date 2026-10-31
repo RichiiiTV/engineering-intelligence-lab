@@ -92,20 +92,21 @@ export default function AuthGate({ children }: { children: ReactNode }) {
         <main className="ux-main auth-main">
           <h1>
             {configured === false
-              ? "Set up your local account"
-              : "Sign in to your workspace"}
+              ? "Lokales Konto einrichten"
+              : "Im Arbeitsbereich anmelden"}
           </h1>
           {configured === null && !error ? (
-            <p>Opening workspace…</p>
+            <p>Arbeitsbereich wird geöffnet…</p>
           ) : (
             <form className="siemens-form" onSubmit={(e) => void submit(e)}>
               {configured === false && (
                 <>
                   <p>
-                    Run this command in the project folder to get a setup code:
+                    Führe diesen Befehl im Projektordner aus, um einen
+                    Einrichtungscode zu erhalten:
                   </p>
                   <code>uv run python -m eil.cli auth-bootstrap</code>
-                  <label htmlFor="auth-code">One-time setup code</label>
+                  <label htmlFor="auth-code">Einmaliger Einrichtungscode</label>
                   <input
                     id="auth-code"
                     autoComplete="off"
@@ -115,12 +116,12 @@ export default function AuthGate({ children }: { children: ReactNode }) {
                     maxLength={128}
                   />
                   <p>
-                    The code expires after 15 minutes. Your existing local cases
-                    will belong to this first account.
+                    Der Code läuft nach 15 Minuten ab. Bestehende lokale Fälle
+                    werden diesem ersten Konto zugeordnet.
                   </p>
                 </>
               )}
-              <label htmlFor="auth-user">Username</label>
+              <label htmlFor="auth-user">Benutzername</label>
               <input
                 id="auth-user"
                 autoComplete="username"
@@ -130,7 +131,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
                 minLength={3}
                 maxLength={40}
               />
-              <label htmlFor="auth-password">Password</label>
+              <label htmlFor="auth-password">Passwort</label>
               <input
                 id="auth-password"
                 type="password"
@@ -148,10 +149,10 @@ export default function AuthGate({ children }: { children: ReactNode }) {
               )}
               <button className="ux-primary" disabled={busy} type="submit">
                 {busy
-                  ? "Please wait…"
+                  ? "Bitte warten…"
                   : configured
-                    ? "Sign in"
-                    : "Create local account"}
+                    ? "Anmelden"
+                    : "Lokales Konto erstellen"}
               </button>
             </form>
           )}
@@ -162,8 +163,8 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   return (
     <UserContext.Provider value={user}>
       <aside className="auth-strip">
-        <span>Signed in as {user.username}</span>
-        <button onClick={() => setAccount(!account)}>Account</button>
+        <span>Angemeldet als {user.username}</span>
+        <button onClick={() => setAccount(!account)}>Konto</button>
         {user.role === "admin" && (
           <button
             onClick={() => {
@@ -174,7 +175,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
             Administration
           </button>
         )}
-        <button onClick={() => void logout()}>Sign out</button>
+        <button onClick={() => void logout()}>Abmelden</button>
         {error && <span role="alert">{error}</span>}
       </aside>
       {account && (
@@ -223,11 +224,11 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
     }
   }
   return (
-    <section className="account-panel" aria-label="Account settings">
-      <h2>Account settings</h2>
+    <section className="account-panel" aria-label="Kontoeinstellungen">
+      <h2>Kontoeinstellungen</h2>
       <form className="siemens-form" onSubmit={(e) => void password(e)}>
-        <h3>Change password</h3>
-        <label htmlFor="old-password">Current password</label>
+        <h3>Passwort ändern</h3>
+        <label htmlFor="old-password">Aktuelles Passwort</label>
         <input
           id="old-password"
           type="password"
@@ -237,7 +238,7 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
           required
           maxLength={128}
         />
-        <label htmlFor="new-password">New password</label>
+        <label htmlFor="new-password">Neues Passwort</label>
         <input
           id="new-password"
           type="password"
@@ -249,11 +250,11 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
           maxLength={128}
         />
         <button className="ux-secondary">
-          Update password and sign out all sessions
+          Passwort aktualisieren und alle Sitzungen abmelden
         </button>
       </form>
       {user.role === "admin" && (
-        <p>Manage workspace users in Administration / Users.</p>
+        <p>Benutzer unter Administration / Benutzer verwalten.</p>
       )}
       {error && <p role="alert">{error}</p>}
     </section>

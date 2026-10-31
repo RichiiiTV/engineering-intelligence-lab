@@ -10,10 +10,11 @@ import {
   Cpu,
 } from "lucide-react";
 import type { Citation, Comparison, RunEvent } from "./types";
+import { statusLabel } from "./locale";
 
-export const fmt = (n: number) => new Intl.NumberFormat("en-US").format(n);
+export const fmt = (n: number) => new Intl.NumberFormat("de-DE").format(n);
 export const time = (s: string) =>
-  new Date(s).toLocaleTimeString([], {
+  new Date(s).toLocaleTimeString("de-DE", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -22,7 +23,7 @@ export function Status({ value }: { value: string }) {
   return (
     <span className={`status ${value}`}>
       <i />
-      {value.replaceAll("_", " ")}
+      {statusLabel(value)}
     </span>
   );
 }
@@ -75,7 +76,7 @@ export function Modal({
         <h2 id={id}>{title}</h2>
         <button
           className="icon-button"
-          aria-label="Close dialog"
+          aria-label="Dialog schließen"
           onClick={onClose}
         >
           <X size={19} />
@@ -113,8 +114,8 @@ export function CitationView({ citation }: { citation: Citation }) {
           <strong>{citation.filename}</strong>
           <p>
             {citation.citation_id.startsWith("pdf:")
-              ? `Page ${(citation.pages || [citation.page]).join(", ")}`
-              : `CSV line ${citation.row?.csv_line} · ${citation.row?.row_id || ""}`}
+              ? `Seite ${(citation.pages || [citation.page]).join(", ")}`
+              : `CSV-Zeile ${citation.row?.csv_line} · ${citation.row?.row_id || ""}`}
           </p>
         </div>
       </div>
@@ -122,11 +123,11 @@ export function CitationView({ citation }: { citation: Citation }) {
       {citation.row && <Json value={citation.row} />}
       <label>Citation ID</label>
       <code className="break">{citation.citation_id}</code>
-      <label>Source SHA-256</label>
+      <label>SHA-256 der Quelle</label>
       <code className="break">{citation.sha256}</code>
       <p className="muted small">
-        The reference verifies a source location. It does not establish that a
-        claim is true.
+        Die Referenz bestätigt eine Fundstelle. Sie belegt nicht die Richtigkeit
+        einer Aussage.
       </p>
     </div>
   );
@@ -157,19 +158,19 @@ export function StationChart({
       <div className="chart-legend">
         <span>
           <i className="baseline-key" />
-          Baseline
+          Ausgangszeitraum
         </span>
         <span>
           <i className="incident-key" />
-          Incident
+          Störungszeitraum
         </span>
-        <span className="muted">False-ejection rate (%)</span>
+        <span className="muted">Fehlausschussquote (%)</span>
       </div>
       <svg
         className="station-chart"
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label="Baseline and incident false-ejection rates by station; exact values in the table below"
+        aria-label="Fehlausschussquoten nach Station und Zeitraum; genaue Werte in der folgenden Tabelle"
       >
         {[0, 1, 2, 3].map((i) => {
           const y = bottom - ((bottom - top) * i) / 3;
@@ -230,10 +231,10 @@ export function StationChart({
           <thead>
             <tr>
               <th>Station</th>
-              <th>Baseline</th>
-              <th>Incident</th>
-              <th>Change</th>
-              <th>Evidence</th>
+              <th>Ausgangszeitraum</th>
+              <th>Störungszeitraum</th>
+              <th>Änderung</th>
+              <th>Belege</th>
             </tr>
           </thead>
           <tbody>
@@ -241,7 +242,9 @@ export function StationChart({
               <tr key={r.station_id}>
                 <td>
                   <span className="station-id">{r.station_id}</span>
-                  {i === 0 && <span className="subtle-tag">Highest delta</span>}
+                  {i === 0 && (
+                    <span className="subtle-tag">Größte Abweichung</span>
+                  )}
                 </td>
                 <td>{(100 * r.baseline_rate).toFixed(2)}%</td>
                 <td>{(100 * r.incident_rate).toFixed(2)}%</td>
@@ -254,7 +257,7 @@ export function StationChart({
                     className="text-button"
                     onClick={() => onCitation(r.example_citations[0])}
                   >
-                    View row <ArrowUpRight size={13} />
+                    Zeile anzeigen <ArrowUpRight size={13} />
                   </button>
                 </td>
               </tr>
@@ -263,7 +266,7 @@ export function StationChart({
         </table>
       </div>
       <details className="method">
-        <summary>Calculation & source provenance</summary>
+        <summary>Berechnung und Herkunft der Quellen</summary>
         <Json value={data.query_provenance} />
         <p className="small muted">{data.uncertainty}</p>
       </details>
@@ -310,7 +313,7 @@ export function Timeline({
                       : e.data.error) ||
                     (e.data.tokens
                       ? `${e.data.tokens} tokens`
-                      : `Event ${e.id}`),
+                      : `Ereignis ${e.id}`),
                 )}
               </span>
             </span>
@@ -319,8 +322,8 @@ export function Timeline({
         );
       })}
       {!visible.length && (
-        <Empty title="Waiting for events">
-          Run activity will appear here as it happens.
+        <Empty title="Wartet auf Ereignisse">
+          Aktivitäten der Untersuchung erscheinen hier fortlaufend.
         </Empty>
       )}
     </div>

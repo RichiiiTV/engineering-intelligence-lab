@@ -17,6 +17,7 @@ export type PublicReference = {
   cited_in_answer?: boolean;
 };
 export type SiemensSnapshot = {
+  query_origin?: string;
   enabled: boolean;
   outbound_query: string;
   status: string;

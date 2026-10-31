@@ -74,7 +74,7 @@ def assess(run, answer):
     text = " ".join(h.get("text", "") for h in observed.values())
     critical = set(
         re.findall(
-            r"\b(?:safety[- ](?:alarm|rated|interlock|circuit|function)|interlock|emergency[- ]stop|SIL\s*[1-4])\b",
+            r"\b(?:safety[- ](?:alarm|rated|interlock|circuit|function)|interlock|emergency[- ]stop|SIL\s*[1-4]|sicherheits(?:funktion|kreis|verriegelung|alarm)|sicherheitsgerichtet\w*|not[- ]?halt|not[- ]?aus|türverriegelung)\b",
             answer,
             re.I,
         )

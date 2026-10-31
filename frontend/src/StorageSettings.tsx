@@ -73,11 +73,12 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
     }
   }
   return (
-    <section aria-label="Files and storage" className="storage-settings">
-      <h3>Files and storage</h3>
+    <section aria-label="Dateien und Speicher" className="storage-settings">
+      <h3>Dateien und Speicher</h3>
       <p>
-        Move completed or paused cases to Trash to hide them. Restore them at
-        any time before permanent deletion.
+        Verschiebe abgeschlossene oder pausierte Fälle zum Ausblenden in den
+        Papierkorb. Vor der endgültigen Löschung kannst du sie jederzeit
+        wiederherstellen.
       </p>
       <ul>
         {rows.map((c) => (
@@ -88,11 +89,11 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
               onClick={() =>
                 void action(
                   () => post(`/api/cases/${c.id}/trash`),
-                  "Case moved to Trash.",
+                  "Fall in den Papierkorb verschoben.",
                 )
               }
             >
-              Move to Trash
+              In den Papierkorb verschieben
             </button>
           </li>
         ))}
@@ -101,14 +102,18 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
         <button
           disabled={busy}
           onClick={() =>
-            void action(() => page(false, offset), "More cases loaded.", false)
+            void action(
+              () => page(false, offset),
+              "Weitere Fälle geladen.",
+              false,
+            )
           }
         >
-          Load more cases
+          Weitere Fälle laden
         </button>
       )}
-      <h4>Trash</h4>
-      {!trash.length && <p>Trash is empty.</p>}
+      <h4>Papierkorb</h4>
+      {!trash.length && <p>Der Papierkorb ist leer.</p>}
       <ul>
         {trash.map((c) => (
           <li key={c.id}>
@@ -118,11 +123,11 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
               onClick={() =>
                 void action(
                   () => post(`/api/cases/${c.id}/restore`),
-                  "Case restored.",
+                  "Fall wiederhergestellt.",
                 )
               }
             >
-              Restore case
+              Fall wiederherstellen
             </button>
           </li>
         ))}
@@ -134,19 +139,19 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             void page(true, trashOffset).catch((e) => setError(String(e)))
           }
         >
-          Load more Trash
+          Weitere Papierkorbeinträge laden
         </button>
       )}
       <button disabled={busy} onClick={() => void review()}>
-        Review Trash older than 90 days
+        Papierkorbeinträge älter als 90 Tage prüfen
       </button>
       {plan && (
         <div className="retention-review">
-          <h4>Review permanent deletion</h4>
+          <h4>Endgültige Löschung prüfen</h4>
           <p>
-            {plan.cases.length} cases. Approval expires{" "}
-            {new Date(plan.expires_at).toLocaleString()}. A verified backup is
-            required before deletion.
+            {plan.cases.length} Fälle. Freigabe läuft ab{" "}
+            {new Date(plan.expires_at).toLocaleString("de-DE")}. Vor dem Löschen
+            ist eine verifizierte Sicherung erforderlich.
           </p>
           <ul>
             {plan.cases.map((c) => (
@@ -156,13 +161,13 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             ))}
           </ul>
           <details>
-            <summary>Exact deletion plan</summary>
+            <summary>Genauer Löschplan</summary>
             <pre>{JSON.stringify(plan, null, 2)}</pre>
           </details>
           {plan.cases.length > 0 && (
             <>
               <label htmlFor="retention-confirmation">
-                Type {CONFIRM} to approve this plan
+                Eingabe: {CONFIRM} zum Freigeben dieses Plans
               </label>
               <input
                 id="retention-confirmation"
@@ -180,11 +185,11 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
                         expected_sha256: plan.sha256,
                         confirmation,
                       }),
-                    "Reviewed Trash permanently deleted; backup retained.",
+                    "Geprüfte Papierkorbeinträge endgültig gelöscht; Sicherung bleibt erhalten.",
                   )
                 }
               >
-                Approve reviewed deletion
+                Geprüfte Löschung freigeben
               </button>
             </>
           )}
@@ -192,11 +197,12 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
       )}
       {admin && (
         <>
-          <h4>Workspace backups</h4>
+          <h4>Sicherungen des Arbeitsbereichs</h4>
           <p>
-            Backups include all accounts’ case data and password hashes. Keep
-            downloaded copies private. Sessions are revoked on restore. The
-            service must be idle to create a backup.
+            Sicherungen enthalten die Falldaten und Passwort-Hashes aller
+            Konten. Heruntergeladene Kopien privat aufbewahren. Bei der
+            Wiederherstellung werden Sitzungen widerrufen. Der Dienst muss für
+            eine Sicherung im Leerlauf sein.
           </p>
           {storage?.databases.map((d) => (
             <p key={d.name}>
@@ -209,16 +215,18 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             onClick={() =>
               void action(
                 () => post("/api/admin/backups"),
-                "Verified workspace backup created.",
+                "Verifizierte Sicherung des Arbeitsbereichs erstellt.",
               )
             }
           >
-            Create verified backup
+            Verifizierte Sicherung erstellen
           </button>
           <ul>
             {storage?.backups.map((b) => (
               <li key={b.id}>
-                <a href={`/api/admin/backups/${b.id}/file`}>Download {b.id}</a>{" "}
+                <a href={`/api/admin/backups/${b.id}/file`}>
+                  Herunterladen {b.id}
+                </a>{" "}
                 · {(b.size / 1048576).toFixed(1)} MiB
                 <details>
                   <summary>SHA-256</summary>
@@ -228,10 +236,11 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             ))}
           </ul>
           <p>
-            Restore through the local maintenance command into a new state
-            directory. See the operator guide. Three backups are retained at
-            most; move an older backup to secure offline storage before creating
-            another.
+            Die Wiederherstellung erfolgt mit dem lokalen Wartungsbefehl in ein
+            neues Zustandsverzeichnis. Siehe Betriebsanleitung. Es werden
+            höchstens drei Sicherungen aufbewahrt; verschiebe eine ältere
+            Sicherung vor einer weiteren Erstellung in einen sicheren
+            Offline-Speicher.
           </p>
         </>
       )}

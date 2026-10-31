@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Beaker, FolderLock, Plus, FileText, ArrowLeft } from "lucide-react";
 import { api, post } from "./api";
+import { statusLabel } from "./locale";
 import "./user.css";
 import "./machines.css";
 import NotebookPanel from "./NotebookPanel";
@@ -138,91 +139,91 @@ export default function MachineApp() {
           <Beaker size={29} />
           <span>Engineering Intelligence Lab</span>
         </a>
-        <nav aria-label="Main navigation">
-          <a href="/">Ask a question</a>
+        <nav aria-label="Hauptnavigation">
+          <a href="/">Frage stellen</a>
           <a href="/?page=machines" aria-current="page">
-            My machines
+            Meine Maschinen
           </a>
-          <a href="/?view=advanced">Advanced</a>
+          <a href="/?view=advanced">Erweitert</a>
         </nav>
       </header>
       <main className="ux-main machine-main">
         {(error || loadError) && (
           <div className="ux-error" role="alert">
             {error || loadError}
-            <button onClick={() => void refresh()}>Try again</button>
+            <button onClick={() => void refresh()}>Erneut versuchen</button>
           </div>
         )}
         {!selected ? (
           <>
             <div className="ux-list-heading">
               <div>
-                <p className="machine-eyebrow">YOUR PRIVATE KNOWLEDGE</p>
-                <h1>My machines</h1>
+                <p className="machine-eyebrow">DEIN PRIVATES WISSEN</p>
+                <h1>Meine Maschinen</h1>
                 <p>
-                  Bring your manuals, documentation and code together. Ask
-                  questions with the right sources.
+                  Handbücher, Dokumentation und Code zusammenführen. Fragen mit
+                  passenden Quellen beantworten.
                 </p>
               </div>
               <button className="ux-primary" onClick={() => setCreate(!create)}>
                 <Plus size={18} />
-                Add machine
+                Maschine hinzufügen
               </button>
             </div>
             {create && (
               <form className="machine-card machine-form" onSubmit={addMachine}>
-                <h2>Add a machine</h2>
+                <h2>Maschine hinzufügen</h2>
                 <label>
-                  Machine name
+                  Maschinenname
                   <input
                     name="name"
                     required
                     maxLength={120}
-                    placeholder="e.g. Packaging line 3"
+                    placeholder="z. B. Verpackungslinie 3"
                   />
                 </label>
                 <label>
-                  Family (optional)
+                  Familie (optional)
                   <input
                     name="family"
                     maxLength={60}
-                    placeholder="e.g. Packaging"
+                    placeholder="z. B. Verpackung"
                   />
                 </label>
                 <button className="ux-primary" disabled={busy}>
-                  Create private workspace
+                  Privaten Arbeitsbereich erstellen
                 </button>
               </form>
             )}
             {!groups.length && !create && (
               <div className="machine-empty">
                 <FolderLock size={38} />
-                <h2>A workspace for each machine</h2>
+                <h2>Ein Arbeitsbereich pro Maschine</h2>
                 <p>
-                  Add a machine, upload its sources, then start an
-                  investigation. Everything stays scoped to your account.
+                  Maschine hinzufügen, Quellen hochladen und eine Untersuchung
+                  starten. Alles bleibt auf dein Konto beschränkt.
                 </p>
                 <button className="ux-primary" onClick={() => setCreate(true)}>
-                  Add your first machine
+                  Erste Maschine hinzufügen
                 </button>
               </div>
             )}
             {groups.length > 0 && (
               <>
                 <p className="ux-small">
-                  Related machines are grouped automatically from local document
-                  embeddings. Groups organize your machines; they do not combine
-                  investigation sources.
+                  Verwandte Maschinen werden automatisch anhand lokaler
+                  Dokument-Embeddings gruppiert. Gruppen ordnen deine Maschinen;
+                  sie führen keine Untersuchungsquellen zusammen.
                 </p>
                 <div className="machine-groups">
                   {groups.map((g) => (
                     <section className="machine-card" key={g.id}>
                       <span className="machine-eyebrow">
                         {g.machines.length > 1
-                          ? "AUTOMATIC SIMILARITY GROUP"
+                          ? "AUTOMATISCHE ÄHNLICHKEITSGRUPPE"
                           : g.indexed
-                            ? "INDEXED WORKSPACE"
-                            : "AWAITING INDEXED SOURCES"}
+                            ? "INDEXIERTER ARBEITSBEREICH"
+                            : "WARTET AUF INDEXIERTE QUELLEN"}
                       </span>
                       <h2>{g.label}</h2>
                       {g.machines.map((m) => (
@@ -235,10 +236,10 @@ export default function MachineApp() {
                           <span>
                             <strong>{m.name}</strong>
                             <small>
-                              {m.family || "Private machine workspace"}
+                              {m.family || "Privater Maschinenarbeitsbereich"}
                             </small>
                           </span>
-                          <span>Open →</span>
+                          <span>Öffnen →</span>
                         </button>
                       ))}
                     </section>
@@ -248,44 +249,46 @@ export default function MachineApp() {
             )}
           </>
         ) : !detail ? (
-          <p>Opening machine workspace…</p>
+          <p>Maschinenarbeitsbereich wird geöffnet…</p>
         ) : (
           <>
             <button className="ux-text-button" onClick={() => select("")}>
-              <ArrowLeft size={16} /> All machines
+              <ArrowLeft size={16} /> Alle Maschinen
             </button>
             <div className="ux-list-heading">
               <div>
-                <p className="machine-eyebrow">PRIVATE MACHINE WORKSPACE</p>
+                <p className="machine-eyebrow">
+                  PRIVATER MASCHINENARBEITSBEREICH
+                </p>
                 <h1>{detail.name}</h1>
                 <p>
-                  {detail.family || "Manuals, documentation and source code"} ·
-                  Local, read-only investigation
+                  {detail.family || "Handbücher, Dokumentation und Quellcode"} ·
+                  Lokale Untersuchung mit rein lesendem Zugriff
                 </p>
               </div>
             </div>
             <div className="machine-layout">
               <section className="machine-card">
                 <h2>
-                  <FileText size={20} /> Sources
+                  <FileText size={20} /> Quellen
                 </h2>
                 <p className="ux-small">
-                  {detail.documents.filter((d) => d.active).length}/100 active
-                  sources · 10 MiB per file · PDFs up to 200 pages
+                  {detail.documents.filter((d) => d.active).length}/100 aktive
+                  Quellen · 10 MiB pro Datei · PDFs bis 200 Seiten
                 </p>
                 {detail.documents.map((d) => (
                   <div className="machine-source" key={d.id}>
                     <strong>{d.title}</strong>
                     <small>
                       {d.filename} · {d.version} ·{" "}
-                      {d.active ? "Available" : "Archived"} ·{" "}
-                      {d.indexed_passages}/{d.passages} indexed passages
+                      {d.active ? "Verfügbar" : "Archiviert"} ·{" "}
+                      {d.indexed_passages}/{d.passages} indexierte Abschnitte
                     </small>
                     <div className="machine-actions">
                       <a
                         href={`/api/machines/${selected}/sources/${d.id}/file`}
                       >
-                        Download
+                        Herunterladen
                       </a>
                       <button
                         disabled={busy}
@@ -299,7 +302,7 @@ export default function MachineApp() {
                           )
                         }
                       >
-                        Preview
+                        Vorschau
                       </button>
                       <button
                         disabled={busy}
@@ -312,7 +315,7 @@ export default function MachineApp() {
                           )
                         }
                       >
-                        {d.active ? "Archive" : "Enable"}
+                        {d.active ? "Archivieren" : "Aktivieren"}
                       </button>
                       <button
                         disabled={busy}
@@ -324,33 +327,34 @@ export default function MachineApp() {
                           )
                         }
                       >
-                        Reindex
+                        Neu indexieren
                       </button>
                     </div>
                   </div>
                 ))}
                 {!detail.documents.length && (
                   <p>
-                    No sources yet. Add a manual or code export to get started.
+                    Noch keine Quellen. Füge ein Handbuch oder einen Code-Export
+                    hinzu.
                   </p>
                 )}
                 <details className="machine-upload">
-                  <summary>Add manuals or code</summary>
+                  <summary>Handbücher oder Code hinzufügen</summary>
                   <form className="machine-form" onSubmit={upload}>
                     <label>
-                      Title
+                      Titel
                       <input name="title" required maxLength={160} />
                     </label>
                     <label>
-                      Edition / version
+                      Ausgabe / Version
                       <input
                         name="version"
-                        defaultValue="Unspecified"
+                        defaultValue="Nicht angegeben"
                         maxLength={80}
                       />
                     </label>
                     <label>
-                      Source file
+                      Quelldatei
                       <input
                         type="file"
                         name="file"
@@ -366,15 +370,15 @@ export default function MachineApp() {
                         value="true"
                         required
                       />
-                      I am authorized to process this material locally in my
-                      private workspace.
+                      Ich bin berechtigt, dieses Material lokal in meinem
+                      privaten Arbeitsbereich zu verarbeiten.
                     </label>
                     <button className="ux-primary" disabled={busy}>
-                      Upload and index
+                      Hochladen und indexieren
                     </button>
                     <small>
-                      Code is read and inspected as text. It is never executed
-                      or connected to equipment.
+                      Code wird als Text gelesen und geprüft. Er wird niemals
+                      ausgeführt oder mit Anlagen verbunden.
                     </small>
                   </form>
                 </details>
@@ -382,12 +386,13 @@ export default function MachineApp() {
                   <details
                     open={detail.jobs.some((j) => !stopped.has(j.status))}
                   >
-                    <summary>Upload activity</summary>
+                    <summary>Upload-Aktivitäten</summary>
                     {detail.jobs.map((j) => (
                       <div className="machine-source" key={j.id}>
                         <strong>{j.filename}</strong>
                         <small>
-                          {j.status} · {j.phase} · {j.progress}%
+                          {statusLabel(j.status)} · {statusLabel(j.phase)} ·{" "}
+                          {j.progress}%
                         </small>
                         {!stopped.has(j.status) && (
                           <progress value={j.progress} max={100} />
@@ -405,19 +410,25 @@ export default function MachineApp() {
                                 )
                               }
                             >
-                              {stopped.has(j.status) ? "Retry" : "Cancel"}
+                              {stopped.has(j.status)
+                                ? "Erneut versuchen"
+                                : "Abbrechen"}
                             </button>
                           )}
                         {stopped.has(j.status) &&
                           j.status !== "completed" &&
                           j.phase !== "discarded" && (
                             <details>
-                              <summary>Discard staged upload</summary>
+                              <summary>
+                                Zwischengespeicherten Upload verwerfen
+                              </summary>
                               <p className="ux-small">
-                                Remove the staged bytes for {j.filename}. This
-                                prevents retry of this job. Published/retained
-                                sources and answers stay available. Upload the
-                                original file again if needed.
+                                Zwischengespeicherte Daten entfernen für{" "}
+                                {j.filename}. Danach ist kein erneuter Versuch
+                                dieses Auftrags möglich. Veröffentlichte und
+                                aufbewahrte Quellen und Antworten bleiben
+                                verfügbar. Lade bei Bedarf die Originaldatei
+                                erneut hoch.
                               </p>
                               <button
                                 disabled={busy}
@@ -430,7 +441,8 @@ export default function MachineApp() {
                                   )
                                 }
                               >
-                                Confirm discard of staged upload
+                                Verwerfen des zwischengespeicherten Uploads
+                                bestätigen
                               </button>
                             </details>
                           )}
@@ -461,18 +473,18 @@ export default function MachineApp() {
             {preview && (
               <section className="machine-card">
                 <div className="ux-list-heading">
-                  <h2>Source preview</h2>
-                  <button onClick={() => setPreview(null)}>Close</button>
+                  <h2>Quellenvorschau</h2>
+                  <button onClick={() => setPreview(null)}>Schließen</button>
                 </div>
                 {preview.text ? (
                   <pre className="machine-code">{preview.text}</pre>
                 ) : (
-                  <p>Use Download to inspect the original PDF.</p>
+                  <p>Nutze den Download, um das Original-PDF zu prüfen.</p>
                 )}
                 {preview.truncated && (
                   <p>
-                    Preview limited to 40,000 characters. Download the complete
-                    source above.
+                    Vorschau auf 40.000 Zeichen begrenzt. Lade oben die
+                    vollständige Quelle herunter.
                   </p>
                 )}
                 {preview.static_review && (
@@ -480,7 +492,7 @@ export default function MachineApp() {
                     <p className="ux-small">{preview.static_review.scope}</p>
                     {preview.static_review.findings.map((f, i) => (
                       <p key={i}>
-                        Line {f.line}: {f.message}
+                        Zeile {f.line}: {f.message}
                       </p>
                     ))}
                   </>
@@ -505,7 +517,7 @@ function MachineProfile({
 }) {
   return (
     <details className="machine-upload">
-      <summary>Machine details and versions</summary>
+      <summary>Maschinendetails und Versionen</summary>
       <form
         className="machine-form"
         key={detail.id}
@@ -526,7 +538,16 @@ function MachineProfile({
       >
         {["family", "model", "firmware", "software_version"].map((k) => (
           <label key={k}>
-            {k.replace("_", " ")}
+            {
+              (
+                {
+                  family: "Familie",
+                  model: "Modell",
+                  firmware: "Firmware",
+                  software_version: "Software-Version",
+                } as Record<string, string>
+              )[k]
+            }
             <input
               name={k}
               defaultValue={detail.profile[k] || ""}
@@ -535,7 +556,7 @@ function MachineProfile({
           </label>
         ))}
         <button className="ux-secondary" disabled={busy}>
-          Save machine details
+          Maschinendetails speichern
         </button>
       </form>
     </details>

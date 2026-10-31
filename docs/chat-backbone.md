@@ -5,7 +5,7 @@ the earlier user-managed machine/notebook flow as the normal entry point.
 
 ## Use
 
-**Administrator:** open Administration → Machine knowledge. Upload manuals,
+**Administrator:** open Administration → Maschinenwissen. Upload manuals,
 documentation or code exports and confirm that you may publish them to users in
 this workspace. No machine name, notebook or document selection is required.
 The background worker extracts passages, creates local embeddings, asks the local
@@ -89,11 +89,12 @@ The installed default generation model advertises vision support. Source code is
 only searchable/readable or statically inspected; there is no shell, include/URL
 following, PLC connection, compiler execution, actuator or production write.
 
-No normal problem text automatically goes to Siemens. For an explicit public lookup,
-type `/siemens` followed by the public product question. The composer discloses the
-destination. Only the literal human-entered public question is bound to the existing
-no-argument Siemens tool; files, images, logs, machine profiles and history never
-enter that query. Public reference summaries remain unverified.
+The 2026-10-31 refinement adds a German interface and automatic public lookup for
+recognized human-typed Siemens PLC families/diagnostic codes. A fixed query contains
+only normalized public identifiers; full problem text, files, images, logs, machine
+profiles and history never enter it. `nur lokal` opts out. `/siemens` remains available
+for an explicit public question. See [coverage and live results](german-siemens-routing.md).
+Public reference summaries remain unverified.
 
 ## Validation and remaining limits
 

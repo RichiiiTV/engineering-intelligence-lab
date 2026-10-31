@@ -141,5 +141,5 @@ def enrich(result, question, outbound, context):
         "curated_references": curated,
         "technical_answer_verified": False,
         "coverage_status": "reviewed_manual_candidates" if curated else "no_reviewed_version_match",
-        "version_notice": "No exact CPU/firmware compatibility has been established. Open the manual and check its validity section. No verified engineering answer is available.",
+        "version_notice": "Die Kompatibilität mit der genauen CPU und Firmware wurde nicht bestätigt. Öffne das Handbuch und prüfe den Gültigkeitsbereich. Die Suche liefert keine verifizierte technische Diagnose.",
     }

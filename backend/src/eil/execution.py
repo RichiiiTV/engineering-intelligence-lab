@@ -637,6 +637,11 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                     else ""
                 )
                 + (
+                    "\nAntworte vollständig auf Deutsch, einschließlich Rückfragen, Einschränkungen und Überschriften. Behalte Fehlercodes, Quellzitate, Dateinamen und Originalauszüge unverändert. Die Siemens-Suche ist an eine feste öffentliche Frage gebunden; bei automatischer Diagnose enthält sie ausschließlich kanonische Produktfamilien und vom Menschen in der aktuellen Frage eingegebene Diagnosekennungen. Ergänze niemals interne Daten. Ohne eindeutige SPS-Familie und Diagnosekennung frage im Chat nach diesen Angaben; leite keine Codes aus beliebigen Alarmnummern ab."
+                    if not run.get("experiment")
+                    else ""
+                )
+                + (
                     "\nThis is a question without uploaded files. Answer the question directly. There is no inspection dataset or uploaded case to analyze. Do not use demo metrics."
                     if run.get("chat_mode")
                     else ""

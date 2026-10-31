@@ -1,5 +1,9 @@
 # Engineering Intelligence Lab (EIL)
 
+The interface and normal chat answers are in German. Recognized public Siemens PLC
+diagnostics are looked up automatically from the current typed question, without
+transmitting machine names or attachments. See [German operation and Siemens routing](docs/german-siemens-routing.md).
+
 A local-first **agentic engineering investigation workbench** developed with OpenAI Codex. **Independent of NodeWeft.**
 
 The normal workflow is now **one problem chat**: users describe a fault and optionally

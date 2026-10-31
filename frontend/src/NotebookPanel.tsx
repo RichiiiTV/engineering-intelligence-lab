@@ -131,8 +131,10 @@ export default function NotebookPanel({
   return (
     <section className="machine-card notebook-panel">
       <div className="ux-list-heading">
-        <h2>Notebooks</h2>
-        {selected && <button onClick={() => select("")}>All notebooks</button>}
+        <h2>Notizbücher</h2>
+        {selected && (
+          <button onClick={() => select("")}>Alle Notizbücher</button>
+        )}
       </div>
       {(error || loadError) && (
         <p className="ux-error" role="alert">
@@ -142,8 +144,8 @@ export default function NotebookPanel({
       {!selected ? (
         <>
           <p>
-            Keep related questions together. Each notebook remembers its
-            selected sources and recent conversation.
+            Zusammengehörige Fragen bündeln. Jedes Notizbuch behält seine
+            ausgewählten Quellen und den jüngsten Gesprächsverlauf.
           </p>
           {rows.map((n) => (
             <button
@@ -154,47 +156,47 @@ export default function NotebookPanel({
               <span>
                 <strong>{n.title}</strong>
                 <small>
-                  {n.document_ids.length} machine sources · selection{" "}
+                  {n.document_ids.length} Maschinenquellen · Auswahl{" "}
                   {n.revision}
                 </small>
               </span>
-              <span>Open →</span>
+              <span>Öffnen →</span>
             </button>
           ))}
           <form className="machine-form" onSubmit={create}>
             <label>
-              New notebook
+              Neues Notizbuch
               <input
                 name="title"
                 required
                 maxLength={120}
-                placeholder="e.g. Unexpected conveyor stops"
+                placeholder="z. B. Unerwartete Förderbandstopps"
               />
             </label>
             <button className="ux-primary" disabled={busy}>
-              Create notebook
+              Notizbuch erstellen
             </button>
             <small>
-              Starts with the currently available machine sources. You can
-              change the selection before asking.
+              Beginnt mit den aktuell verfügbaren Maschinenquellen. Du kannst
+              die Auswahl vor einer Frage ändern.
             </small>
           </form>
         </>
       ) : !notebook ? (
-        <p>Opening notebook…</p>
+        <p>Notizbuch wird geöffnet…</p>
       ) : (
         <>
           <h3>{notebook.title}</h3>
           {changed && (
             <p className="ux-caution">
-              Available sources have changed. Review the selection below;
-              previous answers retain their original sources.
+              Die verfügbaren Quellen haben sich geändert. Prüfe die Auswahl
+              unten; vorherige Antworten behalten ihre ursprünglichen Quellen.
             </p>
           )}
           <details className="notebook-selection">
             <summary>
-              {notebook.document_ids.length} machine sources selected · revision{" "}
-              {notebook.revision}
+              {notebook.document_ids.length} Maschinenquellen ausgewählt ·
+              Revision {notebook.revision}
             </summary>
             <form
               className="machine-form"
@@ -222,7 +224,7 @@ export default function NotebookPanel({
                 </label>
               ))}
               <button className="ux-secondary" disabled={busy || active}>
-                Save selection for next answer
+                Auswahl für nächste Antwort speichern
               </button>
             </form>
           </details>
@@ -240,23 +242,25 @@ export default function NotebookPanel({
           <form className="machine-form notebook-composer" onSubmit={ask}>
             <label>
               {notebook.turns?.length
-                ? "Ask a follow-up"
-                : "Ask about this machine"}
+                ? "Rückfrage stellen"
+                : "Frage zu dieser Maschine stellen"}
               <textarea
                 rows={4}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 required
                 maxLength={4000}
-                placeholder="What could explain the stop, and which code or manual passage supports it?"
+                placeholder="Was könnte den Stopp erklären, und welche Code- oder Handbuchstelle stützt diese Vermutung?"
               />
             </label>
             <details>
-              <summary>Check Siemens public documentation (optional)</summary>
+              <summary>
+                Öffentliche Siemens-Dokumentation prüfen (optional)
+              </summary>
               <p className="ux-small">
-                Only the separate public question entered here is sent to
-                Siemens. Keep internal machine names, source text and code out
-                of this field.
+                Nur die hier separat eingegebene öffentliche Frage wird an
+                Siemens gesendet. Keine internen Maschinennamen, Quelltexte oder
+                Code in dieses Feld eintragen.
               </p>
               <label className="machine-check">
                 <input
@@ -264,11 +268,11 @@ export default function NotebookPanel({
                   checked={publicEnabled}
                   onChange={(e) => setPublicEnabled(e.target.checked)}
                 />
-                Use this public question for this answer
+                Diese öffentliche Frage für diese Antwort verwenden
               </label>
               {publicEnabled && (
                 <label>
-                  Public Siemens question
+                  Öffentliche Siemens-Frage
                   <textarea
                     rows={2}
                     value={publicQuestion}
@@ -289,14 +293,14 @@ export default function NotebookPanel({
               }
             >
               {active
-                ? "Investigating…"
+                ? "Untersuchung läuft…"
                 : busy
-                  ? "Starting…"
-                  : "Ask question →"}
+                  ? "Wird gestartet…"
+                  : "Frage stellen →"}
             </button>
             <small>
-              Local model · read-only tools · last four completed exchanges
-              retained in bounded context
+              Lokales Modell · Rein lesende Werkzeuge · Letzte vier
+              abgeschlossene Gespräche im begrenzten Kontext
             </small>
           </form>
         </>
@@ -331,10 +335,10 @@ function NotebookTurn({
       <div className="notebook-question">{run.question}</div>
       <p className="ux-small">
         {friendlyStatus(run.status)} ·{" "}
-        <a href={`/?run=${run.id}`}>Run details and controls</a>
+        <a href={`/?run=${run.id}`}>Details und Steuerung der Untersuchung</a>
       </p>
       {!stopped.has(run.status) && (
-        <button onClick={() => void onCancel()}>Cancel</button>
+        <button onClick={() => void onCancel()}>Abbrechen</button>
       )}
       {error && <p role="alert">{error}</p>}
       {report && (
@@ -347,12 +351,12 @@ function NotebookTurn({
             }
           >
             {report.answer_contract?.outcome === "needs_review"
-              ? "Review required"
+              ? "Prüfung erforderlich"
               : report.answer_contract?.outcome === "no_support"
-                ? "The selected sources do not establish an answer"
+                ? "Die ausgewählten Quellen belegen keine Antwort"
                 : report.answer_contract?.outcome === "budget_limited"
-                  ? "Partial evidence review"
-                  : "Source references checked; engineering claims need review"}
+                  ? "Teilweise Belegprüfung"
+                  : "Quellenverweise geprüft; technische Aussagen müssen geprüft werden"}
           </p>
           {report.answer_contract?.issues.map((issue) => (
             <p className="ux-caution" key={issue}>
@@ -360,7 +364,7 @@ function NotebookTurn({
             </p>
           ))}
           <SafeAnswer
-            text={report.answer || "No final answer was returned."}
+            text={report.answer || "Keine abschließende Antwort erhalten."}
             references={report.library_citations}
             prefix={run.id + "-"}
           />

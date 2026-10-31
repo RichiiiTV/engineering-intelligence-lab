@@ -26,9 +26,13 @@ class Observation(BaseModel):
 def visual_only_question(question):
     return bool(
         re.search(r"\b(image|screenshot|photo|picture|bild|foto)\b", question, re.I)
-        and re.search(r"\b(read|transcribe|text|code|lies|ablesen)\b", question, re.I)
+        and re.search(
+            r"\b(read|transcribe|text|code|lies|lese|ablesen|transkribier\w*|steht|erkennst)\b",
+            question,
+            re.I,
+        )
         and not re.search(
-            r"\b(why|cause|diagnos\w*|fix|means?|fault|defect|warum|ursache|repar\w*)\b",
+            r"\b(why|cause|diagnos\w*|fix|means?|fault|defect|warum|ursache|repar\w*|bedeut\w*|fehlerursache|beheb\w*)\b",
             question,
             re.I,
         )

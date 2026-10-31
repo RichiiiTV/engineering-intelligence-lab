@@ -1,5 +1,6 @@
 import type { EvidenceReport } from "./types";
 import { siemensUrl } from "./siemens";
+import { displayNotice } from "./locale";
 
 export default function SiemensReferences({
   report,
@@ -19,12 +20,12 @@ export default function SiemensReferences({
   const referenceItem = (r: (typeof references)[number]) => (
     <li key={r.citation_id}>
       <a href={r.url} target="_blank" rel="noopener noreferrer">
-        Siemens source {references.indexOf(r) + 1}: {r.title}
+        Siemens-Quelle {references.indexOf(r) + 1}: {r.title}
       </a>
       <small>
         {r.kind === "curated_manual"
-          ? "Reviewed manual candidate"
-          : "Public reference"}
+          ? "Geprüfter Handbuchkandidat"
+          : "Öffentliche Referenz"}
         {r.tia_version ? ` · ${r.tia_version}` : ""}
         {r.edition ? ` · ${r.edition}` : ""}
       </small>
@@ -33,45 +34,51 @@ export default function SiemensReferences({
   return (
     <section
       className="ux-siemens-references"
-      aria-label="Siemens documentation"
+      aria-label="Siemens-Dokumentation"
     >
-      <h2>Siemens documentation</h2>
+      <h2>Siemens-Dokumentation</h2>
+      {lookup.query_origin === "canonical-human-diagnostic" && (
+        <p>
+          Automatische Suche: nur die erkannte SPS-Produktfamilie und die in
+          dieser Frage eingegebenen Diagnosekennungen.
+        </p>
+      )}
       <p>
         {lookup.remote_search_status === "unavailable"
-          ? "Live Siemens search was unavailable. These are reviewed manual candidates from the local index."
+          ? "Die Siemens-Livesuche war nicht verfügbar. Dies sind geprüfte Handbuchkandidaten aus dem lokalen Index."
           : lookup.connection_verified
-            ? "Checked Siemens public documentation for this question."
-            : "No completed Siemens lookup is available."}
+            ? "Öffentliche Siemens-Dokumentation zu dieser Frage durchsucht."
+            : "Keine abgeschlossene Siemens-Suche verfügbar."}
       </p>
       <p className="ux-small">
-        {lookup.version_notice ||
-          "Check the exact CPU, firmware and TIA Portal version before applying guidance."}
+        {(lookup.version_notice && displayNotice(lookup.version_notice)) ||
+          "Vor der Anwendung genaue CPU, Firmware und TIA-Portal-Version prüfen."}
       </p>
       {lookup.error && <p className="ux-small">{lookup.error}</p>}
       <ul>{visible.map(referenceItem)}</ul>
       {!!remaining.length && (
         <details>
-          <summary>Other Siemens references ({remaining.length})</summary>
+          <summary>Weitere Siemens-Referenzen ({remaining.length})</summary>
           <ul>{remaining.map(referenceItem)}</ul>
         </details>
       )}
       {!references.length && (
         <p>
-          No source links were returned. The answer's technical claims could not
-          be verified against Siemens documentation.
+          Keine Quellenlinks zurückgegeben. Die technischen Aussagen der Antwort
+          konnten nicht anhand der Siemens-Dokumentation geprüft werden.
         </p>
       )}
       {!!report.external_reference_checks?.unresolved.length && (
         <p className="ux-caution">
-          Some answer references could not be matched to this lookup. Review the
-          links above.
+          Einige Quellenangaben der Antwort konnten dieser Suche nicht
+          zugeordnet werden. Prüfe die obigen Links.
         </p>
       )}
       <details>
-        <summary>What was sent to Siemens</summary>
+        <summary>Was an Siemens gesendet wurde</summary>
         <p>
-          Only this public query was sent. Files, case history and model output
-          were excluded.
+          Nur diese öffentliche Suchanfrage wurde gesendet. Dateien, Fallverlauf
+          und Modellausgaben blieben ausgeschlossen.
         </p>
         <pre>{lookup.outbound_query}</pre>
       </details>

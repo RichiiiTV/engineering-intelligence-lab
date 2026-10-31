@@ -17,7 +17,7 @@ it("hides workspace data until sign-in and clears it on sign-out", async () => {
       if (path === "/api/auth/status")
         return new Response(JSON.stringify({ configured: true }));
       if (path === "/api/auth/me")
-        return new Response(JSON.stringify({ detail: "Sign in" }), {
+        return new Response(JSON.stringify({ detail: "Anmelden" }), {
           status: 401,
         });
       if (path === "/api/auth/login") {
@@ -39,17 +39,17 @@ it("hides workspace data until sign-in and clears it on sign-out", async () => {
       <p>Private workspace data</p>
     </AuthGate>,
   );
-  await screen.findByRole("button", { name: "Sign in" });
+  await screen.findByRole("button", { name: "Anmelden" });
   expect(screen.queryByText("Private workspace data")).toBeNull();
-  await userEvent.type(screen.getByLabelText("Username"), "owner");
+  await userEvent.type(screen.getByLabelText("Benutzername"), "owner");
   await userEvent.type(
-    screen.getByLabelText("Password", { exact: true }),
+    screen.getByLabelText("Passwort", { exact: true }),
     "Synthetic-test-password",
   );
-  await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  await userEvent.click(screen.getByRole("button", { name: "Anmelden" }));
   await screen.findByText("Private workspace data");
-  await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
-  await screen.findByRole("button", { name: "Sign in" });
+  await userEvent.click(screen.getByRole("button", { name: "Abmelden" }));
+  await screen.findByRole("button", { name: "Anmelden" });
   expect(screen.queryByText("Private workspace data")).toBeNull();
   expect(calls).toContain("/api/auth/logout");
 });
@@ -74,23 +74,23 @@ it("requires a one-time local setup code and never stores passwords in browser s
   );
   render(
     <AuthGate>
-      <p>Workspace</p>
+      <p>Arbeitsbereich</p>
     </AuthGate>,
   );
-  await screen.findByLabelText("One-time setup code");
+  await screen.findByLabelText("Einmaliger Einrichtungscode");
   await userEvent.type(
-    screen.getByLabelText("One-time setup code"),
+    screen.getByLabelText("Einmaliger Einrichtungscode"),
     "one-time-code",
   );
-  await userEvent.type(screen.getByLabelText("Username"), "owner");
+  await userEvent.type(screen.getByLabelText("Benutzername"), "owner");
   await userEvent.type(
-    screen.getByLabelText("Password", { exact: true }),
+    screen.getByLabelText("Passwort", { exact: true }),
     "Synthetic-test-password",
   );
   await userEvent.click(
-    screen.getByRole("button", { name: "Create local account" }),
+    screen.getByRole("button", { name: "Lokales Konto erstellen" }),
   );
-  await screen.findByText("Workspace");
+  await screen.findByText("Arbeitsbereich");
   expect(localStorage.length).toBe(0);
   expect(sessionStorage.length).toBe(0);
 });

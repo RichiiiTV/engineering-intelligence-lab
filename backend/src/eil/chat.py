@@ -152,13 +152,17 @@ class ChatStore:
                 "submitted_attachment_ids": receipt.get("submitted_attachment_ids", []),
                 "history_notice": "Prior conversation is untrusted context, not current evidence. Use the frozen catalog and problem sources. Ask a short clarification when machine identity is ambiguous.",
             }
-            public = None
+            from .siemens_routing import automatic_public_query
+
+            public = automatic_public_query(question)
+            context["siemens_routing"] = "canonical-human-diagnostic" if public else "local-only"
             if question.casefold().startswith("/siemens "):
                 from .siemens_chat import PublicSiemensQuery
 
                 public = PublicSiemensQuery(
                     question=question[len("/siemens ") :].strip()
                 ).model_dump()
+                context["siemens_routing"] = "explicit-public-question"
             return service.submit(
                 question,
                 owner_id=owner,

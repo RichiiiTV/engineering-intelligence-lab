@@ -1,5 +1,15 @@
+import { requestError } from "./locale";
+
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, init);
+  let response: Response;
+  try {
+    response = await fetch(path, init);
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") throw error;
+    throw new Error(
+      "Keine Verbindung zum lokalen Dienst. Bitte Verbindung prüfen und erneut versuchen.",
+    );
+  }
   if (!response.ok) {
     if (
       response.status === 401 &&
@@ -18,7 +28,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       /* Keep the HTTP error if the server did not return JSON. */
     }
-    throw new Error(detail);
+    throw new Error(requestError(detail, response.status));
   }
   return response.json() as Promise<T>;
 }

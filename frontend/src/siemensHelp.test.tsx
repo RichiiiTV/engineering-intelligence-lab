@@ -18,7 +18,7 @@ it("diagnostic search sends only the submitted public question", async () => {
   const fetcher = vi.fn().mockResolvedValue(
     new Response(
       JSON.stringify({
-        question: "OB1 cycle time",
+        question: "OB1-Zykluszeit",
         summary: "<script>untrusted</script>",
         curated_references: [
           {
@@ -56,15 +56,17 @@ it("diagnostic search sends only the submitted public question", async () => {
   render(<App />);
   expect(fetcher).not.toHaveBeenCalled();
   await userEvent.type(
-    screen.getByRole("textbox", { name: "Your SPS / PLC question" }),
-    "OB1 cycle time",
+    screen.getByRole("textbox", { name: "Deine SPS-Frage" }),
+    "OB1-Zykluszeit",
   );
-  await userEvent.click(screen.getByRole("button", { name: "Search Siemens" }));
-  await screen.findByText("Siemens-generated search summary");
+  await userEvent.click(
+    screen.getByRole("button", { name: "Siemens durchsuchen" }),
+  );
+  await screen.findByText("Von Siemens generierte Suchzusammenfassung");
   expect(fetcher).toHaveBeenCalledTimes(1);
   const [path, init] = fetcher.mock.calls[0];
   expect(path).toBe("/api/knowledge/siemens/search");
-  expect(JSON.parse(init.body)).toEqual({ question: "OB1 cycle time" });
+  expect(JSON.parse(init.body)).toEqual({ question: "OB1-Zykluszeit" });
   expect(screen.getByText("<script>untrusted</script>")).toBeTruthy();
   expect(document.querySelector("script")).toBeNull();
   expect(screen.queryByRole("link", { name: "Attack" })).toBeNull();
@@ -90,7 +92,7 @@ it("handles unavailable search and empty results without fabricating an answer",
     .mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          question: "OB1 cycle time",
+          question: "OB1-Zykluszeit",
           summary: "",
           sources: [],
           retrieved_at: "2026-10-29T10:00:00Z",
@@ -102,13 +104,19 @@ it("handles unavailable search and empty results without fabricating an answer",
     );
   vi.stubGlobal("fetch", fetcher);
   render(<App />);
-  await userEvent.click(screen.getByRole("button", { name: "OB1 cycle time" }));
+  await userEvent.click(screen.getByRole("button", { name: "OB1-Zykluszeit" }));
   expect(fetcher).not.toHaveBeenCalled();
-  await userEvent.click(screen.getByRole("button", { name: "Search Siemens" }));
-  expect((await screen.findByRole("alert")).textContent).toContain(
-    "Siemens unavailable",
+  await userEvent.click(
+    screen.getByRole("button", { name: "Siemens durchsuchen" }),
   );
-  await userEvent.click(screen.getByRole("button", { name: "Search Siemens" }));
-  await screen.findByText(/No eligible Siemens sources/);
-  expect(screen.queryByText("Siemens-generated search summary")).toBeNull();
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Dienst ist momentan nicht verfügbar",
+  );
+  await userEvent.click(
+    screen.getByRole("button", { name: "Siemens durchsuchen" }),
+  );
+  await screen.findByText(/Keine zulässigen Siemens-Quellen/);
+  expect(
+    screen.queryByText("Von Siemens generierte Suchzusammenfassung"),
+  ).toBeNull();
 });
