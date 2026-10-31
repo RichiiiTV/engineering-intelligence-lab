@@ -226,3 +226,48 @@ it("machine ambiguity is a conversational question, with no source or notebook s
     screen.queryByText("Auswahl für nächste Antwort speichern"),
   ).toBeNull();
 });
+
+it("an admin explicitly records the public license and provenance before publication", async () => {
+  session.user = { id: "admin", role: "admin", username: "admin" };
+  history.replaceState(null, "", "/?page=machines");
+  const bodies: FormData[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (_path: string, init?: RequestInit) => {
+      if (init?.method === "POST") {
+        bodies.push(init.body as FormData);
+        return json({ id: "job", status: "queued" });
+      }
+      return json({ machines: [], jobs: [] });
+    }),
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  await user.upload(
+    screen.getByLabelText("Maschinen-Quelldateien"),
+    new File(["# Public Voron documentation"], "voron.md", {
+      type: "text/markdown",
+    }),
+  );
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Inhaltstyp" }),
+    "licensed-public",
+  );
+  await user.click(
+    screen.getByRole("checkbox", { name: /berechtigt, diese Dateien/ }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Hochladen und automatisch zuordnen" }),
+  );
+  expect(bodies).toHaveLength(0);
+  await user.type(
+    screen.getByRole("textbox", { name: "Lizenz und Herkunft" }),
+    "GPL-3.0; Voron Design; pinned official sources and full license included.",
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Hochladen und automatisch zuordnen" }),
+  );
+  expect(await screen.findByRole("status")).toBeTruthy();
+  expect(bodies[0].get("data_policy")).toBe("licensed-public");
+  expect(bodies[0].get("license_note")).toContain("GPL-3.0; Voron Design");
+});

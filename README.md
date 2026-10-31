@@ -1,5 +1,9 @@
 # Engineering Intelligence Lab (EIL)
 
+A versioned real-machine corpus for **Voron 2.4** is included under
+`data/public-machine-packs/voron-2.4-v1/` and imported in the current local workspace.
+See [sources, import instructions and honest pilot results](docs/public-machine-pilot.md).
+
 Use **Sprache / Language** to switch between Deutsch and English for the interface
 and new answers; the browser remembers your choice. See [language behavior](docs/languages.md).
 Recognized public Siemens PLC

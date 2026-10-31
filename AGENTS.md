@@ -36,6 +36,16 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized finding a real publicly licensed machine corpus online and
+adding it on 2026-10-31. The Voron 2.4 pack is published through an authenticated
+admin action: licensed-public, pinned original sources/full GPL license, 63 indexed
+passages and automatic product-family assignment. Public-license metadata is now
+an explicit admin form/API field. See `docs/public-machine-pilot.md`: 283 backend/47
+frontend checks passed; the real answer pilot had two expected behaviors and one
+controller-question failure despite available evidence. Preserve that failure and
+the earlier M5 quality limits. Stop after reporting; no further quality milestone,
+production deployment or equipment work is authorized.
+
 The user authorized a runtime Deutsch/English selector on 2026-10-31. Preserve
 drafts/files on switching; persist only the browser preference. Freeze the selected
 language per new answer, including retries and resume, without rewriting original

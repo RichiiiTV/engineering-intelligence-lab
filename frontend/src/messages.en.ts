@@ -1,5 +1,9 @@
 // Authored interface copy only. Source quotations, user input and model answers are excluded.
 const english: Record<string, string> = {
+  "Interne Maschinendaten": "Internal machine material",
+  "Lizenzierte öffentliche Dokumentation": "Licensed public documentation",
+  "Lizenz, Urheber und Originalquelle angeben":
+    "State the license, author and original source",
   "← Zurück zu den Fragen": "← Back to questions",
   "Arbeitsbereich verwalten": "Workspace administration",
   Maschinenwissen: "Machine knowledge",

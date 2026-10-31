@@ -4,3 +4,12 @@
 data/benchmarks/eil-v1/*.json text eol=lf
 data/benchmarks/eil-v1/*.csv text eol=lf
 data/benchmarks/eil-knowledge-v1/* text eol=lf
+# Public snapshots authenticate exact upstream bytes, including original whitespace.
+data/public-machine-packs/voron-2.4-v1/* -text
+data/public-machine-packs/voron-2.4-v1/manifest.json text eol=lf
+data/public-machine-packs/voron-2.4-v1/README.md text eol=lf
+data/public-machine-packs/voron-2.4-v1/product-readme.md -whitespace
+data/public-machine-packs/voron-2.4-v1/v2-gantry-squaring.md -whitespace
+data/public-machine-packs/voron-2.4-v1/octopus-controller.cfg -whitespace
+data/public-machine-packs/voron-2.4-v1/*-LICENSE.txt -whitespace
+data/public-machine-packs/voron-2.4-v1/voron-2.4-official-reference-pack.md -whitespace

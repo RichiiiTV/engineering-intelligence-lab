@@ -45,6 +45,7 @@ def upload(
     file: UploadFile = File(),
     authorized: bool = Form(),
     data_policy: Literal["internal", "synthetic", "licensed-public"] = Form(default="internal"),
+    license_note: str = Form(default="", max_length=1000),
 ):
     catalog = store(request)
     try:
@@ -66,9 +67,12 @@ def upload(
                 "family": "Unclassified",
                 "version": "Unspecified",
                 "data_policy": data_policy,
-                "license_note": "Administrator-authorized workspace knowledge; local processing"
-                if data_policy == "internal"
-                else "Administrator-declared " + data_policy,
+                "license_note": license_note.strip()
+                or (
+                    "Administrator-authorized workspace knowledge; local processing"
+                    if data_policy == "internal"
+                    else "Administrator-declared " + data_policy
+                ),
             },
             catalog=True,
         )

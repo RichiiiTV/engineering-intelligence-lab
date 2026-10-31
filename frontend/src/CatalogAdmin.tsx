@@ -49,6 +49,10 @@ export default function CatalogAdmin() {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
   const [chosen, setChosen] = useState<File[]>([]);
+  const [dataPolicy, setDataPolicy] = useState<"internal" | "licensed-public">(
+    "internal",
+  );
+  const [licenseNote, setLicenseNote] = useState("");
   async function refresh() {
     try {
       const result = await api<{ machines: Machine[]; jobs: Job[] }>(
@@ -102,7 +106,8 @@ export default function CatalogAdmin() {
         const body = new FormData();
         body.set("file", file);
         body.set("authorized", "true");
-        body.set("data_policy", "internal");
+        body.set("data_policy", dataPolicy);
+        if (licenseNote.trim()) body.set("license_note", licenseNote.trim());
         await api("/api/admin/machine-knowledge/uploads", {
           method: "POST",
           body,
@@ -111,6 +116,8 @@ export default function CatalogAdmin() {
       }
       form.reset();
       setChosen([]);
+      setDataPolicy("internal");
+      setLicenseNote("");
       setNotice(
         tr`${accepted} Datei${accepted === 1 ? "" : "s"} eingereiht. Das System extrahiert und indexiert die Inhalte und ordnet sie automatisch einer Maschine zu.`,
       );
@@ -150,6 +157,32 @@ export default function CatalogAdmin() {
           <p className="ux-small">
             {t("Vorgemerkte Dateien:")} {chosen.map((f) => f.name).join(", ")}
           </p>
+        )}
+        <label>
+          {t("Inhaltstyp")}
+          <select
+            value={dataPolicy}
+            onChange={(e) =>
+              setDataPolicy(e.target.value as "internal" | "licensed-public")
+            }
+          >
+            <option value="internal">{t("Interne Maschinendaten")}</option>
+            <option value="licensed-public">
+              {t("Lizenzierte öffentliche Dokumentation")}
+            </option>
+          </select>
+        </label>
+        {dataPolicy === "licensed-public" && (
+          <label>
+            {t("Lizenz und Herkunft")}
+            <input
+              value={licenseNote}
+              onChange={(e) => setLicenseNote(e.target.value)}
+              maxLength={1000}
+              required
+              placeholder={t("Lizenz, Urheber und Originalquelle angeben")}
+            />
+          </label>
         )}
         <p className="ux-small">
           {t(
