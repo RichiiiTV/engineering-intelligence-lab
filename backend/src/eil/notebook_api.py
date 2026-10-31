@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
 
+from .languages import request_language
 from .library_api import record
 from .notebooks import NotebookStore
 from .siemens_chat import PublicSiemensQuery
@@ -87,6 +88,7 @@ def ask(machine_id: UUID, notebook_id: UUID, payload: Question, request: Request
         str(payload.request_id),
         request.app.state.runs,
         siemens=payload.siemens.model_dump() if payload.siemens else None,
+        language=request_language(request),
     )
     record(request, "notebook_question_submitted", result["id"], {"notebook_id": str(notebook_id)})
     return result

@@ -164,6 +164,7 @@
 }
 .auth-strip {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   align-items: center;
   gap: 16px;
@@ -1449,3 +1450,6 @@
   white-space: pre-wrap;
   font-size: 12px;
 }
+.language-toolbar { display: flex; justify-content: flex-end; padding: 12px 24px; }
+.language-picker { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; white-space: nowrap; }
+.language-picker select { border: 1px solid #dcd9e8; border-radius: 7px; background: white; color: #322b48; padding: 5px 8px; font: inherit; }

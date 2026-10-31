@@ -109,7 +109,9 @@ class NotebookStore:
                 )
             return notebook
 
-    def submit(self, identity, owner_id, question, request_id, service, *, siemens=None):
+    def submit(
+        self, identity, owner_id, question, request_id, service, *, siemens=None, language="de"
+    ):
         with LOCK:
             notebook = self.get(identity, owner_id)
             turns = self.turns(identity, owner_id)
@@ -117,7 +119,11 @@ class NotebookStore:
                 (r for r in turns if r["notebook_context"]["request_id"] == request_id), None
             )
             if existing:
-                if existing["question"] != question or existing.get("siemens") != siemens:
+                if (
+                    existing["question"] != question
+                    or existing.get("siemens") != siemens
+                    or existing.get("language", "de") != language
+                ):
                     raise EvidenceConflict("This submission ID already belongs to another question")
                 return existing
             if len(turns) >= 100:
@@ -158,5 +164,6 @@ class NotebookStore:
                 chat_mode=True,
                 siemens=siemens,
                 notebook_context=context,
+                language=language,
                 limits={"max_output_tokens": 2048},
             )

@@ -1,5 +1,7 @@
+import { useLanguage, t } from "./i18n";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, post } from "./api";
+import { getLanguage } from "./i18n";
 import type { Source } from "./MachineApp";
 import type { EvidenceReport, Run } from "./types";
 import { friendlyStatus } from "./userFlow";
@@ -25,6 +27,7 @@ export default function NotebookPanel({
   machineId: string;
   sources: Source[];
 }) {
+  useLanguage();
   const base = "/api/machines/" + machineId + "/notebooks";
   const [rows, setRows] = useState<Notebook[]>([]),
     [selected, setSelected] = useState(
@@ -103,7 +106,7 @@ export default function NotebookPanel({
         ? { siemens: { question: publicQuestion.trim() } }
         : {}),
     };
-    const body = JSON.stringify(content);
+    const body = JSON.stringify({ ...content, language: getLanguage() });
     if (submission.current?.body !== body)
       submission.current = { body, id: crypto.randomUUID() };
     const ok = await action(() =>
@@ -131,21 +134,22 @@ export default function NotebookPanel({
   return (
     <section className="machine-card notebook-panel">
       <div className="ux-list-heading">
-        <h2>Notizbücher</h2>
+        <h2>{t("Notizbücher")}</h2>
         {selected && (
-          <button onClick={() => select("")}>Alle Notizbücher</button>
+          <button onClick={() => select("")}>{t("Alle Notizbücher")}</button>
         )}
       </div>
       {(error || loadError) && (
         <p className="ux-error" role="alert">
-          {error || loadError}
+          {t(error || loadError)}
         </p>
       )}
       {!selected ? (
         <>
           <p>
-            Zusammengehörige Fragen bündeln. Jedes Notizbuch behält seine
-            ausgewählten Quellen und den jüngsten Gesprächsverlauf.
+            {t(
+              "Zusammengehörige Fragen bündeln. Jedes Notizbuch behält seine ausgewählten Quellen und den jüngsten Gesprächsverlauf.",
+            )}
           </p>
           {rows.map((n) => (
             <button
@@ -156,47 +160,49 @@ export default function NotebookPanel({
               <span>
                 <strong>{n.title}</strong>
                 <small>
-                  {n.document_ids.length} Maschinenquellen · Auswahl{" "}
+                  {n.document_ids.length} {t("Maschinenquellen · Auswahl")}{" "}
                   {n.revision}
                 </small>
               </span>
-              <span>Öffnen →</span>
+              <span>{t("Öffnen →")}</span>
             </button>
           ))}
           <form className="machine-form" onSubmit={create}>
             <label>
-              Neues Notizbuch
+              {t("Neues Notizbuch")}
               <input
                 name="title"
                 required
                 maxLength={120}
-                placeholder="z. B. Unerwartete Förderbandstopps"
+                placeholder={t("z. B. Unerwartete Förderbandstopps")}
               />
             </label>
             <button className="ux-primary" disabled={busy}>
-              Notizbuch erstellen
+              {t("Notizbuch erstellen")}
             </button>
             <small>
-              Beginnt mit den aktuell verfügbaren Maschinenquellen. Du kannst
-              die Auswahl vor einer Frage ändern.
+              {t(
+                "Beginnt mit den aktuell verfügbaren Maschinenquellen. Du kannst die Auswahl vor einer Frage ändern.",
+              )}
             </small>
           </form>
         </>
       ) : !notebook ? (
-        <p>Notizbuch wird geöffnet…</p>
+        <p>{t("Notizbuch wird geöffnet…")}</p>
       ) : (
         <>
           <h3>{notebook.title}</h3>
           {changed && (
             <p className="ux-caution">
-              Die verfügbaren Quellen haben sich geändert. Prüfe die Auswahl
-              unten; vorherige Antworten behalten ihre ursprünglichen Quellen.
+              {t(
+                "Die verfügbaren Quellen haben sich geändert. Prüfe die Auswahl unten; vorherige Antworten behalten ihre ursprünglichen Quellen.",
+              )}
             </p>
           )}
           <details className="notebook-selection">
             <summary>
-              {notebook.document_ids.length} Maschinenquellen ausgewählt ·
-              Revision {notebook.revision}
+              {notebook.document_ids.length}{" "}
+              {t("Maschinenquellen ausgewählt · Revision")} {notebook.revision}
             </summary>
             <form
               className="machine-form"
@@ -224,7 +230,7 @@ export default function NotebookPanel({
                 </label>
               ))}
               <button className="ux-secondary" disabled={busy || active}>
-                Auswahl für nächste Antwort speichern
+                {t("Auswahl für nächste Antwort speichern")}
               </button>
             </form>
           </details>
@@ -242,25 +248,27 @@ export default function NotebookPanel({
           <form className="machine-form notebook-composer" onSubmit={ask}>
             <label>
               {notebook.turns?.length
-                ? "Rückfrage stellen"
-                : "Frage zu dieser Maschine stellen"}
+                ? t("Rückfrage stellen")
+                : t("Frage zu dieser Maschine stellen")}
               <textarea
                 rows={4}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 required
                 maxLength={4000}
-                placeholder="Was könnte den Stopp erklären, und welche Code- oder Handbuchstelle stützt diese Vermutung?"
+                placeholder={t(
+                  "Was könnte den Stopp erklären, und welche Code- oder Handbuchstelle stützt diese Vermutung?",
+                )}
               />
             </label>
             <details>
               <summary>
-                Öffentliche Siemens-Dokumentation prüfen (optional)
+                {t("Öffentliche Siemens-Dokumentation prüfen (optional)")}
               </summary>
               <p className="ux-small">
-                Nur die hier separat eingegebene öffentliche Frage wird an
-                Siemens gesendet. Keine internen Maschinennamen, Quelltexte oder
-                Code in dieses Feld eintragen.
+                {t(
+                  "Nur die hier separat eingegebene öffentliche Frage wird an Siemens gesendet. Keine internen Maschinennamen, Quelltexte oder Code in dieses Feld eintragen.",
+                )}
               </p>
               <label className="machine-check">
                 <input
@@ -268,11 +276,11 @@ export default function NotebookPanel({
                   checked={publicEnabled}
                   onChange={(e) => setPublicEnabled(e.target.checked)}
                 />
-                Diese öffentliche Frage für diese Antwort verwenden
+                {t("Diese öffentliche Frage für diese Antwort verwenden")}
               </label>
               {publicEnabled && (
                 <label>
-                  Öffentliche Siemens-Frage
+                  {t("Öffentliche Siemens-Frage")}
                   <textarea
                     rows={2}
                     value={publicQuestion}
@@ -293,14 +301,15 @@ export default function NotebookPanel({
               }
             >
               {active
-                ? "Untersuchung läuft…"
+                ? t("Untersuchung läuft…")
                 : busy
-                  ? "Wird gestartet…"
-                  : "Frage stellen →"}
+                  ? t("Wird gestartet…")
+                  : t("Frage stellen →")}
             </button>
             <small>
-              Lokales Modell · Rein lesende Werkzeuge · Letzte vier
-              abgeschlossene Gespräche im begrenzten Kontext
+              {t(
+                "Lokales Modell · Rein lesende Werkzeuge · Letzte vier abgeschlossene Gespräche im begrenzten Kontext",
+              )}
             </small>
           </form>
         </>
@@ -316,6 +325,7 @@ function NotebookTurn({
   run: Run;
   onCancel: () => Promise<boolean>;
 }) {
+  useLanguage();
   const [report, setReport] = useState<EvidenceReport | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
@@ -335,12 +345,14 @@ function NotebookTurn({
       <div className="notebook-question">{run.question}</div>
       <p className="ux-small">
         {friendlyStatus(run.status)} ·{" "}
-        <a href={`/?run=${run.id}`}>Details und Steuerung der Untersuchung</a>
+        <a href={`/?run=${run.id}`}>
+          {t("Details und Steuerung der Untersuchung")}
+        </a>
       </p>
       {!stopped.has(run.status) && (
-        <button onClick={() => void onCancel()}>Abbrechen</button>
+        <button onClick={() => void onCancel()}>{t("Abbrechen")}</button>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       {report && (
         <>
           <p
@@ -351,12 +363,14 @@ function NotebookTurn({
             }
           >
             {report.answer_contract?.outcome === "needs_review"
-              ? "Prüfung erforderlich"
+              ? t("Prüfung erforderlich")
               : report.answer_contract?.outcome === "no_support"
-                ? "Die ausgewählten Quellen belegen keine Antwort"
+                ? t("Die ausgewählten Quellen belegen keine Antwort")
                 : report.answer_contract?.outcome === "budget_limited"
-                  ? "Teilweise Belegprüfung"
-                  : "Quellenverweise geprüft; technische Aussagen müssen geprüft werden"}
+                  ? t("Teilweise Belegprüfung")
+                  : t(
+                      "Quellenverweise geprüft; technische Aussagen müssen geprüft werden",
+                    )}
           </p>
           {report.answer_contract?.issues.map((issue) => (
             <p className="ux-caution" key={issue}>
@@ -364,7 +378,7 @@ function NotebookTurn({
             </p>
           ))}
           <SafeAnswer
-            text={report.answer || "Keine abschließende Antwort erhalten."}
+            text={report.answer || t("Keine abschließende Antwort erhalten.")}
             references={report.library_citations}
             prefix={run.id + "-"}
           />

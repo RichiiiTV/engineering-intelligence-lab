@@ -1,3 +1,4 @@
+import { tr } from "./i18n";
 import { useEffect, useRef, useState } from "react";
 import { api } from "./api";
 import type { Run, RunEvent } from "./types";
@@ -64,7 +65,7 @@ export function useInvestigation(id: string, revision: number) {
           );
           if (!response.ok || !response.body)
             throw new Error(
-              `Ereignisstrom nicht verfügbar (${response.status})`,
+              tr`Ereignisstrom nicht verfügbar (${response.status})`,
             );
           const reader = response.body.getReader(),
             decoder = new TextDecoder();

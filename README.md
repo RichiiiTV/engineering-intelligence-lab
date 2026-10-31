@@ -1,6 +1,8 @@
 # Engineering Intelligence Lab (EIL)
 
-The interface and normal chat answers are in German. Recognized public Siemens PLC
+Use **Sprache / Language** to switch between Deutsch and English for the interface
+and new answers; the browser remembers your choice. See [language behavior](docs/languages.md).
+Recognized public Siemens PLC
 diagnostics are looked up automatically from the current typed question, without
 transmitting machine names or attachments. See [German operation and Siemens routing](docs/german-siemens-routing.md).
 

@@ -112,9 +112,17 @@ def route(directory, run, machine_hint=""):
         candidates = selected or [m for _, m in scores[:3]] or machines[:3]
         names = [m["name"] for m in candidates]
         question = (
-            "Welche Maschine ist betroffen"
+            (
+                "Which machine is affected"
+                if run.get("language") == "en"
+                else "Welche Maschine ist betroffen"
+            )
             + (" — " + ", ".join(names) + "?" if names else "?")
-            + " Bitte nenne die Maschinen-/Anlagenkennung oder das Modell vom Typenschild oder Fehlerprotokoll."
+            + (
+                " Please give its machine/line identifier or model from the label or error log."
+                if run.get("language") == "en"
+                else " Bitte nenne die Maschinen-/Anlagenkennung oder das Modell vom Typenschild oder Fehlerprotokoll."
+            )
         )
         return {
             "status": "needs_clarification",

@@ -1,28 +1,29 @@
+import { t } from "./i18n";
 /** Presentation only: persisted API identifiers and original source text stay unchanged. */
 export const statusLabel = (value: string) =>
   (
     ({
-      queued: "Eingereiht",
-      running: "In Bearbeitung",
-      completed: "Abgeschlossen",
-      failed: "Fehlgeschlagen",
-      cancelled: "Abgebrochen",
-      interrupted: "Unterbrochen",
-      paused: "Pausiert",
-      timed_out: "Zeitlimit erreicht",
-      budget_exceeded: "Budget erreicht",
-      accepted: "Angenommen",
-      extracting: "Wird extrahiert",
-      indexing: "Wird indexiert",
-      classifying: "Wird zugeordnet",
-      discarded: "Verworfen",
-      pending: "Ausstehend",
-      approved: "Freigegeben",
-      rejected: "Abgelehnt",
-      starting: "Wird gestartet",
-      parsing: "Wird gelesen",
-      ready: "Bereit",
-      stopped: "Beendet",
+      queued: t("Eingereiht"),
+      running: t("In Bearbeitung"),
+      completed: t("Abgeschlossen"),
+      failed: t("Fehlgeschlagen"),
+      cancelled: t("Abgebrochen"),
+      interrupted: t("Unterbrochen"),
+      paused: t("Pausiert"),
+      timed_out: t("Zeitlimit erreicht"),
+      budget_exceeded: t("Budget erreicht"),
+      accepted: t("Angenommen"),
+      extracting: t("Wird extrahiert"),
+      indexing: t("Wird indexiert"),
+      classifying: t("Wird zugeordnet"),
+      discarded: t("Verworfen"),
+      pending: t("Ausstehend"),
+      approved: t("Freigegeben"),
+      rejected: t("Abgelehnt"),
+      starting: t("Wird gestartet"),
+      parsing: t("Wird gelesen"),
+      ready: t("Bereit"),
+      stopped: t("Beendet"),
     }) as Record<string, string>
   )[value] || value;
 
@@ -65,34 +66,56 @@ const notices: Record<string, string> = {
     "Diese Antwort liest nur den angefragten Bildtext ab; es wurde keine Maschinendiagnose durchgeführt.",
 };
 export function displayNotice(value: string): string {
-  return notices[value] || value;
+  return t(Object.hasOwn(notices, value) ? notices[value] : value);
 }
 
 export function requestError(detail: string, status: number): string {
   if (/CSV columns do not match/i.test(detail))
-    return "Die CSV-Spalten entsprechen nicht dem erwarteten Format. Bitte Spaltenüberschriften prüfen.";
+    return t(
+      "Die CSV-Spalten entsprechen nicht dem erwarteten Format. Bitte Spaltenüberschriften prüfen.",
+    );
   // Stable German guidance rather than exposing backend/library exception prose.
   if (status === 401)
-    return "Anmeldung fehlgeschlagen oder Sitzung abgelaufen. Bitte erneut anmelden.";
-  if (status === 403) return "Für diese Aktion fehlt die Berechtigung.";
+    return t(
+      "Anmeldung fehlgeschlagen oder Sitzung abgelaufen. Bitte erneut anmelden.",
+    );
+  if (status === 403) return t("Für diese Aktion fehlt die Berechtigung.");
   if (status === 404)
-    return "Der angefragte Eintrag wurde nicht gefunden oder gehört nicht zu deinem Konto.";
+    return t(
+      "Der angefragte Eintrag wurde nicht gefunden oder gehört nicht zu deinem Konto.",
+    );
   if (status === 413)
-    return "Die Datei oder Anfrage überschreitet die erlaubte Größe. Bitte kleinere Dateien verwenden.";
+    return t(
+      "Die Datei oder Anfrage überschreitet die erlaubte Größe. Bitte kleinere Dateien verwenden.",
+    );
   if (status === 429)
-    return "Zu viele Anfragen. Bitte kurz warten und erneut versuchen.";
+    return t("Zu viele Anfragen. Bitte kurz warten und erneut versuchen.");
   if (status === 503)
-    return "Der benötigte Dienst ist momentan nicht verfügbar. Bitte später erneut versuchen.";
+    return t(
+      "Der benötigte Dienst ist momentan nicht verfügbar. Bitte später erneut versuchen.",
+    );
   if (status === 409) {
     if (/current answer|active|running|idle|queue/i.test(detail))
-      return "Eine Verarbeitung läuft bereits oder die Warteschlange ist belegt. Bitte warten und erneut versuchen.";
+      return t(
+        "Eine Verarbeitung läuft bereits oder die Warteschlange ist belegt. Bitte warten und erneut versuchen.",
+      );
     if (/submission ID|another problem/i.test(detail))
-      return "Diese Übermittlung gehört zu einer anderen Frage. Bitte einen neuen Chat beginnen.";
+      return t(
+        "Diese Übermittlung gehört zu einer anderen Frage. Bitte einen neuen Chat beginnen.",
+      );
     if (/limit|budget|capacity/i.test(detail))
-      return "Das verfügbare Budget oder Speicherlimit wurde erreicht. Bitte die Frage eingrenzen oder die Administration kontaktieren.";
-    return "Die Aktion konnte wegen eines Zustandskonflikts nicht ausgeführt werden. Bitte die Ansicht aktualisieren und erneut versuchen.";
+      return t(
+        "Das verfügbare Budget oder Speicherlimit wurde erreicht. Bitte die Frage eingrenzen oder die Administration kontaktieren.",
+      );
+    return t(
+      "Die Aktion konnte wegen eines Zustandskonflikts nicht ausgeführt werden. Bitte die Ansicht aktualisieren und erneut versuchen.",
+    );
   }
   if (status === 400 || status === 422)
-    return "Die Eingaben oder Dateien sind ungültig. Bitte Dateiformat, Größe und Pflichtfelder prüfen.";
-  return "Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen; weitere technische Angaben stehen in den lokalen Dienstprotokollen.";
+    return t(
+      "Die Eingaben oder Dateien sind ungültig. Bitte Dateiformat, Größe und Pflichtfelder prüfen.",
+    );
+  return t(
+    "Die Anfrage konnte nicht abgeschlossen werden. Bitte erneut versuchen; weitere technische Angaben stehen in den lokalen Dienstprotokollen.",
+  );
 }

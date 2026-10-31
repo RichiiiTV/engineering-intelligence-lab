@@ -1,3 +1,4 @@
+import { useLanguage, t, getLocale } from "./i18n";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, post } from "./api";
 import type { LibraryDocument } from "./KnowledgeLibrary";
@@ -39,38 +40,39 @@ export default function AdminWorkspace({
   currentUserId: string;
   onClose: () => void;
 }) {
+  useLanguage();
   const [tab, setTab] = useState("catalog");
   return (
     <div className="user-app">
       <main className="ux-main admin-main">
         <button className="ux-link" onClick={onClose}>
-          ← Zurück zu den Fragen
+          {t("← Zurück zu den Fragen")}
         </button>
-        <h1>Arbeitsbereich verwalten</h1>
+        <h1>{t("Arbeitsbereich verwalten")}</h1>
         <nav aria-label="Administration">
           <button
             aria-pressed={tab === "catalog"}
             onClick={() => setTab("catalog")}
           >
-            Maschinenwissen
+            {t("Maschinenwissen")}
           </button>
           <button
             aria-pressed={tab === "documents"}
             onClick={() => setTab("documents")}
           >
-            Öffentliche Referenzen
+            {t("Öffentliche Referenzen")}
           </button>
           <button
             aria-pressed={tab === "users"}
             onClick={() => setTab("users")}
           >
-            Benutzer
+            {t("Benutzer")}
           </button>
           <button
             aria-pressed={tab === "audit"}
             onClick={() => setTab("audit")}
           >
-            Audit-Protokoll
+            {t("Audit-Protokoll")}
           </button>
         </nav>
         {tab === "catalog" ? (
@@ -88,6 +90,7 @@ export default function AdminWorkspace({
 }
 
 function Documents() {
+  useLanguage();
   const [rows, setRows] = useState<LibraryDocument[]>([]),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
@@ -121,42 +124,44 @@ function Documents() {
     const body = new FormData(form);
     await action(
       () => api("/api/library/documents", { method: "POST", body }),
-      "Dokument hinzugefügt. Für die semantische Suche bitte indexieren.",
+      t("Dokument hinzugefügt. Für die semantische Suche bitte indexieren."),
     );
   }
   return (
-    <section aria-label="Dokumentverwaltung">
-      <h2>Wissensdokumente</h2>
+    <section aria-label={t("Dokumentverwaltung")}>
+      <h2>{t("Wissensdokumente")}</h2>
       <p>
-        Aktive Dokumente stehen allen Benutzern dieses Arbeitsbereichs zur
-        Verfügung. Jede Frage behält ihren eigenen Dokumentstand. Neue Versionen
-        werden als neues Dokument hinzugefügt; die alte Version kann deaktiviert
-        werden.
+        {t(
+          "Aktive Dokumente stehen allen Benutzern dieses Arbeitsbereichs zur Verfügung. Jede Frage behält ihren eigenen Dokumentstand. Neue Versionen werden als neues Dokument hinzugefügt; die alte Version kann deaktiviert werden.",
+        )}
       </p>
       <div className="admin-list">
         {rows.map((d) => (
           <article key={d.id}>
             <h3>{d.title}</h3>
             <p>
-              {d.family} · {d.version} · {d.active ? "Aktiv" : "Deaktiviert"}
+              {d.family} · {d.version} ·{" "}
+              {d.active ? t("Aktiv") : t("Deaktiviert")}
             </p>
             <p className="ux-small">{d.license_note}</p>
             <p>
-              {d.indexed_passages}/{d.passages} Abschnitte für die semantische
-              Suche indexiert
+              {d.indexed_passages}/{d.passages}{" "}
+              {t("Abschnitte für die semantische Suche indexiert")}
             </p>
             <div className="admin-actions">
-              <a href={`/api/library/documents/${d.id}/file`}>Herunterladen</a>
+              <a href={`/api/library/documents/${d.id}/file`}>
+                {t("Herunterladen")}
+              </a>
               <button
                 disabled={busy || !d.active}
                 onClick={() =>
                   void action(
                     () => post(`/api/library/documents/${d.id}/index`),
-                    "Semantischer Index gespeichert.",
+                    t("Semantischer Index gespeichert."),
                   )
                 }
               >
-                Dokument indexieren
+                {t("Dokument indexieren")}
               </button>
               <button
                 disabled={busy}
@@ -167,86 +172,88 @@ function Documents() {
                         active: !d.active,
                       }),
                     d.active
-                      ? "Dokument für neue Fragen deaktiviert."
-                      : "Dokument aktiviert.",
+                      ? t("Dokument für neue Fragen deaktiviert.")
+                      : t("Dokument aktiviert."),
                   )
                 }
               >
-                {d.active ? "Deaktivieren" : "Aktivieren"}
+                {d.active ? t("Deaktivieren") : t("Aktivieren")}
               </button>
             </div>
           </article>
         ))}
       </div>
       <details className="admin-add">
-        <summary>Gemeinsames Dokument hinzufügen</summary>
+        <summary>{t("Gemeinsames Dokument hinzufügen")}</summary>
         <form onSubmit={(e) => void upload(e)} className="siemens-form">
           <label>
-            Dokumenttitel
+            {t("Dokumenttitel")}
             <input name="title" required maxLength={160} />
           </label>
           <label>
-            Produktfamilie
+            {t("Produktfamilie")}
             <input
               name="family"
               required
               maxLength={60}
-              placeholder="Zum Beispiel SIMATIC S7-1500"
+              placeholder={t("Zum Beispiel SIMATIC S7-1500")}
             />
           </label>
           <label>
-            Version / Handbuchausgabe
+            {t("Version / Handbuchausgabe")}
             <input name="version" required maxLength={80} />
           </label>
           <label>
-            Lizenz und Herkunft
+            {t("Lizenz und Herkunft")}
             <input
               name="license_note"
               required
               maxLength={300}
-              placeholder="Lizenz für Nutzung und Weitergabe angeben"
+              placeholder={t("Lizenz für Nutzung und Weitergabe angeben")}
             />
           </label>
           <label>
-            Inhaltstyp
+            {t("Inhaltstyp")}
             <select name="data_policy">
               <option value="synthetic">
-                Generiertes Demonstrationsmaterial
+                {t("Generiertes Demonstrationsmaterial")}
               </option>
               <option value="licensed-public">
-                Ausdrücklich lizenziertes öffentliches Material
+                {t("Ausdrücklich lizenziertes öffentliches Material")}
               </option>
             </select>
           </label>
           <label>
-            Quelldatei
+            {t("Quelldatei")}
             <input type="file" name="file" accept=".pdf,.md,.txt" required />
           </label>
           <p className="ux-small">
-            PDF: bis 10 MiB / 20 Seiten. UTF-8-Text oder Markdown: bis 1 MiB.
-            Keine OCR. Seitenzahlen in Textdateien folgen den
-            Seitenumbruchzeichen.
+            {t(
+              "PDF: bis 10 MiB / 20 Seiten. UTF-8-Text oder Markdown: bis 1 MiB. Keine OCR. Seitenzahlen in Textdateien folgen den Seitenumbruchzeichen.",
+            )}
           </p>
           <label className="ux-confirm">
             <input type="checkbox" name="confirmed" value="true" required />
             <span>
-              Ich bestätige, dass die Lizenz die Freigabe für alle Benutzer
-              dieses Arbeitsbereichs erlaubt.
+              {t(
+                "Ich bestätige, dass die Lizenz die Freigabe für alle Benutzer dieses Arbeitsbereichs erlaubt.",
+              )}
             </span>
           </label>
           <button className="ux-primary" disabled={busy}>
-            Dokument hinzufügen
+            {t("Dokument hinzufügen")}
           </button>
         </form>
       </details>
-      {busy && <p role="status">Lokale Verarbeitung…</p>}
-      {error && <p role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
+      {busy && <p role="status">{t("Lokale Verarbeitung…")}</p>}
+      {error && <p role="alert">{t(error)}</p>}
+      {notice && <p role="status">{t(notice)}</p>}
     </section>
   );
 }
 
 function Users({ currentUserId }: { currentUserId: string }) {
+  useLanguage();
   const [rows, setRows] = useState<User[]>([]),
     [next, setNext] = useState<number | null>(null),
     [error, setError] = useState(""),
@@ -283,17 +290,17 @@ function Users({ currentUserId }: { currentUserId: string }) {
     const fields = new FormData(form);
     const success = await action(
       () => post("/api/auth/users", Object.fromEntries(fields)),
-      "Benutzerkonto erstellt.",
+      t("Benutzerkonto erstellt."),
     );
     if (success) form.reset();
   }
   return (
-    <section aria-label="Benutzerverwaltung">
-      <h2>Benutzer des Arbeitsbereichs</h2>
+    <section aria-label={t("Benutzerverwaltung")}>
+      <h2>{t("Benutzer des Arbeitsbereichs")}</h2>
       <p>
-        Mitglieder sehen ihre eigenen Untersuchungen und die gemeinsame
-        Bibliothek. Administratoren verwalten zusätzlich Benutzer, Dokumente,
-        Speicher und Audit-Protokolle.
+        {t(
+          "Mitglieder sehen ihre eigenen Untersuchungen und die gemeinsame Bibliothek. Administratoren verwalten zusätzlich Benutzer, Dokumente, Speicher und Audit-Protokolle.",
+        )}
       </p>
       <div className="admin-list">
         {rows.map((u) => (
@@ -303,8 +310,8 @@ function Users({ currentUserId }: { currentUserId: string }) {
               {u.id === currentUserId ? " (you)" : ""}
             </h3>
             <p>
-              {u.role} · {u.active ? "Aktiv" : "Deaktiviert"} · {u.sessions}{" "}
-              aktive Sitzungen
+              {u.role} · {u.active ? t("Aktiv") : t("Deaktiviert")} ·{" "}
+              {u.sessions} {t("aktive Sitzungen")}
             </p>
             <div className="admin-actions">
               <button
@@ -315,13 +322,13 @@ function Users({ currentUserId }: { currentUserId: string }) {
                       post(`/api/auth/users/${u.id}/update`, {
                         role: u.role === "admin" ? "member" : "admin",
                       }),
-                    "Rolle aktualisiert; bestehende Sitzungen widerrufen.",
+                    t("Rolle aktualisiert; bestehende Sitzungen widerrufen."),
                   )
                 }
               >
                 {u.role === "admin"
-                  ? "Als Mitglied festlegen"
-                  : "Als Administrator festlegen"}
+                  ? t("Als Mitglied festlegen")
+                  : t("Als Administrator festlegen")}
               </button>
               <button
                 disabled={busy || u.id === currentUserId}
@@ -331,22 +338,24 @@ function Users({ currentUserId }: { currentUserId: string }) {
                       post(`/api/auth/users/${u.id}/update`, {
                         active: !u.active,
                       }),
-                    "Kontoverfügbarkeit aktualisiert; Sitzungen deaktivierter Konten widerrufen.",
+                    t(
+                      "Kontoverfügbarkeit aktualisiert; Sitzungen deaktivierter Konten widerrufen.",
+                    ),
                   )
                 }
               >
-                {u.active ? "Konto deaktivieren" : "Konto aktivieren"}
+                {u.active ? t("Konto deaktivieren") : t("Konto aktivieren")}
               </button>
               <button
                 disabled={busy}
                 onClick={() =>
                   void action(
                     () => post(`/api/auth/users/${u.id}/revoke-sessions`),
-                    "Sitzungen widerrufen.",
+                    t("Sitzungen widerrufen."),
                   )
                 }
               >
-                Alle Sitzungen abmelden
+                {t("Alle Sitzungen abmelden")}
               </button>
             </div>
           </article>
@@ -354,14 +363,14 @@ function Users({ currentUserId }: { currentUserId: string }) {
       </div>
       {next !== null && (
         <button disabled={busy} onClick={() => void refresh(next)}>
-          Weitere Benutzer laden
+          {t("Weitere Benutzer laden")}
         </button>
       )}
       <details className="admin-add">
-        <summary>Benutzer anlegen</summary>
+        <summary>{t("Benutzer anlegen")}</summary>
         <form className="siemens-form" onSubmit={(e) => void create(e)}>
           <label>
-            Benutzername
+            {t("Benutzername")}
             <input
               name="username"
               minLength={3}
@@ -371,7 +380,7 @@ function Users({ currentUserId }: { currentUserId: string }) {
             />
           </label>
           <label>
-            Anfangspasswort
+            {t("Anfangspasswort")}
             <input
               name="password"
               type="password"
@@ -382,22 +391,23 @@ function Users({ currentUserId }: { currentUserId: string }) {
             />
           </label>
           <label>
-            Rolle
+            {t("Rolle")}
             <select name="role">
-              <option value="member">Mitglied</option>
+              <option value="member">{t("Mitglied")}</option>
               <option value="admin">Administrator</option>
             </select>
           </label>
-          <button disabled={busy}>Konto erstellen</button>
+          <button disabled={busy}>{t("Konto erstellen")}</button>
         </form>
       </details>
-      {error && <p role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
+      {error && <p role="alert">{t(error)}</p>}
+      {notice && <p role="status">{t(notice)}</p>}
     </section>
   );
 }
 
 function Audit() {
+  useLanguage();
   const [page, setPage] = useState<AuditPage | null>(null),
     [events, setEvents] = useState<AuditEvent[]>([]),
     [kind, setKind] = useState(""),
@@ -419,12 +429,12 @@ function Audit() {
     void refresh();
   }, []);
   return (
-    <section aria-label="Audit-Protokoll des Arbeitsbereichs">
-      <h2>Audit-Protokoll</h2>
+    <section aria-label={t("Audit-Protokoll des Arbeitsbereichs")}>
+      <h2>{t("Audit-Protokoll")}</h2>
       <p>
-        Erfasst Anmeldungen, Kontoänderungen, Dokumentverwaltung, Änderungen,
-        Downloads und verweigerte Zugriffe. Fragen, Dokumentinhalte, Passwörter
-        und Sitzungstoken werden nicht protokolliert.
+        {t(
+          "Erfasst Anmeldungen, Kontoänderungen, Dokumentverwaltung, Änderungen, Downloads und verweigerte Zugriffe. Fragen, Dokumentinhalte, Passwörter und Sitzungstoken werden nicht protokolliert.",
+        )}
       </p>
       <form
         className="admin-filters"
@@ -434,42 +444,42 @@ function Audit() {
         }}
       >
         <label>
-          Ereignistyp
+          {t("Ereignistyp")}
           <input
             value={kind}
             onChange={(e) => setKind(e.target.value)}
-            placeholder="Zum Beispiel user_updated"
+            placeholder={t("Zum Beispiel user_updated")}
           />
         </label>
         <label>
-          Akteur-ID
+          {t("Akteur-ID")}
           <input
             value={actor}
             onChange={(e) => setActor(e.target.value)}
             maxLength={40}
           />
         </label>
-        <button>Filter anwenden</button>
+        <button>{t("Filter anwenden")}</button>
       </form>
       {page && (
         <p role="status">
           {page.integrity.valid
-            ? "Audit-Kette verifiziert"
-            : "Audit-Integritätsprüfung fehlgeschlagen"}{" "}
-          · {page.integrity.checked} Ereignisse geprüft
+            ? t("Audit-Kette verifiziert")
+            : t("Audit-Integritätsprüfung fehlgeschlagen")}{" "}
+          · {page.integrity.checked} {t("Ereignisse geprüft")}
         </p>
       )}
       <p className="ux-small">
-        Die Anwendung fügt Einträge nur an. Ein lokaler Datenbankadministrator
-        kann die Datenbank ersetzen; exportierte Prüfsummen sollten unabhängig
-        aufbewahrt werden.
+        {t(
+          "Die Anwendung fügt Einträge nur an. Ein lokaler Datenbankadministrator kann die Datenbank ersetzen; exportierte Prüfsummen sollten unabhängig aufbewahrt werden.",
+        )}
       </p>
       <a href="/api/admin/audit/export">
-        Erste Audit-Seite herunterladen (JSON, bis 100 Ereignisse)
+        {t("Erste Audit-Seite herunterladen (JSON, bis 100 Ereignisse)")}
       </a>
       <p>
         <a href="/api/admin/audit/complete">
-          Vollständiges Audit-Protokoll herunterladen (JSONL)
+          {t("Vollständiges Audit-Protokoll herunterladen (JSONL)")}
         </a>
       </p>
       <button
@@ -479,14 +489,17 @@ function Audit() {
             .catch((e) => setError(String(e)))
         }
       >
-        Aktuelles Segment archivieren (Verlauf bleibt erhalten)
+        {t("Aktuelles Segment archivieren (Verlauf bleibt erhalten)")}
       </button>
       {page?.delivery &&
         (!page.delivery.healthy || page.delivery.pending > 0) && (
           <p role="alert">
-            Audit-Zustellung benötigt Aufmerksamkeit: {page.delivery.pending}{" "}
-            ausstehende Ereignisse; {page.delivery.overflow_events}{" "}
-            zusammengefasste Überlaufereignisse. Die Anmeldung bleibt verfügbar.
+            {t("Audit-Zustellung benötigt Aufmerksamkeit:")}{" "}
+            {page.delivery.pending} {t("ausstehende Ereignisse;")}{" "}
+            {page.delivery.overflow_events}{" "}
+            {t(
+              "zusammengefasste Überlaufereignisse. Die Anmeldung bleibt verfügbar.",
+            )}
           </p>
         )}
       <div className="admin-audit">
@@ -496,12 +509,14 @@ function Audit() {
               #{e.id} {e.kind}
             </strong>
             <small>
-              {new Date(e.at * 1000).toLocaleString("de-DE")} ·{" "}
-              {e.actor || e.actor_id || "Nicht authentifiziert"}
+              {new Date(e.at * 1000).toLocaleString(getLocale())} ·{" "}
+              {e.actor || e.actor_id || t("Nicht authentifiziert")}
             </small>
             <p>{e.subject_id}</p>
             <details>
-              <summary>Ereignismetadaten und Integritätsprüfsumme</summary>
+              <summary>
+                {t("Ereignismetadaten und Integritätsprüfsumme")}
+              </summary>
               <pre>{JSON.stringify(e.details, null, 2)}</pre>
               <code>{e.entry_hash}</code>
             </details>
@@ -510,10 +525,10 @@ function Audit() {
       </div>
       {page?.next_after != null && (
         <button onClick={() => void refresh(page.next_after!)}>
-          Weitere Audit-Ereignisse laden
+          {t("Weitere Audit-Ereignisse laden")}
         </button>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
     </section>
   );
 }

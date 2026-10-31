@@ -178,7 +178,10 @@ class RunStore:
         automatic_catalog=False,
         chat_context=None,
         problem_attachment_ids=None,
+        language="de",
     ):
+        if language not in {"de", "en"}:
+            raise ValueError("Choose de or en")
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
         limits = RunLimits.model_validate(limits or {})
@@ -258,6 +261,7 @@ class RunStore:
             owner_id=owner_id,
             thread_id=run_id,
             question=question,
+            language=language,
             chat_mode=chat_mode,
             siemens=siemens,
             use_library=use_library,

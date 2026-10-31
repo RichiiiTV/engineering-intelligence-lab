@@ -36,6 +36,13 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized a runtime Deutsch/English selector on 2026-10-31. Preserve
+drafts/files on switching; persist only the browser preference. Freeze the selected
+language per new answer, including retries and resume, without rewriting original
+sources/history or resetting budgets. See `docs/languages.md` for 281 backend/46
+frontend checks and a live local English answer. Stop after reporting; no later
+milestone, production deployment or equipment work is authorized.
+
 The 2026-10-31 user refinement adds German operation and automatic Siemens MCP
 diagnostic routing in normal chat. Automatic external queries may use only fixed
 template words plus canonical public PLC family/diagnostic identifiers explicitly

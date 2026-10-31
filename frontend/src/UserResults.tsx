@@ -1,3 +1,4 @@
+import { t, useLanguage, tr } from "./i18n";
 import { useEffect, useState } from "react";
 import { displayNotice } from "./locale";
 import {
@@ -34,14 +35,14 @@ function progressText(status: string, events: RunEvent[]) {
   const last = events.at(-1);
   const name = String(last?.data.name || "");
   if (name.includes("knowledge_library"))
-    return "Wissensbibliothek wird durchsucht…";
+    return t("Wissensbibliothek wird durchsucht…");
   if (last?.type === "siemens_lookup_started")
-    return "Siemens-Dokumentation wird geprüft…";
-  if (name.includes("siemens")) return "Siemens-Dokumentation wird geprüft…";
+    return t("Siemens-Dokumentation wird geprüft…");
+  if (name.includes("siemens")) return t("Siemens-Dokumentation wird geprüft…");
   if (name.includes("search") || name.includes("citation"))
-    return "Belege werden gelesen…";
-  if (name.includes("compare")) return "Prüfdaten werden untersucht…";
-  return "Frage und Quellen werden geprüft…";
+    return t("Belege werden gelesen…");
+  if (name.includes("compare")) return t("Prüfdaten werden untersucht…");
+  return t("Frage und Quellen werden geprüft…");
 }
 export default function UserResults({
   id,
@@ -56,6 +57,7 @@ export default function UserResults({
   onBack: () => void;
   onAnother: () => void;
 }) {
+  useLanguage();
   const [revision, setRevision] = useState(0),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -150,16 +152,17 @@ export default function UserResults({
     <>
       <button className="ux-back ux-link" onClick={onBack}>
         <ArrowLeft size={17} />
-        Meine Untersuchungen
+        {t("Meine Untersuchungen")}
       </button>
       {loadedRun && !run ? (
         <div className="ux-error" role="alert">
-          Diese Untersuchung gehört zu einem anderen Fall. Öffne sie unter Meine
-          Untersuchungen.
+          {t(
+            "Diese Untersuchung gehört zu einem anderen Fall. Öffne sie unter Meine Untersuchungen.",
+          )}
         </div>
       ) : !run ? (
         <p className="ux-loading">
-          {connectionError || "Untersuchung wird geöffnet…"}
+          {connectionError || t("Untersuchung wird geöffnet…")}
         </p>
       ) : (
         <>
@@ -174,31 +177,31 @@ export default function UserResults({
             <span>
               {completed
                 ? run.result?.answer_contract?.outcome === "needs_review"
-                  ? "Prüfung erforderlich"
+                  ? t("Prüfung erforderlich")
                   : run.result?.answer_contract?.outcome === "no_support"
-                    ? "Weitere Angaben erforderlich"
+                    ? t("Weitere Angaben erforderlich")
                     : run.chat_mode
-                      ? "Antwort bereit"
-                      : "Untersuchung abgeschlossen"
+                      ? t("Antwort bereit")
+                      : t("Untersuchung abgeschlossen")
                 : friendlyStatus(run.status)}
             </span>
           </div>
           <h1 className="ux-result-title">
             {completed
               ? run.result?.answer_contract?.outcome === "needs_review"
-                ? "Prüfe die Quellen der Antwort."
+                ? t("Prüfe die Quellen der Antwort.")
                 : run.result?.answer_contract?.outcome === "no_support"
-                  ? "Die ausgewählten Quellen belegen keine Antwort."
+                  ? t("Die ausgewählten Quellen belegen keine Antwort.")
                   : run.result?.capacity_limited
-                    ? "Bisherige Ergebnisse."
+                    ? t("Bisherige Ergebnisse.")
                     : run.chat_mode
-                      ? "Deine Antwort."
-                      : "Diese Änderungen wurden gefunden."
+                      ? t("Deine Antwort.")
+                      : t("Diese Änderungen wurden gefunden.")
               : active
-                ? "Belege werden geprüft."
+                ? t("Belege werden geprüft.")
                 : run.status === "paused"
-                  ? "Bereit für deine Frage."
-                  : "Diese Untersuchung benötigt Aufmerksamkeit."}
+                  ? t("Bereit für deine Frage.")
+                  : t("Diese Untersuchung benötigt Aufmerksamkeit.")}
           </h1>
           <p className="ux-result-question">{run.question}</p>
           {!!run.result?.answer_contract?.issues.length && (
@@ -208,12 +211,12 @@ export default function UserResults({
           )}
           {error && (
             <div className="ux-error" role="alert">
-              {error}
+              {t(error)}
               <button
                 className="ux-link"
                 onClick={() => setRevision((n) => n + 1)}
               >
-                Erneut versuchen
+                {t("Erneut versuchen")}
               </button>
             </div>
           )}
@@ -231,17 +234,31 @@ export default function UserResults({
                 {active
                   ? run.chat_mode
                     ? run.siemens
-                      ? "Du kannst diese Frage unter Meine Untersuchungen wieder öffnen. Die aktivierte Siemens-Suche sendet nur deine öffentliche Suchanfrage."
-                      : "Du kannst diese Frage unter Meine Untersuchungen wieder öffnen. Die ausgewählte Bibliothek wird lokal durchsucht."
-                    : "Du kannst die Seite verlassen und dieselbe Untersuchung später wieder öffnen. Deine Dateien bleiben auf diesem Computer."
+                      ? t(
+                          "Du kannst diese Frage unter Meine Untersuchungen wieder öffnen. Die aktivierte Siemens-Suche sendet nur deine öffentliche Suchanfrage.",
+                        )
+                      : t(
+                          "Du kannst diese Frage unter Meine Untersuchungen wieder öffnen. Die ausgewählte Bibliothek wird lokal durchsucht.",
+                        )
+                    : t(
+                        "Du kannst die Seite verlassen und dieselbe Untersuchung später wieder öffnen. Deine Dateien bleiben auf diesem Computer.",
+                      )
                   : run.status === "paused"
-                    ? "Dein Fortschritt ist gespeichert. Du kannst jederzeit fortsetzen."
+                    ? t(
+                        "Dein Fortschritt ist gespeichert. Du kannst jederzeit fortsetzen.",
+                      )
                     : extraTokens !== null
                       ? extraTokens
-                        ? "Dein Fortschritt ist gespeichert. Du kannst mit einer begrenzten zusätzlichen Kapazität fortsetzen; Dateien und andere Limits bleiben erhalten."
-                        : "Dein Fortschritt ist gespeichert. Nutze das verbleibende Budget, ohne Dateien erneut hochzuladen."
+                        ? t(
+                            "Dein Fortschritt ist gespeichert. Du kannst mit einer begrenzten zusätzlichen Kapazität fortsetzen; Dateien und andere Limits bleiben erhalten.",
+                          )
+                        : t(
+                            "Dein Fortschritt ist gespeichert. Nutze das verbleibende Budget, ohne Dateien erneut hochzuladen.",
+                          )
                       : run.error?.message ||
-                        "Die Untersuchung wurde beendet. Du kannst eine neue Frage zu denselben Dateien stellen."}
+                        t(
+                          "Die Untersuchung wurde beendet. Du kannst eine neue Frage zu denselben Dateien stellen.",
+                        )}
               </p>
               <div className="ux-progress-actions">
                 {active && (
@@ -252,14 +269,14 @@ export default function UserResults({
                       disabled={busy}
                     >
                       <Pause size={17} />
-                      Pausieren
+                      {t("Pausieren")}
                     </button>
                     <button
                       className="ux-link"
                       onClick={() => void control("cancel")}
                       disabled={busy}
                     >
-                      Untersuchung abbrechen
+                      {t("Untersuchung abbrechen")}
                     </button>
                   </>
                 )}
@@ -271,14 +288,14 @@ export default function UserResults({
                       disabled={busy}
                     >
                       <Play size={17} />
-                      Untersuchung fortsetzen
+                      {t("Untersuchung fortsetzen")}
                     </button>
                     <button
                       className="ux-link"
                       onClick={() => void control("cancel")}
                       disabled={busy}
                     >
-                      Untersuchung abbrechen
+                      {t("Untersuchung abbrechen")}
                     </button>
                   </>
                 )}
@@ -294,43 +311,45 @@ export default function UserResults({
                   >
                     <Play size={17} />
                     {extraTokens
-                      ? "Mit zusätzlicher Kapazität fortsetzen"
-                      : "Untersuchung fortsetzen"}
+                      ? t("Mit zusätzlicher Kapazität fortsetzen")
+                      : t("Untersuchung fortsetzen")}
                   </button>
                 )}
                 {!active && !resumable && extraTokens === null && (
                   <button className="ux-primary" onClick={onAnother}>
-                    Weitere Frage stellen
+                    {t("Weitere Frage stellen")}
                     <ArrowRight size={16} />
                   </button>
                 )}
               </div>
               {connectionError && (
                 <p className="ux-small">
-                  Verbindung unterbrochen. Wird neu verbunden; die gespeicherte
-                  Untersuchung bleibt unverändert.
+                  {t(
+                    "Verbindung unterbrochen. Wird neu verbunden; die gespeicherte Untersuchung bleibt unverändert.",
+                  )}
                 </p>
               )}
             </section>
           )}
           {completed && !report && !error && (
-            <p className="ux-loading">Befunde werden vorbereitet…</p>
+            <p className="ux-loading">{t("Befunde werden vorbereitet…")}</p>
           )}
           {completed && report && (
             <>
               {run.result?.capacity_limited && (
                 <p className="ux-caution">
-                  Dies ist eine Zusammenfassung der bisher gesammelten Belege.
-                  Weitere Prüfungen können erforderlich sein.
+                  {t(
+                    "Dies ist eine Zusammenfassung der bisher gesammelten Belege. Weitere Prüfungen können erforderlich sein.",
+                  )}
                 </p>
               )}
               <section className="ux-finding-card">
-                <span className="ux-section-label">Hauptbefund</span>
+                <span className="ux-section-label">{t("Hauptbefund")}</span>
                 {csvSources.length > 1 && (
                   <label className="ux-data-select">
-                    Datendatei
+                    {t("Datendatei")}
                     <select
-                      aria-label="Vergleichsdatendatei"
+                      aria-label={t("Vergleichsdatendatei")}
                       value={sourceId}
                       onChange={(e) => setSourceId(e.target.value)}
                     >
@@ -346,18 +365,18 @@ export default function UserResults({
                   <>
                     <h2>
                       {top.delta_percentage_points > 0
-                        ? `Fehlausschuss stieg am stärksten bei ${top.station_id}`
-                        : `Größte Stationsabweichung: ${top.station_id}`}
+                        ? tr`Fehlausschuss stieg am stärksten bei ${top.station_id}`
+                        : tr`Größte Stationsabweichung: ${top.station_id}`}
                     </h2>
                     <p>
-                      Die Quote{" "}
+                      {t("Die Quote")}{" "}
                       {top.incident_rate >= top.baseline_rate ? "rose" : "fell"}{" "}
                       from{" "}
                       <strong>{(top.baseline_rate * 100).toFixed(2)}%</strong>{" "}
                       to{" "}
                       <strong>{(top.incident_rate * 100).toFixed(2)}%</strong> —{" "}
                       {Math.abs(top.delta_percentage_points).toFixed(2)}{" "}
-                      Prozentpunkte{" "}
+                      {t("Prozentpunkte")}{" "}
                       {top.delta_percentage_points >= 0 ? "higher" : "lower"}.
                     </p>
                     <div
@@ -366,13 +385,14 @@ export default function UserResults({
                       aria-labelledby={chartId}
                     >
                       <span id={chartId} className="ux-sr-only">
-                        {top.station_id}: vorher{" "}
-                        {(top.baseline_rate * 100).toFixed(2)}%, im
-                        Störungszeitraum {(top.incident_rate * 100).toFixed(2)}%
+                        {top.station_id}
+                        {t(": vorher")} {(top.baseline_rate * 100).toFixed(2)}
+                        {t("%, im Störungszeitraum")}{" "}
+                        {(top.incident_rate * 100).toFixed(2)}%
                       </span>
                       {[
-                        ["Vorher", top.baseline_rate],
-                        ["Im Störungszeitraum", top.incident_rate],
+                        [t("Vorher"), top.baseline_rate],
+                        [t("Im Störungszeitraum"), top.incident_rate],
                       ].map(([label, value], i) => {
                         const max = Math.max(
                           top.baseline_rate,
@@ -403,8 +423,8 @@ export default function UserResults({
                       })}
                     </div>
                     <p className="ux-calculated">
-                      Berechnet aus {selectedSource?.filename}. Separate Dateien
-                      werden unabhängig verglichen.
+                      {t("Berechnet aus")} {selectedSource?.filename}
+                      {t(". Separate Dateien werden unabhängig verglichen.")}
                     </p>
                     <div className="ux-source-pills">
                       {top.example_citations.map((cid, i) => (
@@ -414,8 +434,8 @@ export default function UserResults({
                         >
                           <Table2 size={17} />
                           {i === 0
-                            ? "Vorher: Quellzeile"
-                            : "Störung: Quellzeile"}
+                            ? t("Vorher: Quellzeile")
+                            : t("Störung: Quellzeile")}
                         </button>
                       ))}
                     </div>
@@ -424,29 +444,32 @@ export default function UserResults({
                   <>
                     <h2>
                       {compareError
-                        ? "Untersuchungsnotizen prüfen"
+                        ? t("Untersuchungsnotizen prüfen")
                         : run.chat_mode
-                          ? "Antwort"
-                          : "Was die Dateien zeigen"}
+                          ? t("Antwort")
+                          : t("Was die Dateien zeigen")}
                     </h2>
                     <p className="ux-answer">
                       {readableAnswer(report.answer, [
                         ...report.citations,
                         ...(report.external_references || []),
                         ...(report.library_citations || []),
-                      ]) || "Kein abschließender Befund zurückgegeben."}
+                      ]) || t("Kein abschließender Befund zurückgegeben.")}
                     </p>
                     {compareError && (
                       <p className="ux-small">
-                        Diese Datendatei konnte nicht verglichen werden. Der
-                        Berechnungsfehler steht in den erweiterten Details.
+                        {t(
+                          "Diese Datendatei konnte nicht verglichen werden. Der Berechnungsfehler steht in den erweiterten Details.",
+                        )}
                       </p>
                     )}
                   </>
                 )}
                 {pdfReferences.length > 0 && (
                   <div className="ux-related">
-                    <span className="ux-section-label">Zugehörige Belege</span>
+                    <span className="ux-section-label">
+                      {t("Zugehörige Belege")}
+                    </span>
                     {pdfReferences.slice(0, 2).map((c) => (
                       <button
                         className="ux-excerpt"
@@ -456,7 +479,7 @@ export default function UserResults({
                         <span>{c.text}</span>
                         <small>
                           <FileText size={16} />
-                          {c.filename} · Seite{" "}
+                          {c.filename} {t("· Seite")}{" "}
                           {(c.pages || [c.page]).join(", ")}
                           <ChevronDown size={14} />
                         </small>
@@ -466,13 +489,13 @@ export default function UserResults({
                 )}
                 <div className="ux-caution">
                   {run.chat_mode
-                    ? "Vor der Anwendung die Quelldokumentation prüfen."
-                    : "Ein zu prüfender Befund, keine bestätigte Ursache."}
+                    ? t("Vor der Anwendung die Quelldokumentation prüfen.")
+                    : t("Ein zu prüfender Befund, keine bestätigte Ursache.")}
                 </div>
               </section>
               {top && (
                 <details className="ux-notes">
-                  <summary>Untersuchungsnotizen lesen</summary>
+                  <summary>{t("Untersuchungsnotizen lesen")}</summary>
                   <p className="ux-answer">
                     {readableAnswer(report.answer, [
                       ...report.citations,
@@ -488,9 +511,9 @@ export default function UserResults({
                 !report.library_citations?.some((r) => r.cited_in_answer) &&
                 report.answer && (
                   <p className="ux-source-warning">
-                    Die Notizen des Assistenten benötigen eine Quellenprüfung.
-                    Prüfe die Belege über die Quellenlinks, bevor du dich darauf
-                    stützt.
+                    {t(
+                      "Die Notizen des Assistenten benötigen eine Quellenprüfung. Prüfe die Belege über die Quellenlinks, bevor du dich darauf stützt.",
+                    )}
                   </p>
                 )}
               <SiemensReferences report={report} />
@@ -499,8 +522,12 @@ export default function UserResults({
                 <AnswerReferences report={report} onOpen={openCitation} />
               )}
               <div className="ux-next-check">
-                <span className="ux-section-label">Nächster Schritt</span>
-                <p>Prüfe vor einer Schlussfolgerung die verlinkten Belege.</p>
+                <span className="ux-section-label">
+                  {t("Nächster Schritt")}
+                </span>
+                <p>
+                  {t("Prüfe vor einer Schlussfolgerung die verlinkten Belege.")}
+                </p>
               </div>
               <div className="ux-result-actions">
                 <button
@@ -522,49 +549,54 @@ export default function UserResults({
                   }
                 >
                   <ArrowDownToLine size={19} />
-                  Bericht herunterladen
+                  {t("Bericht herunterladen")}
                 </button>
                 <button className="ux-link" onClick={onAnother}>
-                  Weitere Frage stellen
+                  {t("Weitere Frage stellen")}
                 </button>
                 <span>
-                  Lesbarer Bericht · Im Browser drucken oder als PDF speichern
+                  {t(
+                    "Lesbarer Bericht · Im Browser drucken oder als PDF speichern",
+                  )}
                 </span>
               </div>
             </>
           )}
           <details className="ux-advanced">
-            <summary>Erweiterte Details</summary>
+            <summary>{t("Erweiterte Details")}</summary>
             <p>
-              Vollständigen Arbeitsbereich für Werkzeugaktivitäten,
-              Quellenverweise, Berechnungsherkunft, Budgets und freigegebene
-              Berichtsentwürfe öffnen.
+              {t(
+                "Vollständigen Arbeitsbereich für Werkzeugaktivitäten, Quellenverweise, Berechnungsherkunft, Budgets und freigegebene Berichtsentwürfe öffnen.",
+              )}
             </p>
             {compareError && <p>{compareError}</p>}
             <a href={advancedUrl(caseId, id)}>
-              Erweiterten Arbeitsbereich öffnen
+              {t("Erweiterten Arbeitsbereich öffnen")}
               <ArrowRight size={15} />
             </a>
             <p className="ux-small">
-              Diese Untersuchung verwendete {(run.source_ids || []).length}{" "}
-              gespeicherte Quelldatei(en). Später hinzugefügte Dateien werden
-              nur für neue Untersuchungen verwendet.
+              {t("Diese Untersuchung verwendete")}{" "}
+              {(run.source_ids || []).length}{" "}
+              {t(
+                "gespeicherte Quelldatei(en). Später hinzugefügte Dateien werden nur für neue Untersuchungen verwendet.",
+              )}
             </p>
           </details>
           <p className="ux-demo-note">
-            Synthetische oder lizenzierte öffentliche Belege · Befunde vor der
-            Nutzung prüfen
+            {t(
+              "Synthetische oder lizenzierte öffentliche Belege · Befunde vor der Nutzung prüfen",
+            )}
           </p>
         </>
       )}
       {citation && (
-        <Modal title="Quellbelege" onClose={() => setCitation(null)} wide>
+        <Modal title={t("Quellbelege")} onClose={() => setCitation(null)} wide>
           <div className="ux-source-dialog">
             <h3>{citation.filename}</h3>
             <p>
               {citation.citation_id.startsWith("pdf:")
-                ? `Seite ${(citation.pages || [citation.page]).join(", ")}`
-                : `Quellzeile ${citation.row?.row_id} · CSV-Zeile ${citation.row?.csv_line}`}
+                ? tr`Seite ${(citation.pages || [citation.page]).join(", ")}`
+                : tr`Quellzeile ${citation.row?.row_id} · CSV-Zeile ${citation.row?.csv_line}`}
             </p>
             {citation.text && <blockquote>{citation.text}</blockquote>}
             {citation.row && (
@@ -578,21 +610,24 @@ export default function UserResults({
               </dl>
             )}
             <p className="ux-small">
-              Dies ist eine Fundstelle, kein Beweis für die Richtigkeit einer
-              Aussage.
+              {t(
+                "Dies ist eine Fundstelle, kein Beweis für die Richtigkeit einer Aussage.",
+              )}
             </p>
             <a
               href={`/api/cases/${caseId}/sources/${citation.source_id}/file`}
               download
             >
               <ArrowDownToLine size={16} />
-              Originaldatei herunterladen
+              {t("Originaldatei herunterladen")}
             </a>
           </div>
         </Modal>
       )}
       {detail && (
-        <span className="ux-sr-only">Untersuchung: {detail.title}</span>
+        <span className="ux-sr-only">
+          {t("Untersuchung:")} {detail.title}
+        </span>
       )}
     </>
   );
@@ -605,6 +640,7 @@ function AnswerReferences({
   report: EvidenceReport;
   onOpen: (id: string) => Promise<void>;
 }) {
+  useLanguage();
   return (
     <div className="ux-source-pills ux-all-sources">
       {report.citations
@@ -615,7 +651,7 @@ function AnswerReferences({
             onClick={() => void onOpen(c.citation_id)}
           >
             <FileText size={16} />
-            Quelle {report.citations.indexOf(c) + 1}: {c.filename}
+            {t("Quelle")} {report.citations.indexOf(c) + 1}: {c.filename}
           </button>
         ))}
     </div>

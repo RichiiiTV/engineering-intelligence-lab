@@ -1,3 +1,4 @@
+import { useLanguage, t } from "./i18n";
 import {
   createContext,
   useContext,
@@ -9,6 +10,7 @@ import {
 import { api, post } from "./api";
 import StorageSettings from "./StorageSettings";
 import AdminWorkspace from "./AdminWorkspace";
+import LanguagePicker from "./LanguagePicker";
 import "./user.css";
 
 type User = { id: string; username: string; role: string };
@@ -16,6 +18,7 @@ const UserContext = createContext<User | null>(null);
 export const useCurrentUser = () => useContext(UserContext);
 
 export default function AuthGate({ children }: { children: ReactNode }) {
+  useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [username, setUsername] = useState("");
@@ -89,24 +92,30 @@ export default function AuthGate({ children }: { children: ReactNode }) {
   if (!user)
     return (
       <div className="user-app">
+        <aside className="language-toolbar">
+          <LanguagePicker />
+        </aside>
         <main className="ux-main auth-main">
           <h1>
             {configured === false
-              ? "Lokales Konto einrichten"
-              : "Im Arbeitsbereich anmelden"}
+              ? t("Lokales Konto einrichten")
+              : t("Im Arbeitsbereich anmelden")}
           </h1>
           {configured === null && !error ? (
-            <p>Arbeitsbereich wird geöffnet…</p>
+            <p>{t("Arbeitsbereich wird geöffnet…")}</p>
           ) : (
             <form className="siemens-form" onSubmit={(e) => void submit(e)}>
               {configured === false && (
                 <>
                   <p>
-                    Führe diesen Befehl im Projektordner aus, um einen
-                    Einrichtungscode zu erhalten:
+                    {t(
+                      "Führe diesen Befehl im Projektordner aus, um einen Einrichtungscode zu erhalten:",
+                    )}
                   </p>
                   <code>uv run python -m eil.cli auth-bootstrap</code>
-                  <label htmlFor="auth-code">Einmaliger Einrichtungscode</label>
+                  <label htmlFor="auth-code">
+                    {t("Einmaliger Einrichtungscode")}
+                  </label>
                   <input
                     id="auth-code"
                     autoComplete="off"
@@ -116,12 +125,13 @@ export default function AuthGate({ children }: { children: ReactNode }) {
                     maxLength={128}
                   />
                   <p>
-                    Der Code läuft nach 15 Minuten ab. Bestehende lokale Fälle
-                    werden diesem ersten Konto zugeordnet.
+                    {t(
+                      "Der Code läuft nach 15 Minuten ab. Bestehende lokale Fälle werden diesem ersten Konto zugeordnet.",
+                    )}
                   </p>
                 </>
               )}
-              <label htmlFor="auth-user">Benutzername</label>
+              <label htmlFor="auth-user">{t("Benutzername")}</label>
               <input
                 id="auth-user"
                 autoComplete="username"
@@ -131,7 +141,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
                 minLength={3}
                 maxLength={40}
               />
-              <label htmlFor="auth-password">Passwort</label>
+              <label htmlFor="auth-password">{t("Passwort")}</label>
               <input
                 id="auth-password"
                 type="password"
@@ -144,27 +154,30 @@ export default function AuthGate({ children }: { children: ReactNode }) {
               />
               {error && (
                 <p className="ux-error" role="alert">
-                  {error}
+                  {t(error)}
                 </p>
               )}
               <button className="ux-primary" disabled={busy} type="submit">
                 {busy
-                  ? "Bitte warten…"
+                  ? t("Bitte warten…")
                   : configured
-                    ? "Anmelden"
-                    : "Lokales Konto erstellen"}
+                    ? t("Anmelden")
+                    : t("Lokales Konto erstellen")}
               </button>
             </form>
           )}
-          {configured === null && error && <p role="alert">{error}</p>}
+          {configured === null && error && <p role="alert">{t(error)}</p>}
         </main>
       </div>
     );
   return (
     <UserContext.Provider value={user}>
       <aside className="auth-strip">
-        <span>Angemeldet als {user.username}</span>
-        <button onClick={() => setAccount(!account)}>Konto</button>
+        <LanguagePicker />
+        <span>
+          {t("Angemeldet als")} {user.username}
+        </span>
+        <button onClick={() => setAccount(!account)}>{t("Konto")}</button>
         {user.role === "admin" && (
           <button
             onClick={() => {
@@ -175,8 +188,8 @@ export default function AuthGate({ children }: { children: ReactNode }) {
             Administration
           </button>
         )}
-        <button onClick={() => void logout()}>Abmelden</button>
-        {error && <span role="alert">{error}</span>}
+        <button onClick={() => void logout()}>{t("Abmelden")}</button>
+        {error && <span role="alert">{t(error)}</span>}
       </aside>
       {account && (
         <Account
@@ -205,6 +218,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
 }
 
 function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
+  useLanguage();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [error, setError] = useState("");
@@ -224,11 +238,11 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
     }
   }
   return (
-    <section className="account-panel" aria-label="Kontoeinstellungen">
-      <h2>Kontoeinstellungen</h2>
+    <section className="account-panel" aria-label={t("Kontoeinstellungen")}>
+      <h2>{t("Kontoeinstellungen")}</h2>
       <form className="siemens-form" onSubmit={(e) => void password(e)}>
-        <h3>Passwort ändern</h3>
-        <label htmlFor="old-password">Aktuelles Passwort</label>
+        <h3>{t("Passwort ändern")}</h3>
+        <label htmlFor="old-password">{t("Aktuelles Passwort")}</label>
         <input
           id="old-password"
           type="password"
@@ -238,7 +252,7 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
           required
           maxLength={128}
         />
-        <label htmlFor="new-password">Neues Passwort</label>
+        <label htmlFor="new-password">{t("Neues Passwort")}</label>
         <input
           id="new-password"
           type="password"
@@ -250,13 +264,13 @@ function Account({ user, onChanged }: { user: User; onChanged: () => void }) {
           maxLength={128}
         />
         <button className="ux-secondary">
-          Passwort aktualisieren und alle Sitzungen abmelden
+          {t("Passwort aktualisieren und alle Sitzungen abmelden")}
         </button>
       </form>
       {user.role === "admin" && (
-        <p>Benutzer unter Administration / Benutzer verwalten.</p>
+        <p>{t("Benutzer unter Administration / Benutzer verwalten.")}</p>
       )}
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
     </section>
   );
 }

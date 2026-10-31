@@ -9,7 +9,9 @@ import re
 from .siemens_chat import PublicSiemensQuery
 
 
-def automatic_public_query(question: str):
+def automatic_public_query(question: str, *, language="de"):
+    if language not in {"de", "en"}:
+        raise ValueError("Choose de or en")
     if re.search(
         r"(?:nur|ausschließlich)\s+(?:lokal|intern)|(?:nicht|keine?)\b.{0,30}"
         r"(?:extern|online|internet|mcp|siemens|senden|übertragen)|"
@@ -70,6 +72,11 @@ def automatic_public_query(question: str):
             f"SIMATIC {family}: Diagnose zu {', '.join(identifiers)}. "
             "Öffentliche Siemens-Dokumentation zu Bedeutung, Voraussetzungen und "
             "dokumentierten Prüfungen suchen. Antwort auf Deutsch."
+        )
+        if language == "de"
+        else (
+            f"SIMATIC {family}: diagnostics for {', '.join(identifiers)}. "
+            "Find public Siemens documentation on meaning, prerequisites and documented checks. Answer in English."
         ),
         family=family,
     ).model_dump()

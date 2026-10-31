@@ -1,13 +1,19 @@
+import { t } from "./i18n";
 import { requestError } from "./locale";
+import { getLanguage } from "./i18n";
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(path, init);
+    const headers = new Headers(init?.headers);
+    headers.set("X-EIL-Language", getLanguage());
+    response = await fetch(path, { ...init, headers });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") throw error;
     throw new Error(
-      "Keine Verbindung zum lokalen Dienst. Bitte Verbindung prüfen und erneut versuchen.",
+      t(
+        "Keine Verbindung zum lokalen Dienst. Bitte Verbindung prüfen und erneut versuchen.",
+      ),
     );
   }
   if (!response.ok) {

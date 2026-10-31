@@ -1,3 +1,4 @@
+import { getLocale, useLanguage, t, tr } from "./i18n";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import {
   X,
@@ -12,14 +13,15 @@ import {
 import type { Citation, Comparison, RunEvent } from "./types";
 import { statusLabel } from "./locale";
 
-export const fmt = (n: number) => new Intl.NumberFormat("de-DE").format(n);
+export const fmt = (n: number) => new Intl.NumberFormat(getLocale()).format(n);
 export const time = (s: string) =>
-  new Date(s).toLocaleTimeString("de-DE", {
+  new Date(s).toLocaleTimeString(getLocale(), {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
   });
 export function Status({ value }: { value: string }) {
+  useLanguage();
   return (
     <span className={`status ${value}`}>
       <i />
@@ -34,6 +36,7 @@ export function Empty({
   title: string;
   children?: ReactNode;
 }) {
+  useLanguage();
   return (
     <div className="empty">
       <div className="empty-icon">
@@ -55,6 +58,7 @@ export function Modal({
   onClose: () => void;
   wide?: boolean;
 }) {
+  useLanguage();
   const ref = useRef<HTMLDialogElement>(null),
     id = useId();
   useEffect(() => {
@@ -76,7 +80,7 @@ export function Modal({
         <h2 id={id}>{title}</h2>
         <button
           className="icon-button"
-          aria-label="Dialog schließen"
+          aria-label={t("Dialog schließen")}
           onClick={onClose}
         >
           <X size={19} />
@@ -87,6 +91,7 @@ export function Modal({
   );
 }
 export function Json({ value }: { value: unknown }) {
+  useLanguage();
   let parsed = value;
   if (typeof value === "string") {
     try {
@@ -102,6 +107,7 @@ export function Json({ value }: { value: unknown }) {
   );
 }
 export function CitationView({ citation }: { citation: Citation }) {
+  useLanguage();
   return (
     <div className="citation-view">
       <div className="source-heading">
@@ -114,8 +120,8 @@ export function CitationView({ citation }: { citation: Citation }) {
           <strong>{citation.filename}</strong>
           <p>
             {citation.citation_id.startsWith("pdf:")
-              ? `Seite ${(citation.pages || [citation.page]).join(", ")}`
-              : `CSV-Zeile ${citation.row?.csv_line} · ${citation.row?.row_id || ""}`}
+              ? tr`Seite ${(citation.pages || [citation.page]).join(", ")}`
+              : tr`CSV-Zeile ${citation.row?.csv_line} · ${citation.row?.row_id || ""}`}
           </p>
         </div>
       </div>
@@ -123,11 +129,12 @@ export function CitationView({ citation }: { citation: Citation }) {
       {citation.row && <Json value={citation.row} />}
       <label>Citation ID</label>
       <code className="break">{citation.citation_id}</code>
-      <label>SHA-256 der Quelle</label>
+      <label>{t("SHA-256 der Quelle")}</label>
       <code className="break">{citation.sha256}</code>
       <p className="muted small">
-        Die Referenz bestätigt eine Fundstelle. Sie belegt nicht die Richtigkeit
-        einer Aussage.
+        {t(
+          "Die Referenz bestätigt eine Fundstelle. Sie belegt nicht die Richtigkeit einer Aussage.",
+        )}
       </p>
     </div>
   );
@@ -139,6 +146,7 @@ export function StationChart({
   data: Comparison;
   onCitation: (id: string) => void;
 }) {
+  useLanguage();
   const ranking = [...data.ranking].sort((a, b) =>
     a.station_id.localeCompare(b.station_id),
   );
@@ -158,19 +166,21 @@ export function StationChart({
       <div className="chart-legend">
         <span>
           <i className="baseline-key" />
-          Ausgangszeitraum
+          {t("Ausgangszeitraum")}
         </span>
         <span>
           <i className="incident-key" />
-          Störungszeitraum
+          {t("Störungszeitraum")}
         </span>
-        <span className="muted">Fehlausschussquote (%)</span>
+        <span className="muted">{t("Fehlausschussquote (%)")}</span>
       </div>
       <svg
         className="station-chart"
         viewBox={`0 0 ${width} ${height}`}
         role="img"
-        aria-label="Fehlausschussquoten nach Station und Zeitraum; genaue Werte in der folgenden Tabelle"
+        aria-label={t(
+          "Fehlausschussquoten nach Station und Zeitraum; genaue Werte in der folgenden Tabelle",
+        )}
       >
         {[0, 1, 2, 3].map((i) => {
           const y = bottom - ((bottom - top) * i) / 3;
@@ -231,10 +241,10 @@ export function StationChart({
           <thead>
             <tr>
               <th>Station</th>
-              <th>Ausgangszeitraum</th>
-              <th>Störungszeitraum</th>
-              <th>Änderung</th>
-              <th>Belege</th>
+              <th>{t("Ausgangszeitraum")}</th>
+              <th>{t("Störungszeitraum")}</th>
+              <th>{t("Änderung")}</th>
+              <th>{t("Belege")}</th>
             </tr>
           </thead>
           <tbody>
@@ -243,7 +253,7 @@ export function StationChart({
                 <td>
                   <span className="station-id">{r.station_id}</span>
                   {i === 0 && (
-                    <span className="subtle-tag">Größte Abweichung</span>
+                    <span className="subtle-tag">{t("Größte Abweichung")}</span>
                   )}
                 </td>
                 <td>{(100 * r.baseline_rate).toFixed(2)}%</td>
@@ -257,7 +267,7 @@ export function StationChart({
                     className="text-button"
                     onClick={() => onCitation(r.example_citations[0])}
                   >
-                    Zeile anzeigen <ArrowUpRight size={13} />
+                    {t("Zeile anzeigen")} <ArrowUpRight size={13} />
                   </button>
                 </td>
               </tr>
@@ -266,7 +276,7 @@ export function StationChart({
         </table>
       </div>
       <details className="method">
-        <summary>Berechnung und Herkunft der Quellen</summary>
+        <summary>{t("Berechnung und Herkunft der Quellen")}</summary>
         <Json value={data.query_provenance} />
         <p className="small muted">{data.uncertainty}</p>
       </details>
@@ -282,6 +292,7 @@ export function Timeline({
   selected: number | null;
   onSelect: (event: RunEvent) => void;
 }) {
+  useLanguage();
   const visible = events.filter((e) => e.type !== "checkpoint");
   return (
     <div className="timeline">
@@ -313,7 +324,7 @@ export function Timeline({
                       : e.data.error) ||
                     (e.data.tokens
                       ? `${e.data.tokens} tokens`
-                      : `Ereignis ${e.id}`),
+                      : tr`Ereignis ${e.id}`),
                 )}
               </span>
             </span>
@@ -322,8 +333,8 @@ export function Timeline({
         );
       })}
       {!visible.length && (
-        <Empty title="Wartet auf Ereignisse">
-          Aktivitäten der Untersuchung erscheinen hier fortlaufend.
+        <Empty title={t("Wartet auf Ereignisse")}>
+          {t("Aktivitäten der Untersuchung erscheinen hier fortlaufend.")}
         </Empty>
       )}
     </div>

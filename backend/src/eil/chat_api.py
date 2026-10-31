@@ -1,6 +1,7 @@
 """Authenticated chat and private problem attachments. No user-managed machine scope."""
 
 import json
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -43,6 +44,7 @@ def ask(
     request_id: UUID = Form(),
     conversation_id: UUID | None = Form(default=None),
     files: list[UploadFile] = File(default=[]),
+    language: Literal["de", "en"] = Form(default="de"),
 ):
     try:
         if len(files) > 4:
@@ -64,6 +66,7 @@ def ask(
             request.app.state.runs,
             parsed,
             str(conversation_id) if conversation_id else None,
+            language=language,
         )
         record(
             request,

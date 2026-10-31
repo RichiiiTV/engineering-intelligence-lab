@@ -1,3 +1,4 @@
+import { useLanguage, t } from "./i18n";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Beaker, FolderLock, Plus, FileText, ArrowLeft } from "lucide-react";
 import { api, post } from "./api";
@@ -47,6 +48,7 @@ const stopped = new Set([
 ]);
 
 export default function MachineApp() {
+  useLanguage();
   const [groups, setGroups] = useState<Group[]>([]),
     [detail, setDetail] = useState<Detail | null>(null);
   const [selected, setSelected] = useState(
@@ -139,91 +141,95 @@ export default function MachineApp() {
           <Beaker size={29} />
           <span>Engineering Intelligence Lab</span>
         </a>
-        <nav aria-label="Hauptnavigation">
-          <a href="/">Frage stellen</a>
+        <nav aria-label={t("Hauptnavigation")}>
+          <a href="/">{t("Frage stellen")}</a>
           <a href="/?page=machines" aria-current="page">
-            Meine Maschinen
+            {t("Meine Maschinen")}
           </a>
-          <a href="/?view=advanced">Erweitert</a>
+          <a href="/?view=advanced">{t("Erweitert")}</a>
         </nav>
       </header>
       <main className="ux-main machine-main">
         {(error || loadError) && (
           <div className="ux-error" role="alert">
-            {error || loadError}
-            <button onClick={() => void refresh()}>Erneut versuchen</button>
+            {t(error || loadError)}
+            <button onClick={() => void refresh()}>
+              {t("Erneut versuchen")}
+            </button>
           </div>
         )}
         {!selected ? (
           <>
             <div className="ux-list-heading">
               <div>
-                <p className="machine-eyebrow">DEIN PRIVATES WISSEN</p>
-                <h1>Meine Maschinen</h1>
+                <p className="machine-eyebrow">{t("DEIN PRIVATES WISSEN")}</p>
+                <h1>{t("Meine Maschinen")}</h1>
                 <p>
-                  Handbücher, Dokumentation und Code zusammenführen. Fragen mit
-                  passenden Quellen beantworten.
+                  {t(
+                    "Handbücher, Dokumentation und Code zusammenführen. Fragen mit passenden Quellen beantworten.",
+                  )}
                 </p>
               </div>
               <button className="ux-primary" onClick={() => setCreate(!create)}>
                 <Plus size={18} />
-                Maschine hinzufügen
+                {t("Maschine hinzufügen")}
               </button>
             </div>
             {create && (
               <form className="machine-card machine-form" onSubmit={addMachine}>
-                <h2>Maschine hinzufügen</h2>
+                <h2>{t("Maschine hinzufügen")}</h2>
                 <label>
-                  Maschinenname
+                  {t("Maschinenname")}
                   <input
                     name="name"
                     required
                     maxLength={120}
-                    placeholder="z. B. Verpackungslinie 3"
+                    placeholder={t("z. B. Verpackungslinie 3")}
                   />
                 </label>
                 <label>
-                  Familie (optional)
+                  {t("Familie (optional)")}
                   <input
                     name="family"
                     maxLength={60}
-                    placeholder="z. B. Verpackung"
+                    placeholder={t("z. B. Verpackung")}
                   />
                 </label>
                 <button className="ux-primary" disabled={busy}>
-                  Privaten Arbeitsbereich erstellen
+                  {t("Privaten Arbeitsbereich erstellen")}
                 </button>
               </form>
             )}
             {!groups.length && !create && (
               <div className="machine-empty">
                 <FolderLock size={38} />
-                <h2>Ein Arbeitsbereich pro Maschine</h2>
+                <h2>{t("Ein Arbeitsbereich pro Maschine")}</h2>
                 <p>
-                  Maschine hinzufügen, Quellen hochladen und eine Untersuchung
-                  starten. Alles bleibt auf dein Konto beschränkt.
+                  {t(
+                    "Maschine hinzufügen, Quellen hochladen und eine Untersuchung starten. Alles bleibt auf dein Konto beschränkt.",
+                  )}
                 </p>
                 <button className="ux-primary" onClick={() => setCreate(true)}>
-                  Erste Maschine hinzufügen
+                  {t("Erste Maschine hinzufügen")}
                 </button>
               </div>
             )}
             {groups.length > 0 && (
               <>
                 <p className="ux-small">
-                  Verwandte Maschinen werden automatisch anhand lokaler
-                  Dokument-Embeddings gruppiert. Gruppen ordnen deine Maschinen;
-                  sie führen keine Untersuchungsquellen zusammen.
+                  {t(
+                    "Verwandte Maschinen werden automatisch anhand lokaler Dokument-Embeddings gruppiert. Gruppen ordnen deine Maschinen; sie führen keine Untersuchungsquellen zusammen.",
+                  )}
                 </p>
                 <div className="machine-groups">
                   {groups.map((g) => (
                     <section className="machine-card" key={g.id}>
                       <span className="machine-eyebrow">
                         {g.machines.length > 1
-                          ? "AUTOMATISCHE ÄHNLICHKEITSGRUPPE"
+                          ? t("AUTOMATISCHE ÄHNLICHKEITSGRUPPE")
                           : g.indexed
-                            ? "INDEXIERTER ARBEITSBEREICH"
-                            : "WARTET AUF INDEXIERTE QUELLEN"}
+                            ? t("INDEXIERTER ARBEITSBEREICH")
+                            : t("WARTET AUF INDEXIERTE QUELLEN")}
                       </span>
                       <h2>{g.label}</h2>
                       {g.machines.map((m) => (
@@ -236,10 +242,11 @@ export default function MachineApp() {
                           <span>
                             <strong>{m.name}</strong>
                             <small>
-                              {m.family || "Privater Maschinenarbeitsbereich"}
+                              {m.family ||
+                                t("Privater Maschinenarbeitsbereich")}
                             </small>
                           </span>
-                          <span>Öffnen →</span>
+                          <span>{t("Öffnen →")}</span>
                         </button>
                       ))}
                     </section>
@@ -249,46 +256,50 @@ export default function MachineApp() {
             )}
           </>
         ) : !detail ? (
-          <p>Maschinenarbeitsbereich wird geöffnet…</p>
+          <p>{t("Maschinenarbeitsbereich wird geöffnet…")}</p>
         ) : (
           <>
             <button className="ux-text-button" onClick={() => select("")}>
-              <ArrowLeft size={16} /> Alle Maschinen
+              <ArrowLeft size={16} /> {t("Alle Maschinen")}
             </button>
             <div className="ux-list-heading">
               <div>
                 <p className="machine-eyebrow">
-                  PRIVATER MASCHINENARBEITSBEREICH
+                  {t("PRIVATER MASCHINENARBEITSBEREICH")}
                 </p>
                 <h1>{detail.name}</h1>
                 <p>
-                  {detail.family || "Handbücher, Dokumentation und Quellcode"} ·
-                  Lokale Untersuchung mit rein lesendem Zugriff
+                  {detail.family ||
+                    t("Handbücher, Dokumentation und Quellcode")}{" "}
+                  {t("· Lokale Untersuchung mit rein lesendem Zugriff")}
                 </p>
               </div>
             </div>
             <div className="machine-layout">
               <section className="machine-card">
                 <h2>
-                  <FileText size={20} /> Quellen
+                  <FileText size={20} /> {t("Quellen")}
                 </h2>
                 <p className="ux-small">
-                  {detail.documents.filter((d) => d.active).length}/100 aktive
-                  Quellen · 10 MiB pro Datei · PDFs bis 200 Seiten
+                  {detail.documents.filter((d) => d.active).length}
+                  {t(
+                    "/100 aktive Quellen · 10 MiB pro Datei · PDFs bis 200 Seiten",
+                  )}
                 </p>
                 {detail.documents.map((d) => (
                   <div className="machine-source" key={d.id}>
                     <strong>{d.title}</strong>
                     <small>
                       {d.filename} · {d.version} ·{" "}
-                      {d.active ? "Verfügbar" : "Archiviert"} ·{" "}
-                      {d.indexed_passages}/{d.passages} indexierte Abschnitte
+                      {d.active ? t("Verfügbar") : t("Archiviert")} ·{" "}
+                      {d.indexed_passages}/{d.passages}{" "}
+                      {t("indexierte Abschnitte")}
                     </small>
                     <div className="machine-actions">
                       <a
                         href={`/api/machines/${selected}/sources/${d.id}/file`}
                       >
-                        Herunterladen
+                        {t("Herunterladen")}
                       </a>
                       <button
                         disabled={busy}
@@ -302,7 +313,7 @@ export default function MachineApp() {
                           )
                         }
                       >
-                        Vorschau
+                        {t("Vorschau")}
                       </button>
                       <button
                         disabled={busy}
@@ -315,7 +326,7 @@ export default function MachineApp() {
                           )
                         }
                       >
-                        {d.active ? "Archivieren" : "Aktivieren"}
+                        {d.active ? t("Archivieren") : t("Aktivieren")}
                       </button>
                       <button
                         disabled={busy}
@@ -327,34 +338,35 @@ export default function MachineApp() {
                           )
                         }
                       >
-                        Neu indexieren
+                        {t("Neu indexieren")}
                       </button>
                     </div>
                   </div>
                 ))}
                 {!detail.documents.length && (
                   <p>
-                    Noch keine Quellen. Füge ein Handbuch oder einen Code-Export
-                    hinzu.
+                    {t(
+                      "Noch keine Quellen. Füge ein Handbuch oder einen Code-Export hinzu.",
+                    )}
                   </p>
                 )}
                 <details className="machine-upload">
-                  <summary>Handbücher oder Code hinzufügen</summary>
+                  <summary>{t("Handbücher oder Code hinzufügen")}</summary>
                   <form className="machine-form" onSubmit={upload}>
                     <label>
-                      Titel
+                      {t("Titel")}
                       <input name="title" required maxLength={160} />
                     </label>
                     <label>
-                      Ausgabe / Version
+                      {t("Ausgabe / Version")}
                       <input
                         name="version"
-                        defaultValue="Nicht angegeben"
+                        defaultValue={t("Nicht angegeben")}
                         maxLength={80}
                       />
                     </label>
                     <label>
-                      Quelldatei
+                      {t("Quelldatei")}
                       <input
                         type="file"
                         name="file"
@@ -370,15 +382,17 @@ export default function MachineApp() {
                         value="true"
                         required
                       />
-                      Ich bin berechtigt, dieses Material lokal in meinem
-                      privaten Arbeitsbereich zu verarbeiten.
+                      {t(
+                        "Ich bin berechtigt, dieses Material lokal in meinem privaten Arbeitsbereich zu verarbeiten.",
+                      )}
                     </label>
                     <button className="ux-primary" disabled={busy}>
-                      Hochladen und indexieren
+                      {t("Hochladen und indexieren")}
                     </button>
                     <small>
-                      Code wird als Text gelesen und geprüft. Er wird niemals
-                      ausgeführt oder mit Anlagen verbunden.
+                      {t(
+                        "Code wird als Text gelesen und geprüft. Er wird niemals ausgeführt oder mit Anlagen verbunden.",
+                      )}
                     </small>
                   </form>
                 </details>
@@ -386,7 +400,7 @@ export default function MachineApp() {
                   <details
                     open={detail.jobs.some((j) => !stopped.has(j.status))}
                   >
-                    <summary>Upload-Aktivitäten</summary>
+                    <summary>{t("Upload-Aktivitäten")}</summary>
                     {detail.jobs.map((j) => (
                       <div className="machine-source" key={j.id}>
                         <strong>{j.filename}</strong>
@@ -411,8 +425,8 @@ export default function MachineApp() {
                               }
                             >
                               {stopped.has(j.status)
-                                ? "Erneut versuchen"
-                                : "Abbrechen"}
+                                ? t("Erneut versuchen")
+                                : t("Abbrechen")}
                             </button>
                           )}
                         {stopped.has(j.status) &&
@@ -420,15 +434,14 @@ export default function MachineApp() {
                           j.phase !== "discarded" && (
                             <details>
                               <summary>
-                                Zwischengespeicherten Upload verwerfen
+                                {t("Zwischengespeicherten Upload verwerfen")}
                               </summary>
                               <p className="ux-small">
-                                Zwischengespeicherte Daten entfernen für{" "}
-                                {j.filename}. Danach ist kein erneuter Versuch
-                                dieses Auftrags möglich. Veröffentlichte und
-                                aufbewahrte Quellen und Antworten bleiben
-                                verfügbar. Lade bei Bedarf die Originaldatei
-                                erneut hoch.
+                                {t("Zwischengespeicherte Daten entfernen für")}{" "}
+                                {j.filename}
+                                {t(
+                                  ". Danach ist kein erneuter Versuch dieses Auftrags möglich. Veröffentlichte und aufbewahrte Quellen und Antworten bleiben verfügbar. Lade bei Bedarf die Originaldatei erneut hoch.",
+                                )}
                               </p>
                               <button
                                 disabled={busy}
@@ -441,8 +454,9 @@ export default function MachineApp() {
                                   )
                                 }
                               >
-                                Verwerfen des zwischengespeicherten Uploads
-                                bestätigen
+                                {t(
+                                  "Verwerfen des zwischengespeicherten Uploads bestätigen",
+                                )}
                               </button>
                             </details>
                           )}
@@ -473,18 +487,23 @@ export default function MachineApp() {
             {preview && (
               <section className="machine-card">
                 <div className="ux-list-heading">
-                  <h2>Quellenvorschau</h2>
-                  <button onClick={() => setPreview(null)}>Schließen</button>
+                  <h2>{t("Quellenvorschau")}</h2>
+                  <button onClick={() => setPreview(null)}>
+                    {t("Schließen")}
+                  </button>
                 </div>
                 {preview.text ? (
                   <pre className="machine-code">{preview.text}</pre>
                 ) : (
-                  <p>Nutze den Download, um das Original-PDF zu prüfen.</p>
+                  <p>
+                    {t("Nutze den Download, um das Original-PDF zu prüfen.")}
+                  </p>
                 )}
                 {preview.truncated && (
                   <p>
-                    Vorschau auf 40.000 Zeichen begrenzt. Lade oben die
-                    vollständige Quelle herunter.
+                    {t(
+                      "Vorschau auf 40.000 Zeichen begrenzt. Lade oben die vollständige Quelle herunter.",
+                    )}
                   </p>
                 )}
                 {preview.static_review && (
@@ -492,7 +511,7 @@ export default function MachineApp() {
                     <p className="ux-small">{preview.static_review.scope}</p>
                     {preview.static_review.findings.map((f, i) => (
                       <p key={i}>
-                        Zeile {f.line}: {f.message}
+                        {t("Zeile")} {f.line}: {f.message}
                       </p>
                     ))}
                   </>
@@ -515,9 +534,10 @@ function MachineProfile({
   busy: boolean;
   save: (data: unknown) => Promise<boolean>;
 }) {
+  useLanguage();
   return (
     <details className="machine-upload">
-      <summary>Maschinendetails und Versionen</summary>
+      <summary>{t("Maschinendetails und Versionen")}</summary>
       <form
         className="machine-form"
         key={detail.id}
@@ -541,10 +561,10 @@ function MachineProfile({
             {
               (
                 {
-                  family: "Familie",
-                  model: "Modell",
+                  family: t("Familie"),
+                  model: t("Modell"),
                   firmware: "Firmware",
-                  software_version: "Software-Version",
+                  software_version: t("Software-Version"),
                 } as Record<string, string>
               )[k]
             }
@@ -556,7 +576,7 @@ function MachineProfile({
           </label>
         ))}
         <button className="ux-secondary" disabled={busy}>
-          Maschinendetails speichern
+          {t("Maschinendetails speichern")}
         </button>
       </form>
     </details>

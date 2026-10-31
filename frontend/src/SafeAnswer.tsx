@@ -1,3 +1,4 @@
+import { useLanguage, t } from "./i18n";
 import { Fragment, type ReactNode } from "react";
 import { siemensUrl } from "./siemens";
 
@@ -10,6 +11,7 @@ export default function SafeAnswer({
   references?: { citation_id: string; title?: string; url?: string }[];
   prefix?: string;
 }) {
+  useLanguage();
   function inline(value: string): ReactNode[] {
     return value
       .split(
@@ -28,7 +30,7 @@ export default function SafeAnswer({
         )
           return (
             <a key={i} href={ref.url} target="_blank" rel="noopener noreferrer">
-              [Siemens-Quelle{" "}
+              {t("[Siemens-Quelle")}{" "}
               {references
                 .filter((r) => r.citation_id.startsWith("siemens:"))
                 .indexOf(ref) + 1}
@@ -40,7 +42,7 @@ export default function SafeAnswer({
             <button
               className="source-inline"
               key={i}
-              title={ref.title || "Quellabschnitt öffnen"}
+              title={ref.title || t("Quellabschnitt öffnen")}
               onClick={() => {
                 const target = document.getElementById(
                   prefix + "source-" + ref.citation_id,
@@ -61,7 +63,7 @@ export default function SafeAnswer({
                 }
               }}
             >
-              [Quelle {references.indexOf(ref) + 1}]
+              {t("[Quelle")} {references.indexOf(ref) + 1}]
             </button>
           );
         if (part.startsWith("**") && part.endsWith("**"))

@@ -1,3 +1,4 @@
+import { useLanguage } from "./i18n";
 import AdvancedApp from "./AdvancedApp";
 import UserApp from "./UserApp";
 import SiemensHelp from "./SiemensHelp";
@@ -7,6 +8,7 @@ import AdminWorkspace from "./AdminWorkspace";
 import { useCurrentUser } from "./AuthGate";
 
 export default function App() {
+  useLanguage();
   const params = new URLSearchParams(location.search);
   const user = useCurrentUser();
   if (user?.role !== "admin") return <ChatApp />;

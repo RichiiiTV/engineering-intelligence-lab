@@ -43,6 +43,7 @@ from .database import StorageFull
 from .drafts import DraftStore
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore
 from .exports import export_investigation
+from .languages import request_language
 from .library_api import router as library_router
 from .machine_api import router as machine_router
 from .notebook_api import router as notebook_router
@@ -233,6 +234,7 @@ def investigate(payload: InvestigationRequest, request: Request):
                 case_id=str(payload.case_id) if payload.case_id else None,
                 use_mock_mcp=payload.use_mock_mcp,
                 owner_id=request.state.principal.id,
+                language=request_language(request),
                 siemens=payload.siemens.model_dump() if payload.siemens else None,
                 chat_mode=payload.chat_mode,
                 use_library=payload.use_library,

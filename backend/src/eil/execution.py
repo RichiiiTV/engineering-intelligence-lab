@@ -638,7 +638,12 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                 )
                 + (
                     "\nAntworte vollständig auf Deutsch, einschließlich Rückfragen, Einschränkungen und Überschriften. Behalte Fehlercodes, Quellzitate, Dateinamen und Originalauszüge unverändert. Die Siemens-Suche ist an eine feste öffentliche Frage gebunden; bei automatischer Diagnose enthält sie ausschließlich kanonische Produktfamilien und vom Menschen in der aktuellen Frage eingegebene Diagnosekennungen. Ergänze niemals interne Daten. Ohne eindeutige SPS-Familie und Diagnosekennung frage im Chat nach diesen Angaben; leite keine Codes aus beliebigen Alarmnummern ab."
-                    if not run.get("experiment")
+                    if not run.get("experiment") and run.get("language", "de") == "de"
+                    else ""
+                )
+                + (
+                    "\nAnswer entirely in English, including clarifications, headings and limitations. Preserve exact error codes, source citations, filenames and original quotations. The public Siemens query is fixed: never add private context. If the public PLC family or diagnostic code is ambiguous, ask the user to clarify rather than guessing."
+                    if not run.get("experiment") and run.get("language") == "en"
                     else ""
                 )
                 + (

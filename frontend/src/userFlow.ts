@@ -1,3 +1,4 @@
+import { t, tr } from "./i18n";
 import { api, post } from "./api";
 import type { Case, CaseDetail, Run, Source } from "./types";
 import type { SiemensQuery } from "./siemens";
@@ -18,20 +19,22 @@ export const fromSource = (source: Source): Attachment => ({
 });
 export function validateFiles(current: Attachment[], incoming: File[]) {
   if (current.length + incoming.length > 10)
-    throw new Error("Bis zu 10 Dateien pro Untersuchung verwenden.");
+    throw new Error(t("Bis zu 10 Dateien pro Untersuchung verwenden."));
   if (
     current.reduce((n, f) => n + f.size, 0) +
       incoming.reduce((n, f) => n + f.size, 0) >
     30 * 1024 * 1024
   )
-    throw new Error("Diese Dateien überschreiten die Gesamtgrenze von 30 MiB.");
+    throw new Error(
+      t("Diese Dateien überschreiten die Gesamtgrenze von 30 MiB."),
+    );
   for (const file of incoming) {
     if (!/\.(pdf|csv)$/i.test(file.name))
-      throw new Error(`${file.name}: CSV- oder PDF-Datei auswählen.`);
+      throw new Error(tr`${file.name}: CSV- oder PDF-Datei auswählen.`);
     const max = /\.pdf$/i.test(file.name) ? 10 : 2;
     if (!file.size || file.size > max * 1024 * 1024)
       throw new Error(
-        `${file.name}: eine nicht leere Datei mit höchstens ${max} MiB verwenden.`,
+        tr`${file.name}: eine nicht leere Datei mit höchstens ${max} MiB verwenden.`,
       );
   }
 }
@@ -42,7 +45,7 @@ async function hashFile(file: File) {
     reader.onerror = () =>
       reject(
         new Error(
-          `Datei konnte nicht gelesen werden: ${file.name}. Bitte wähle die Datei erneut aus.`,
+          tr`Datei konnte nicht gelesen werden: ${file.name}. Bitte wähle die Datei erneut aus.`,
         ),
       );
     reader.readAsArrayBuffer(file);
@@ -66,7 +69,7 @@ export async function startUserInvestigation(options: {
   const { question, files, policy, onCase, onProgress, onUploaded } = options;
   let caseId = options.caseId;
   if (!files.length) {
-    onProgress("Deine Frage wird gestartet…");
+    onProgress(t("Deine Frage wird gestartet…"));
     return post<Run>("/api/investigations", {
       question: question.trim(),
       chat_mode: true,
@@ -84,7 +87,7 @@ export async function startUserInvestigation(options: {
     });
   }
   if (!caseId) {
-    onProgress("Untersuchung wird vorbereitet…");
+    onProgress(t("Untersuchung wird vorbereitet…"));
     const created = await post<Case>("/api/cases", {
       title: question.trim().slice(0, 120),
     });
@@ -97,7 +100,7 @@ export async function startUserInvestigation(options: {
     const item = files[index];
     if (item.source || !item.file) continue;
     onProgress(
-      `Datei wird hinzugefügt: ${index + 1} of ${files.length}: ${item.name}`,
+      tr`Datei wird hinzugefügt: ${index + 1} of ${files.length}: ${item.name}`,
     );
     const digest = await hashFile(item.file);
     let source = existing.sources.find((s) => s.sha256 === digest);
@@ -113,7 +116,7 @@ export async function startUserInvestigation(options: {
     }
     onUploaded(item.key, source);
   }
-  onProgress("Untersuchung wird gestartet…");
+  onProgress(t("Untersuchung wird gestartet…"));
   return post<Run>("/api/investigations", {
     case_id: caseId,
     question: question.trim(),
@@ -135,15 +138,15 @@ export function friendlyStatus(status: string) {
   return (
     (
       {
-        queued: "Wartet auf den Start",
-        running: "Wird untersucht",
-        paused: "Pausiert",
-        completed: "Abgeschlossen",
-        failed: "Aufmerksamkeit erforderlich",
-        cancelled: "Abgebrochen",
-        interrupted: "Unterbrochen",
-        timed_out: "Zeitlimit erreicht",
-        budget_exceeded: "Budget erreicht",
+        queued: t("Wartet auf den Start"),
+        running: t("Wird untersucht"),
+        paused: t("Pausiert"),
+        completed: t("Abgeschlossen"),
+        failed: t("Aufmerksamkeit erforderlich"),
+        cancelled: t("Abgebrochen"),
+        interrupted: t("Unterbrochen"),
+        timed_out: t("Zeitlimit erreicht"),
+        budget_exceeded: t("Budget erreicht"),
       } as Record<string, string>
     )[status] || status
   );
@@ -160,19 +163,19 @@ export function readableAnswer(
           .filter((c) => c.citation_id.startsWith("kb:"))
           .findIndex((c) => c.citation_id === id);
         return index < 0
-          ? "Ungeprüfte Bibliotheksreferenz"
-          : `Bibliotheksquelle ${index + 1}`;
+          ? t("Ungeprüfte Bibliotheksreferenz")
+          : tr`Bibliotheksquelle ${index + 1}`;
       }
       if (id.startsWith("siemens:")) {
         const index = citations
           .filter((c) => c.citation_id.startsWith("siemens:"))
           .findIndex((c) => c.citation_id === id);
         return index < 0
-          ? "Ungeprüfte Siemens-Referenz"
-          : `Siemens-Quelle ${index + 1}`;
+          ? t("Ungeprüfte Siemens-Referenz")
+          : tr`Siemens-Quelle ${index + 1}`;
       }
       const index = citations.findIndex((c) => c.citation_id === id);
-      return index < 0 ? "Ungeprüfte Quelle" : `Quelle ${index + 1}`;
+      return index < 0 ? t("Ungeprüfte Quelle") : tr`Quelle ${index + 1}`;
     },
   );
 }

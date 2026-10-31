@@ -1,3 +1,4 @@
+import { useLanguage, t, getLocale, tr } from "./i18n";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowRight,
@@ -52,6 +53,7 @@ export const message = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
 export default function UserApp() {
+  useLanguage();
   const [route, setRoute] = useState(readRoute),
     [navigation, setNavigation] = useState(0);
   const [cases, setCases] = useState<Case[]>([]),
@@ -176,17 +178,17 @@ export default function UserApp() {
           <Beaker size={29} />
           <span>Engineering Intelligence Lab</span>
         </button>
-        <nav aria-label="Hauptnavigation">
-          <a href="/?page=machines">Meine Maschinen</a>
+        <nav aria-label={t("Hauptnavigation")}>
+          <a href="/?page=machines">{t("Meine Maschinen")}</a>
           <button
             onClick={() =>
               navigate({ page: "investigations", caseId: "", runId: "" })
             }
             disabled={busy}
           >
-            Meine Untersuchungen
+            {t("Meine Untersuchungen")}
           </button>
-          <span className="ux-avatar" aria-label="Lokaler Arbeitsbereich">
+          <span className="ux-avatar" aria-label={t("Lokaler Arbeitsbereich")}>
             L
           </span>
         </nav>
@@ -194,9 +196,9 @@ export default function UserApp() {
       <main className={route.runId ? "ux-main ux-results" : "ux-main"}>
         {error && (
           <div className="ux-error" role="alert">
-            {error}
+            {t(error)}
             <button onClick={() => setRevision((n) => n + 1)}>
-              Erneut versuchen
+              {t("Erneut versuchen")}
             </button>
           </div>
         )}
@@ -217,12 +219,12 @@ export default function UserApp() {
           <>
             <div className="ux-list-heading">
               <div>
-                <h1>Meine Untersuchungen</h1>
-                <p>Dateien, Fragen und Befunde an einem Ort.</p>
+                <h1>{t("Meine Untersuchungen")}</h1>
+                <p>{t("Dateien, Fragen und Befunde an einem Ort.")}</p>
               </div>
               <button className="ux-primary" onClick={home}>
                 <Plus size={17} />
-                Neue Untersuchung
+                {t("Neue Untersuchung")}
               </button>
             </div>
             <Recent
@@ -239,7 +241,7 @@ export default function UserApp() {
                 disabled={busy}
                 onClick={() => void loadMore()}
               >
-                {busy ? "Wird geladen…" : "Weitere Untersuchungen laden"}
+                {busy ? t("Wird geladen…") : t("Weitere Untersuchungen laden")}
               </button>
             )}
           </>
@@ -248,8 +250,8 @@ export default function UserApp() {
             {route.caseId && !selectedDetail ? (
               <p className="ux-loading">
                 {error
-                  ? "Diese Untersuchung konnte nicht geöffnet werden."
-                  : "Dateien werden geöffnet…"}
+                  ? t("Diese Untersuchung konnte nicht geöffnet werden.")
+                  : t("Dateien werden geöffnet…")}
               </p>
             ) : (
               <QuestionForm
@@ -274,7 +276,7 @@ export default function UserApp() {
             )}
             <section className="ux-recent" aria-labelledby="recent-title">
               <div>
-                <h2 id="recent-title">Letzte Untersuchungen</h2>
+                <h2 id="recent-title">{t("Letzte Untersuchungen")}</h2>
                 {cases.length + runs.filter((r) => r.chat_mode).length > 3 && (
                   <button
                     className="ux-link"
@@ -286,7 +288,7 @@ export default function UserApp() {
                       })
                     }
                   >
-                    Alle anzeigen
+                    {t("Alle anzeigen")}
                     <ArrowRight size={14} />
                   </button>
                 )}
@@ -310,7 +312,7 @@ export default function UserApp() {
               route.runId,
             )}
           >
-            Erweiterter Arbeitsbereich
+            {t("Erweiterter Arbeitsbereich")}
           </a>
         </footer>
       </main>
@@ -331,6 +333,7 @@ function Recent({
   onQuestion: (r: Run) => void;
   limit?: number;
 }) {
+  useLanguage();
   const entries = [
     ...cases.map((c) => ({
       id: c.id,
@@ -359,8 +362,9 @@ function Recent({
             <button key={c.id} onClick={c.open}>
               <span>{c.title}</span>
               <small>
-                {c.status ? friendlyStatus(c.status) : "Untersuchung öffnen"} ·{" "}
-                {new Date(c.date).toLocaleDateString("de-DE", {
+                {c.status ? friendlyStatus(c.status) : t("Untersuchung öffnen")}{" "}
+                ·{" "}
+                {new Date(c.date).toLocaleDateString(getLocale(), {
                   month: "short",
                   day: "numeric",
                 })}
@@ -371,7 +375,7 @@ function Recent({
         })
       ) : (
         <div className="ux-no-history">
-          Deine Untersuchungen erscheinen hier.
+          {t("Deine Untersuchungen erscheinen hier.")}
         </div>
       )}
     </div>
@@ -389,6 +393,7 @@ function QuestionForm({
   onCase: (id: string) => void;
   onStarted: (r: Run) => void;
 }) {
+  useLanguage();
   const [question, setQuestion] = useState(""),
     [files, setFiles] = useState<Attachment[]>(
       existing?.sources.map(fromSource) || [],
@@ -439,7 +444,7 @@ function QuestionForm({
     setBusy(true);
     onBusy(true);
     setError("");
-    setProgress("Demodateien werden geladen…");
+    setProgress(t("Demodateien werden geladen…"));
     try {
       const generated = await Promise.all(
         [
@@ -449,7 +454,9 @@ function QuestionForm({
           const r = await fetch(`/api/examples/${endpoint}`);
           if (!r.ok)
             throw new Error(
-              "Demodateien sind nicht verfügbar. Versuche, eigene Dateien hochzuladen.",
+              t(
+                "Demodateien sind nicht verfügbar. Versuche, eigene Dateien hochzuladen.",
+              ),
             );
           return new File([await r.blob()], name);
         }),
@@ -457,7 +464,7 @@ function QuestionForm({
       add(generated);
       setPolicy("synthetic");
       setConfirmed(true);
-      setQuestion("Warum ist der Fehlausschuss an Station S03 gestiegen?");
+      setQuestion(t("Warum ist der Fehlausschuss an Station S03 gestiegen?"));
     } catch (e) {
       setError(message(e));
     } finally {
@@ -503,7 +510,7 @@ function QuestionForm({
       onStarted(run);
     } catch (e) {
       setError(
-        `${message(e)} Erfolgreich hochgeladene Dateien bleiben erhalten. Du kannst es erneut versuchen.`,
+        tr`${message(e)} Erfolgreich hochgeladene Dateien bleiben erhalten. Du kannst es erneut versuchen.`,
       );
     } finally {
       setBusy(false);
@@ -513,34 +520,43 @@ function QuestionForm({
   }
   return (
     <>
-      <div className="ux-steps" aria-label="Untersuchungsschritte">
+      <div className="ux-steps" aria-label={t("Untersuchungsschritte")}>
         <span className="current">
-          <b>1</b>Frage stellen
+          <b>1</b>
+          {t("Frage stellen")}
         </span>
         <i />
         <span>
-          <b>2</b>Bei Bedarf Dateien hinzufügen
+          <b>2</b>
+          {t("Bei Bedarf Dateien hinzufügen")}
         </span>
         <i />
         <span>
-          <b>3</b>Befunde prüfen
+          <b>3</b>
+          {t("Befunde prüfen")}
         </span>
       </div>
       <div className="ux-intro">
-        <h1>Was möchtest du untersuchen?</h1>
+        <h1>{t("Was möchtest du untersuchen?")}</h1>
         <p>
           {existing
-            ? "Stelle eine weitere Frage zu diesen Dateien oder ergänze weitere Belege."
-            : "Frage zu Siemens-SPS oder füge Dateien für eine Untersuchung hinzu."}
+            ? t(
+                "Stelle eine weitere Frage zu diesen Dateien oder ergänze weitere Belege.",
+              )
+            : t(
+                "Frage zu Siemens-SPS oder füge Dateien für eine Untersuchung hinzu.",
+              )}
         </p>
       </div>
       <form className="ux-question-card" onSubmit={submit}>
-        <label htmlFor="user-question">Deine Frage</label>
+        <label htmlFor="user-question">{t("Deine Frage")}</label>
         <textarea
           id="user-question"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Frage zu S7 / TIA Portal oder untersuche eine Änderung in deinen Dateien…"
+          placeholder={t(
+            "Frage zu S7 / TIA Portal oder untersuche eine Änderung in deinen Dateien…",
+          )}
           maxLength={4000}
           required
           rows={3}
@@ -553,8 +569,8 @@ function QuestionForm({
         >
           <summary>
             {useSiemens
-              ? "Siemens-Dokumentation wird geprüft"
-              : "Siemens-Dokumentation"}
+              ? t("Siemens-Dokumentation wird geprüft")
+              : t("Siemens-Dokumentation")}
           </summary>
           <label className="ux-confirm">
             <input
@@ -566,7 +582,7 @@ function QuestionForm({
               }
             />
             <span>
-              Öffentliche Siemens-Dokumentation für diese Frage verwenden
+              {t("Öffentliche Siemens-Dokumentation für diese Frage verwenden")}
             </span>
           </label>
           {useSiemens && (
@@ -574,7 +590,7 @@ function QuestionForm({
               {files.length > 0 && (
                 <>
                   <label htmlFor="public-siemens-question">
-                    Öffentliche Siemens-Frage
+                    {t("Öffentliche Siemens-Frage")}
                   </label>
                   <textarea
                     id="public-siemens-question"
@@ -584,24 +600,28 @@ function QuestionForm({
                     required
                     disabled={busy}
                     rows={2}
-                    placeholder="Nur eine öffentliche Produktfrage, z. B. S7-1500 OB1 Zykluszeit"
+                    placeholder={t(
+                      "Nur eine öffentliche Produktfrage, z. B. S7-1500 OB1 Zykluszeit",
+                    )}
                   />
                 </>
               )}
               <p className="ux-small">
-                Siemens erhält{" "}
+                {t("Siemens erhält")}{" "}
                 {files.length
-                  ? "nur die obige öffentliche Frage"
-                  : "deine obige Frage"}{" "}
-                und etwaige Produktfelder unten. Dateiinhalte und Fallverlauf
-                bleiben lokal. Die öffentliche Suchanfrage ist auf 500 Zeichen
-                begrenzt.
+                  ? t("nur die obige öffentliche Frage")
+                  : t("deine obige Frage")}{" "}
+                {t(
+                  "und etwaige Produktfelder unten. Dateiinhalte und Fallverlauf bleiben lokal. Die öffentliche Suchanfrage ist auf 500 Zeichen begrenzt.",
+                )}
               </p>
               <details>
-                <summary>CPU, Firmware und TIA-Version (optional)</summary>
+                <summary>
+                  {t("CPU, Firmware und TIA-Version (optional)")}
+                </summary>
                 <div className="ux-product-fields">
                   <label>
-                    SIMATIC-Familie
+                    {t("SIMATIC-Familie")}
                     <select
                       value={product.family}
                       disabled={busy}
@@ -609,14 +629,14 @@ function QuestionForm({
                         setProduct({ ...product, family: e.target.value })
                       }
                     >
-                      <option value="">Nicht angegeben</option>
+                      <option value="">{t("Nicht angegeben")}</option>
                       {["S7-1200", "S7-1200 G2", "S7-1500"].map((f) => (
                         <option key={f}>{f}</option>
                       ))}
                     </select>
                   </label>
                   <label>
-                    CPU-Modell
+                    {t("CPU-Modell")}
                     <input
                       value={product.cpu}
                       maxLength={50}
@@ -647,7 +667,7 @@ function QuestionForm({
                         setProduct({ ...product, tia_version: e.target.value })
                       }
                     >
-                      <option value="">Nicht angegeben</option>
+                      <option value="">{t("Nicht angegeben")}</option>
                       {[17, 18, 19, 20, 21].map((v) => (
                         <option key={v}>V{v}</option>
                       ))}
@@ -663,7 +683,7 @@ function QuestionForm({
           htmlFor="user-files"
         >
           <Paperclip size={23} />
-          <span>CSV- oder PDF-Dateien hinzufügen</span>
+          <span>{t("CSV- oder PDF-Dateien hinzufügen")}</span>
           <input
             id="user-files"
             type="file"
@@ -688,13 +708,13 @@ function QuestionForm({
               {f.source ? (
                 <Check
                   size={18}
-                  aria-label="Datei bereit"
+                  aria-label={t("Datei bereit")}
                   className="ux-ready"
                 />
               ) : (
                 <button
                   type="button"
-                  aria-label={`Entfernen: ${f.name}`}
+                  aria-label={tr`Entfernen: ${f.name}`}
                   disabled={busy}
                   onClick={() =>
                     setFiles((prev) => prev.filter((x) => x.key !== f.key))
@@ -708,7 +728,7 @@ function QuestionForm({
         </div>
         {hasNewFiles && (
           <div className="ux-data-policy">
-            <label htmlFor="user-data-policy">Dateikategorie</label>
+            <label htmlFor="user-data-policy">{t("Dateikategorie")}</label>
             <select
               id="user-data-policy"
               value={policy}
@@ -718,9 +738,11 @@ function QuestionForm({
                 setConfirmed(false);
               }}
             >
-              <option value="synthetic">Synthetische / generierte Daten</option>
+              <option value="synthetic">
+                {t("Synthetische / generierte Daten")}
+              </option>
               <option value="licensed-public">
-                Lizenzierte öffentliche Daten
+                {t("Lizenzierte öffentliche Daten")}
               </option>
             </select>
             <label className="ux-confirm">
@@ -732,15 +754,16 @@ function QuestionForm({
                 onChange={(e) => setConfirmed(e.target.checked)}
               />
               <span>
-                Ich bestätige, dass diese Dateien zur Kategorie gehören und
-                keine internen oder sensiblen Informationen enthalten.
+                {t(
+                  "Ich bestätige, dass diese Dateien zur Kategorie gehören und keine internen oder sensiblen Informationen enthalten.",
+                )}
               </span>
             </label>
           </div>
         )}
         {error && (
           <p className="ux-error" role="alert">
-            {error}
+            {t(error)}
           </p>
         )}
         {busy && (
@@ -751,7 +774,9 @@ function QuestionForm({
         )}
         <div className="ux-form-bottom">
           <div>
-            <span>Nur synthetische oder lizenzierte öffentliche Daten.</span>
+            <span>
+              {t("Nur synthetische oder lizenzierte öffentliche Daten.")}
+            </span>
             {!files.length && (
               <button
                 type="button"
@@ -759,7 +784,7 @@ function QuestionForm({
                 disabled={busy}
                 onClick={() => void example()}
               >
-                Demodateien ausprobieren
+                {t("Demodateien ausprobieren")}
               </button>
             )}
           </div>
@@ -776,7 +801,7 @@ function QuestionForm({
               <LoaderCircle className="spin" size={18} />
             ) : (
               <>
-                {files.length ? "Untersuchen" : "Fragen"}
+                {files.length ? t("Untersuchen") : t("Fragen")}
                 <ArrowRight size={18} />
               </>
             )}
@@ -785,7 +810,7 @@ function QuestionForm({
       </form>
       <p className="ux-local">
         <LockKeyhole size={15} />
-        Deine Dateien werden lokal verarbeitet.
+        {t("Deine Dateien werden lokal verarbeitet.")}
       </p>
     </>
   );

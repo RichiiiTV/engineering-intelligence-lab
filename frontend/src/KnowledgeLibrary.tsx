@@ -1,3 +1,4 @@
+import { useLanguage, t, tr } from "./i18n";
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import { displayNotice } from "./locale";
@@ -26,6 +27,7 @@ export function LibraryChooser({
   onChange: (next: LibrarySelection) => void;
   busy: boolean;
 }) {
+  useLanguage();
   const [documents, setDocuments] = useState<LibraryDocument[]>([]);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -37,7 +39,9 @@ export function LibraryChooser({
       .catch(() => {
         if (!controller.signal.aborted)
           setError(
-            "Bibliotheksdetails sind nicht verfügbar. Vor der Quellenauswahl erneut versuchen.",
+            t(
+              "Bibliotheksdetails sind nicht verfügbar. Vor der Quellenauswahl erneut versuchen.",
+            ),
           );
       });
     return () => controller.abort();
@@ -45,8 +49,8 @@ export function LibraryChooser({
   return (
     <details className="ux-library-options">
       <summary>
-        Wissensbibliothek
-        {documents.length ? ` · ${documents.length} Dokumente` : ""}
+        {t("Wissensbibliothek")}
+        {documents.length ? tr` · ${documents.length} Dokumente` : ""}
       </summary>
       <label className="ux-confirm">
         <input
@@ -55,13 +59,14 @@ export function LibraryChooser({
           disabled={busy}
           onChange={(e) => onChange({ ...value, enabled: e.target.checked })}
         />
-        <span>Dokumentbibliothek des Arbeitsbereichs durchsuchen</span>
+        <span>{t("Dokumentbibliothek des Arbeitsbereichs durchsuchen")}</span>
       </label>
       <p className="ux-small">
-        Antworten zitieren unterstützende Abschnitte. Einstiegshilfen sind
-        generierte Beispiele; Produkthandbücher zeigen ihre Ausgabe und Lizenz.
+        {t(
+          "Antworten zitieren unterstützende Abschnitte. Einstiegshilfen sind generierte Beispiele; Produkthandbücher zeigen ihre Ausgabe und Lizenz.",
+        )}
       </p>
-      {error && <p role="status">{error}</p>}
+      {error && <p role="status">{t(error)}</p>}
       {value.enabled &&
         documents.map((d) => (
           <label className="ux-confirm" key={d.id}>
@@ -104,6 +109,7 @@ export function LibraryReferences({
   runId: string;
   prefix?: string;
 }) {
+  useLanguage();
   if (
     !report.library_snapshot?.length &&
     !report.library_retrieval?.method &&
@@ -113,11 +119,14 @@ export function LibraryReferences({
     return null;
   const references = report.library_citations || [];
   return (
-    <section className="ux-siemens-references" aria-label="Bibliotheksquellen">
+    <section
+      className="ux-siemens-references"
+      aria-label={t("Bibliotheksquellen")}
+    >
       <h2>
         {report.machine_id
-          ? "Aus deinen ausgewählten Quellen"
-          : "Aus deiner Wissensbibliothek"}
+          ? t("Aus deinen ausgewählten Quellen")
+          : t("Aus deiner Wissensbibliothek")}
       </h2>
       {report.machine_retrieval?.notice && (
         <p className="ux-small">
@@ -132,8 +141,12 @@ export function LibraryReferences({
       {!references.length && (
         <p>
           {report.library_retrieval?.method || report.machine_retrieval?.method
-            ? "Keine unterstützenden Abschnitte in den ausgewählten Dokumenten gefunden. Das beweist nicht, dass die Information fehlt."
-            : "Bibliotheksquellen wurden ausgewählt, aber die Suche wurde nicht abgeschlossen. Diese Antwort benötigt eine Quellenprüfung."}
+            ? t(
+                "Keine unterstützenden Abschnitte in den ausgewählten Dokumenten gefunden. Das beweist nicht, dass die Information fehlt.",
+              )
+            : t(
+                "Bibliotheksquellen wurden ausgewählt, aber die Suche wurde nicht abgeschlossen. Diese Antwort benötigt eine Quellenprüfung.",
+              )}
         </p>
       )}
       {references.map((r, i) => (
@@ -143,7 +156,7 @@ export function LibraryReferences({
           tabIndex={-1}
         >
           <summary>
-            Bibliotheksquelle {i + 1}: {r.title} ·{" "}
+            {t("Bibliotheksquelle")} {i + 1}: {r.title} ·{" "}
             {r.line_start
               ? `lines ${r.line_start}–${r.line_end}`
               : r.pages?.length
@@ -153,17 +166,17 @@ export function LibraryReferences({
           <p className="ux-small">
             {r.family} · {r.version} ·{" "}
             {r.data_policy === "synthetic"
-              ? "Generiertes Demonstrationsmaterial"
+              ? t("Generiertes Demonstrationsmaterial")
               : r.data_policy === "internal"
-                ? "Interne Referenz"
-                : "Lizenzierte öffentliche Referenz"}
+                ? t("Interne Referenz")
+                : t("Lizenzierte öffentliche Referenz")}
           </p>
           <blockquote>{r.text}</blockquote>
           <p className="ux-small">{r.license_note}</p>
           <a
             href={`/api/investigations/${encodeURIComponent(runId)}/library/documents/${encodeURIComponent(r.id)}/file`}
           >
-            Quelldokument herunterladen
+            {t("Quelldokument herunterladen")}
           </a>
         </details>
       ))}
@@ -172,15 +185,15 @@ export function LibraryReferences({
         report.library_citation_checks?.not_returned_by_tools.length
       ) && (
         <p className="ux-caution">
-          Einige Bibliothekszitate konnten nicht aufgelöst werden oder stammen
-          nicht aus der Suche. Prüfe die Abschnitte vor der Verwendung dieser
-          Antwort.
+          {t(
+            "Einige Bibliothekszitate konnten nicht aufgelöst werden oder stammen nicht aus der Suche. Prüfe die Abschnitte vor der Verwendung dieser Antwort.",
+          )}
         </p>
       )}
       <p className="ux-small">
-        Dokumentausgabe und Produktgültigkeit prüfen. Zitate kennzeichnen
-        Fundstellen; die Unterstützung der Aussagen muss weiterhin geprüft
-        werden.
+        {t(
+          "Dokumentausgabe und Produktgültigkeit prüfen. Zitate kennzeichnen Fundstellen; die Unterstützung der Aussagen muss weiterhin geprüft werden.",
+        )}
       </p>
     </section>
   );

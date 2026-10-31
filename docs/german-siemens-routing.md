@@ -1,5 +1,8 @@
 # German UI and automatic public PLC diagnostics
 
+The subsequent [language selector](languages.md) adds runtime Deutsch/English
+switching. German remains the default; new answers use the selected language.
+
 Implemented and locally validated on 2026-10-31 following the user's request to
 test ordinary problem chat with automatic Siemens MCP routing and German operation.
 

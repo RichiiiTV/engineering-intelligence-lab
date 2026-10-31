@@ -112,6 +112,7 @@ class RunService:
         automatic_catalog=False,
         chat_context=None,
         problem_attachment_ids=None,
+        language="de",
     ):
         if self._stop.is_set() or self._fatal_error is not None:
             raise RunConflict("Run service is unavailable; restart the API")
@@ -131,6 +132,7 @@ class RunService:
             automatic_catalog=automatic_catalog,
             chat_context=chat_context,
             problem_attachment_ids=problem_attachment_ids,
+            language=language,
         )
 
     def wait(self, run_id, timeout=610):

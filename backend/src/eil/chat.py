@@ -55,13 +55,26 @@ class ChatStore:
                 )
             ]
 
-    def submit(self, owner, question, request_id, service, parsed=(), conversation_id=None):
+    def submit(
+        self,
+        owner,
+        question,
+        request_id,
+        service,
+        parsed=(),
+        conversation_id=None,
+        *,
+        language="de",
+    ):
+        if language not in {"de", "en"}:
+            raise ValueError("Choose de or en")
         if not question.strip() or len(question) > 4000:
             raise ValueError("Describe the problem in 1–4,000 characters")
         fingerprint = hashlib.sha256(
             json.dumps(
                 {
                     "question": question,
+                    "language": language,
                     "conversation_id": conversation_id,
                     "files": [(p[0]["filename"], p[0]["sha256"]) for p in parsed],
                 },
@@ -76,6 +89,19 @@ class ChatStore:
                 ).fetchone()
             receipt = json.loads(row[0]) if row else None
             if receipt:
+                if "language" not in receipt and language == "de":
+                    # Receipts predating the preference stored the same payload
+                    # without a language field. Reuse them without duplicating work.
+                    fingerprint = hashlib.sha256(
+                        json.dumps(
+                            {
+                                "question": question,
+                                "conversation_id": conversation_id,
+                                "files": [(p[0]["filename"], p[0]["sha256"]) for p in parsed],
+                            },
+                            sort_keys=True,
+                        ).encode()
+                    ).hexdigest()
                 if receipt["fingerprint"] != fingerprint:
                     raise EvidenceConflict(
                         "This submission ID belongs to another problem or attachment set"
@@ -123,6 +149,7 @@ class ChatStore:
                         )
                     self.problems.add(conn, conversation_id, owner, parsed)
                     receipt = {
+                        "language": language,
                         "fingerprint": fingerprint,
                         "conversation_id": conversation_id,
                         "submitted_attachment_ids": [p[0]["id"] for p in parsed],
@@ -154,7 +181,7 @@ class ChatStore:
             }
             from .siemens_routing import automatic_public_query
 
-            public = automatic_public_query(question)
+            public = automatic_public_query(question, language=language)
             context["siemens_routing"] = "canonical-human-diagnostic" if public else "local-only"
             if question.casefold().startswith("/siemens "):
                 from .siemens_chat import PublicSiemensQuery
@@ -172,6 +199,7 @@ class ChatStore:
                 chat_context=context,
                 problem_attachment_ids=self.problems.snapshot(conversation_id, owner),
                 limits={"max_output_tokens": 2048},
+                language=language,
             )
 
     def _exists(self, identity, owner):

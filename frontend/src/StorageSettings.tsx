@@ -1,3 +1,4 @@
+import { useLanguage, t, getLocale } from "./i18n";
 import { useEffect, useState } from "react";
 import { api, post } from "./api";
 
@@ -15,6 +16,7 @@ type Storage = {
 const CONFIRM = "PERMANENTLY PURGE REVIEWED TRASH";
 
 export default function StorageSettings({ admin }: { admin: boolean }) {
+  useLanguage();
   const [rows, setRows] = useState<CaseRow[]>([]);
   const [trash, setTrash] = useState<CaseRow[]>([]);
   const [storage, setStorage] = useState<Storage | null>(null);
@@ -73,12 +75,15 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
     }
   }
   return (
-    <section aria-label="Dateien und Speicher" className="storage-settings">
-      <h3>Dateien und Speicher</h3>
+    <section
+      aria-label={t("Dateien und Speicher")}
+      className="storage-settings"
+    >
+      <h3>{t("Dateien und Speicher")}</h3>
       <p>
-        Verschiebe abgeschlossene oder pausierte Fälle zum Ausblenden in den
-        Papierkorb. Vor der endgültigen Löschung kannst du sie jederzeit
-        wiederherstellen.
+        {t(
+          "Verschiebe abgeschlossene oder pausierte Fälle zum Ausblenden in den Papierkorb. Vor der endgültigen Löschung kannst du sie jederzeit wiederherstellen.",
+        )}
       </p>
       <ul>
         {rows.map((c) => (
@@ -89,11 +94,11 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
               onClick={() =>
                 void action(
                   () => post(`/api/cases/${c.id}/trash`),
-                  "Fall in den Papierkorb verschoben.",
+                  t("Fall in den Papierkorb verschoben."),
                 )
               }
             >
-              In den Papierkorb verschieben
+              {t("In den Papierkorb verschieben")}
             </button>
           </li>
         ))}
@@ -104,16 +109,16 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
           onClick={() =>
             void action(
               () => page(false, offset),
-              "Weitere Fälle geladen.",
+              t("Weitere Fälle geladen."),
               false,
             )
           }
         >
-          Weitere Fälle laden
+          {t("Weitere Fälle laden")}
         </button>
       )}
-      <h4>Papierkorb</h4>
-      {!trash.length && <p>Der Papierkorb ist leer.</p>}
+      <h4>{t("Papierkorb")}</h4>
+      {!trash.length && <p>{t("Der Papierkorb ist leer.")}</p>}
       <ul>
         {trash.map((c) => (
           <li key={c.id}>
@@ -123,11 +128,11 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
               onClick={() =>
                 void action(
                   () => post(`/api/cases/${c.id}/restore`),
-                  "Fall wiederhergestellt.",
+                  t("Fall wiederhergestellt."),
                 )
               }
             >
-              Fall wiederherstellen
+              {t("Fall wiederherstellen")}
             </button>
           </li>
         ))}
@@ -139,19 +144,21 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             void page(true, trashOffset).catch((e) => setError(String(e)))
           }
         >
-          Weitere Papierkorbeinträge laden
+          {t("Weitere Papierkorbeinträge laden")}
         </button>
       )}
       <button disabled={busy} onClick={() => void review()}>
-        Papierkorbeinträge älter als 90 Tage prüfen
+        {t("Papierkorbeinträge älter als 90 Tage prüfen")}
       </button>
       {plan && (
         <div className="retention-review">
-          <h4>Endgültige Löschung prüfen</h4>
+          <h4>{t("Endgültige Löschung prüfen")}</h4>
           <p>
-            {plan.cases.length} Fälle. Freigabe läuft ab{" "}
-            {new Date(plan.expires_at).toLocaleString("de-DE")}. Vor dem Löschen
-            ist eine verifizierte Sicherung erforderlich.
+            {plan.cases.length} {t("Fälle. Freigabe läuft ab")}{" "}
+            {new Date(plan.expires_at).toLocaleString(getLocale())}
+            {t(
+              ". Vor dem Löschen ist eine verifizierte Sicherung erforderlich.",
+            )}
           </p>
           <ul>
             {plan.cases.map((c) => (
@@ -161,13 +168,13 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             ))}
           </ul>
           <details>
-            <summary>Genauer Löschplan</summary>
+            <summary>{t("Genauer Löschplan")}</summary>
             <pre>{JSON.stringify(plan, null, 2)}</pre>
           </details>
           {plan.cases.length > 0 && (
             <>
               <label htmlFor="retention-confirmation">
-                Eingabe: {CONFIRM} zum Freigeben dieses Plans
+                {t("Eingabe:")} {CONFIRM} {t("zum Freigeben dieses Plans")}
               </label>
               <input
                 id="retention-confirmation"
@@ -185,11 +192,13 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
                         expected_sha256: plan.sha256,
                         confirmation,
                       }),
-                    "Geprüfte Papierkorbeinträge endgültig gelöscht; Sicherung bleibt erhalten.",
+                    t(
+                      "Geprüfte Papierkorbeinträge endgültig gelöscht; Sicherung bleibt erhalten.",
+                    ),
                   )
                 }
               >
-                Geprüfte Löschung freigeben
+                {t("Geprüfte Löschung freigeben")}
               </button>
             </>
           )}
@@ -197,12 +206,11 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
       )}
       {admin && (
         <>
-          <h4>Sicherungen des Arbeitsbereichs</h4>
+          <h4>{t("Sicherungen des Arbeitsbereichs")}</h4>
           <p>
-            Sicherungen enthalten die Falldaten und Passwort-Hashes aller
-            Konten. Heruntergeladene Kopien privat aufbewahren. Bei der
-            Wiederherstellung werden Sitzungen widerrufen. Der Dienst muss für
-            eine Sicherung im Leerlauf sein.
+            {t(
+              "Sicherungen enthalten die Falldaten und Passwort-Hashes aller Konten. Heruntergeladene Kopien privat aufbewahren. Bei der Wiederherstellung werden Sitzungen widerrufen. Der Dienst muss für eine Sicherung im Leerlauf sein.",
+            )}
           </p>
           {storage?.databases.map((d) => (
             <p key={d.name}>
@@ -215,17 +223,17 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             onClick={() =>
               void action(
                 () => post("/api/admin/backups"),
-                "Verifizierte Sicherung des Arbeitsbereichs erstellt.",
+                t("Verifizierte Sicherung des Arbeitsbereichs erstellt."),
               )
             }
           >
-            Verifizierte Sicherung erstellen
+            {t("Verifizierte Sicherung erstellen")}
           </button>
           <ul>
             {storage?.backups.map((b) => (
               <li key={b.id}>
                 <a href={`/api/admin/backups/${b.id}/file`}>
-                  Herunterladen {b.id}
+                  {t("Herunterladen")} {b.id}
                 </a>{" "}
                 · {(b.size / 1048576).toFixed(1)} MiB
                 <details>
@@ -236,16 +244,14 @@ export default function StorageSettings({ admin }: { admin: boolean }) {
             ))}
           </ul>
           <p>
-            Die Wiederherstellung erfolgt mit dem lokalen Wartungsbefehl in ein
-            neues Zustandsverzeichnis. Siehe Betriebsanleitung. Es werden
-            höchstens drei Sicherungen aufbewahrt; verschiebe eine ältere
-            Sicherung vor einer weiteren Erstellung in einen sicheren
-            Offline-Speicher.
+            {t(
+              "Die Wiederherstellung erfolgt mit dem lokalen Wartungsbefehl in ein neues Zustandsverzeichnis. Siehe Betriebsanleitung. Es werden höchstens drei Sicherungen aufbewahrt; verschiebe eine ältere Sicherung vor einer weiteren Erstellung in einen sicheren Offline-Speicher.",
+            )}
           </p>
         </>
       )}
-      {error && <p role="alert">{error}</p>}
-      {notice && <p role="status">{notice}</p>}
+      {error && <p role="alert">{t(error)}</p>}
+      {notice && <p role="status">{t(notice)}</p>}
     </section>
   );
 }

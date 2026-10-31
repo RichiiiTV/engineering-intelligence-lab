@@ -1,3 +1,4 @@
+import { useLanguage, t, tr, getLocale } from "./i18n";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   Activity,
@@ -72,6 +73,7 @@ function errorText(e: unknown) {
 }
 
 export default function App() {
+  useLanguage();
   const [simpleHref, setSimpleHref] = useState(simpleLocation);
   useEffect(() => {
     const update = () => setSimpleHref(simpleLocation());
@@ -120,7 +122,7 @@ export default function App() {
         <a
           className="brand"
           href="/?view=advanced"
-          aria-label="Startseite von Engineering Intelligence Lab"
+          aria-label={t("Startseite von Engineering Intelligence Lab")}
         >
           <span className="brand-mark">
             <Beaker size={22} />
@@ -134,26 +136,28 @@ export default function App() {
         <div className="workspace-label">
           <span className="workspace-avatar">RL</span>
           <span>
-            Lokaler Arbeitsbereich<small>Synthetische Forschungsumgebung</small>
+            {t("Lokaler Arbeitsbereich")}
+            <small>{t("Synthetische Forschungsumgebung")}</small>
           </span>
           <ChevronDown size={14} />
         </div>
-        <div className="sidebar-heading">ARBEITSBEREICH</div>
+        <div className="sidebar-heading">{t("ARBEITSBEREICH")}</div>
         <div className="nav-item active">
           <LayoutDashboard size={17} />
-          Untersuchungen<span className="count">{cases.length}</span>
+          {t("Untersuchungen")}
+          <span className="count">{cases.length}</span>
         </div>
         <div className="case-heading">
-          <span>DEINE FÄLLE</span>
+          <span>{t("DEINE FÄLLE")}</span>
           <button
             className="icon-button"
-            aria-label="Fall erstellen"
+            aria-label={t("Fall erstellen")}
             onClick={() => setNewCase(true)}
           >
             <Plus size={16} />
           </button>
         </div>
-        <nav className="case-list" aria-label="Fälle">
+        <nav className="case-list" aria-label={t("Fälle")}>
           {cases.map((c) => (
             <button
               key={c.id}
@@ -171,21 +175,21 @@ export default function App() {
         </nav>
         <button className="new-case-button" onClick={() => setNewCase(true)}>
           <Plus size={16} />
-          Neuer Fall
+          {t("Neuer Fall")}
         </button>
         <div className="sidebar-bottom">
           <div className="local-card">
             <span className="online-dot" />
-            <strong>Lokal konzipiert</strong>
+            <strong>{t("Lokal konzipiert")}</strong>
             <p>
-              Agenten mit rein lesendem Zugriff.
+              {t("Agenten mit rein lesendem Zugriff.")}
               <br />
-              Deine Daten bleiben hier.
+              {t("Deine Daten bleiben hier.")}
             </p>
           </div>
           <button className="help-button" onClick={() => setHelp(true)}>
             <CircleHelp size={17} />
-            Anleitung zum Arbeitsbereich
+            {t("Anleitung zum Arbeitsbereich")}
             <ArrowRight size={14} />
           </button>
           <div className="build-label">
@@ -196,19 +200,20 @@ export default function App() {
       <div className="main-shell">
         <header className="topbar">
           <span>
-            Arbeitsbereich <ChevronRight size={13} /> Untersuchungen
+            {t("Arbeitsbereich")} <ChevronRight size={13} />{" "}
+            {t("Untersuchungen")}
           </span>
           <span className="environment">
-            <a href={simpleHref}>Einfache Ansicht</a>
+            <a href={simpleHref}>{t("Einfache Ansicht")}</a>
             <span className="online-dot" />
-            LOKALE DEMO
+            {t("LOKALE DEMO")}
             <LockKeyhole size={13} />
           </span>
         </header>
         {error && !newCase && (
           <div className="banner error" role="alert">
-            {error}
-            <button onClick={() => setError("")}>Schließen</button>
+            {t(error)}
+            <button onClick={() => setError("")}>{t("Schließen")}</button>
           </div>
         )}
         {caseId ? (
@@ -217,49 +222,60 @@ export default function App() {
           <main className="welcome">
             <span className="eyebrow">ENGINEERING INTELLIGENCE LAB</span>
             <h1>
-              Beginne mit einer Frage.
+              {t("Beginne mit einer Frage.")}
               <br />
-              Untersuche einen Fall anhand von Belegen.
+              {t("Untersuche einen Fall anhand von Belegen.")}
             </h1>
             <p>
-              Ein lokaler Arbeitsbereich für die Analyse von Prüfdaten,
-              Quelldokumenten und nachvollziehbaren Ergebnissen.
+              {t(
+                "Ein lokaler Arbeitsbereich für die Analyse von Prüfdaten, Quelldokumenten und nachvollziehbaren Ergebnissen.",
+              )}
             </p>
             <button className="primary" onClick={() => setNewCase(true)}>
               <Plus size={17} />
-              Ersten Fall erstellen
+              {t("Ersten Fall erstellen")}
             </button>
             <div className="welcome-steps">
               <div>
                 <span>01</span>
-                <h3>Daten hinzufügen</h3>
+                <h3>{t("Daten hinzufügen")}</h3>
                 <p>
-                  Synthetische oder lizenzierte öffentliche CSV- und PDF-Dateien
-                  hochladen.
+                  {t(
+                    "Synthetische oder lizenzierte öffentliche CSV- und PDF-Dateien hochladen.",
+                  )}
                 </p>
               </div>
               <div>
                 <span>02</span>
-                <h3>Untersuchung verfolgen</h3>
-                <p>Berechnungen, Werkzeugaufrufe und Quellenangaben prüfen.</p>
+                <h3>{t("Untersuchung verfolgen")}</h3>
+                <p>
+                  {t(
+                    "Berechnungen, Werkzeugaufrufe und Quellenangaben prüfen.",
+                  )}
+                </p>
               </div>
               <div>
                 <span>03</span>
-                <h3>Ergebnisse prüfen</h3>
-                <p>Berichtsentwurf freigeben und Belegübersicht exportieren.</p>
+                <h3>{t("Ergebnisse prüfen")}</h3>
+                <p>
+                  {t(
+                    "Berichtsentwurf freigeben und Belegübersicht exportieren.",
+                  )}
+                </p>
               </div>
             </div>
           </main>
         )}
       </div>
       {newCase && (
-        <Modal title="Fall erstellen" onClose={() => setNewCase(false)}>
+        <Modal title={t("Fall erstellen")} onClose={() => setNewCase(false)}>
           <form onSubmit={create}>
             <p className="muted">
-              Gib dieser Untersuchung einen eindeutigen Namen. Belege kannst du
-              anschließend hinzufügen.
+              {t(
+                "Gib dieser Untersuchung einen eindeutigen Namen. Belege kannst du anschließend hinzufügen.",
+              )}
             </p>
-            <label htmlFor="case-title">Fallname</label>
+            <label htmlFor="case-title">{t("Fallname")}</label>
             <input
               id="case-title"
               autoFocus
@@ -267,11 +283,11 @@ export default function App() {
               maxLength={120}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="z. B. Untersuchung der Prüfquote S03"
+              placeholder={t("z. B. Untersuchung der Prüfquote S03")}
             />
             {error && (
               <p className="error-text" role="alert">
-                {error}
+                {t(error)}
               </p>
             )}
             <div className="modal-actions">
@@ -280,51 +296,54 @@ export default function App() {
                 className="secondary"
                 onClick={() => setNewCase(false)}
               >
-                Abbrechen
+                {t("Abbrechen")}
               </button>
               <button className="primary" disabled={busy || !title.trim()}>
-                {busy ? "Wird erstellt…" : "Fall erstellen"}
+                {busy ? t("Wird erstellt…") : t("Fall erstellen")}
               </button>
             </div>
           </form>
         </Modal>
       )}
       {help && (
-        <Modal title="Dein Untersuchungsbereich" onClose={() => setHelp(false)}>
+        <Modal
+          title={t("Dein Untersuchungsbereich")}
+          onClose={() => setHelp(false)}
+        >
           <ol className="guide">
             <li>
-              Erstelle einen Fall und lade Prüf-CSV-Dateien oder textbasierte
-              PDFs hoch. Hier werden nur synthetische oder lizenzierte
-              öffentliche Daten unterstützt.
+              {t(
+                "Erstelle einen Fall und lade Prüf-CSV-Dateien oder textbasierte PDFs hoch. Hier werden nur synthetische oder lizenzierte öffentliche Daten unterstützt.",
+              )}
             </li>
             <li>
-              Vergleiche Stationsquoten und durchsuche Dokumente in der
-              Übersicht. Öffne Quellenangaben, um die Originalstelle und
-              Prüfsumme zu sehen.
+              {t(
+                "Vergleiche Stationsquoten und durchsuche Dokumente in der Übersicht. Öffne Quellenangaben, um die Originalstelle und Prüfsumme zu sehen.",
+              )}
             </li>
             <li>
-              Lass Ollama untersuchen. Unter Aktivitäten siehst du gespeicherte
-              Werkzeugargumente, Beobachtungen und Checkpoints. Pausieren,
-              Fortsetzen und Abbrechen setzen keine Budgets zurück.
+              {t(
+                "Lass Ollama untersuchen. Unter Aktivitäten siehst du gespeicherte Werkzeugargumente, Beobachtungen und Checkpoints. Pausieren, Fortsetzen und Abbrechen setzen keine Budgets zurück.",
+              )}
             </li>
             <li>
-              Prüfe die Modellantwort im Bericht. Bearbeite einen Entwurf, prüfe
-              die genaue Vorschau und gib das Speichern frei. JSON-Exporte
-              enthalten Quellstände und Quellenprüfungen.
+              {t(
+                "Prüfe die Modellantwort im Bericht. Bearbeite einen Entwurf, prüfe die genaue Vorschau und gib das Speichern frei. JSON-Exporte enthalten Quellstände und Quellenprüfungen.",
+              )}
             </li>
           </ol>
           <p className="notice">
-            Die MCP-Option liest einen festen fiktiven Wartungsdatensatz. Es
-            sind keine realen Anlagen verbunden. Korrelation belegt keine
-            Ursache.
+            {t(
+              "Die MCP-Option liest einen festen fiktiven Wartungsdatensatz. Es sind keine realen Anlagen verbunden. Korrelation belegt keine Ursache.",
+            )}
           </p>
           <p>
             <a href="/api/examples/inspection.csv" download>
-              Beispiel-CSV herunterladen
+              {t("Beispiel-CSV herunterladen")}
             </a>{" "}
             ·{" "}
             <a href="/api/examples/maintenance.pdf" download>
-              Beispiel-PDF herunterladen
+              {t("Beispiel-PDF herunterladen")}
             </a>
           </p>
         </Modal>
@@ -334,6 +353,7 @@ export default function App() {
 }
 
 function Workspace({ id }: { id: string }) {
+  useLanguage();
   const [detail, setDetail] = useState<CaseDetail | null>(null),
     [runs, setRuns] = useState<Run[]>([]);
   const [runId, setRunId] = useState(
@@ -353,7 +373,9 @@ function Workspace({ id }: { id: string }) {
   const [uploadOpen, setUploadOpen] = useState(false),
     [askOpen, setAskOpen] = useState(false);
   const [question, setQuestion] = useState(
-    "Welche Station hat sich zwischen Ausgangs- und Störungszeitraum am stärksten verändert? Nutze die hochgeladenen Belege, zitiere Quellen und trenne Beobachtungen von Hypothesen.",
+    t(
+      "Welche Station hat sich zwischen Ausgangs- und Störungszeitraum am stärksten verändert? Nutze die hochgeladenen Belege, zitiere Quellen und trenne Beobachtungen von Hypothesen.",
+    ),
   );
   const [useMcp, setUseMcp] = useState(false),
     [seconds, setSeconds] = useState(120);
@@ -430,7 +452,7 @@ function Workspace({ id }: { id: string }) {
         setReport(r);
         setDraftBody(r.answer);
         setDraftTitle(
-          `${detail?.title || "Untersuchung"} — Bericht`.slice(0, 120),
+          tr`${detail?.title || t("Untersuchung")} — Bericht`.slice(0, 120),
         );
       })
       .catch((e) => {
@@ -515,8 +537,8 @@ function Workspace({ id }: { id: string }) {
       setRevision((x) => x + 1);
       setMessage(
         decision === "approve"
-          ? "Berichtsentwurf freigegeben und gespeichert."
-          : "Vorschlag abgelehnt. Kein Entwurf gespeichert.",
+          ? t("Berichtsentwurf freigegeben und gespeichert.")
+          : t("Vorschlag abgelehnt. Kein Entwurf gespeichert."),
       );
     });
   }
@@ -533,7 +555,7 @@ function Workspace({ id }: { id: string }) {
   if (!detail)
     return (
       <main className="content">
-        <p className="muted">{error || "Fall wird geladen…"}</p>
+        <p className="muted">{error || t("Fall wird geladen…")}</p>
       </main>
     );
   return (
@@ -545,7 +567,7 @@ function Workspace({ id }: { id: string }) {
             {id.slice(0, 8).toUpperCase()}
           </div>
           <h1>{detail.title}</h1>
-          <p>Daten zusammenführen. Belege nachvollziehen.</p>
+          <p>{t("Daten zusammenführen. Belege nachvollziehen.")}</p>
         </div>
         <button
           className="primary"
@@ -553,13 +575,13 @@ function Workspace({ id }: { id: string }) {
           disabled={!sources.length || !!busy}
         >
           <Plus size={17} />
-          Neue Untersuchung
+          {t("Neue Untersuchung")}
         </button>
       </div>
       {error && (
         <div className="banner error" role="alert">
-          {error}
-          <button onClick={() => setError("")}>Schließen</button>
+          {t(error)}
+          <button onClick={() => setError("")}>{t("Schließen")}</button>
         </div>
       )}
       {message && (
@@ -571,8 +593,8 @@ function Workspace({ id }: { id: string }) {
       <div className="case-meta">
         <span>
           <FolderClosed size={14} />
-          Erstellt{" "}
-          {new Date(detail.created_at).toLocaleDateString("de-DE", {
+          {t("Erstellt")}{" "}
+          {new Date(detail.created_at).toLocaleDateString(getLocale(), {
             month: "short",
             day: "numeric",
             year: "numeric",
@@ -580,19 +602,19 @@ function Workspace({ id }: { id: string }) {
         </span>
         <span>
           <ShieldCheck size={14} />
-          Untersuchung mit rein lesendem Zugriff
+          {t("Untersuchung mit rein lesendem Zugriff")}
         </span>
         <span>
           <BookOpen size={14} />
-          {sources.length} Belegquellen
+          {sources.length} {t("Belegquellen")}
         </span>
       </div>
       <div className="tabs-and-run">
-        <div className="tabs" role="tablist" aria-label="Fallansichten">
+        <div className="tabs" role="tablist" aria-label={t("Fallansichten")}>
           {[
-            ["overview", LayoutDashboard, "Übersicht"],
-            ["activity", Activity, "Aktivitäten"],
-            ["report", FileText, "Bericht"],
+            ["overview", LayoutDashboard, t("Übersicht")],
+            ["activity", Activity, t("Aktivitäten")],
+            ["report", FileText, t("Bericht")],
           ].map(([value, Icon, label]) => {
             const TabIcon = Icon as typeof Activity;
             return (
@@ -610,13 +632,13 @@ function Workspace({ id }: { id: string }) {
           })}
         </div>
         <div className="run-select">
-          <label htmlFor="run-select">Untersuchung</label>
+          <label htmlFor="run-select">{t("Untersuchung")}</label>
           <select
             id="run-select"
             value={runId}
             onChange={(e) => setRunId(e.target.value)}
           >
-            <option value="">Untersuchung auswählen</option>
+            <option value="">{t("Untersuchung auswählen")}</option>
             {runs.map((r) => (
               <option value={r.id} key={r.id}>
                 {time(r.created_at)} · {r.question.slice(0, 40)}
@@ -646,8 +668,8 @@ function Workspace({ id }: { id: string }) {
                 }
               >
                 <Play size={14} />
-                Fortsetzen
-                {tokenContinuation(run) ? " mit zusätzlicher Kapazität" : ""}
+                {t("Fortsetzen")}
+                {tokenContinuation(run) ? t(" mit zusätzlicher Kapazität") : ""}
               </button>
             )}
             {active && (
@@ -658,13 +680,13 @@ function Workspace({ id }: { id: string }) {
                   disabled={!!busy}
                 >
                   <Pause size={14} />
-                  Pausieren
+                  {t("Pausieren")}
                 </button>
                 <button
                   className="icon-button"
                   onClick={() => control("cancel")}
                   disabled={!!busy}
-                  aria-label="Untersuchung abbrechen"
+                  aria-label={t("Untersuchung abbrechen")}
                 >
                   <Square size={14} />
                 </button>
@@ -678,14 +700,14 @@ function Workspace({ id }: { id: string }) {
                   disabled={!!busy}
                 >
                   <Play size={14} />
-                  Fortsetzen
+                  {t("Fortsetzen")}
                 </button>
                 <button
                   className="secondary compact"
                   onClick={() => control("cancel")}
                   disabled={!!busy}
                 >
-                  Abbrechen
+                  {t("Abbrechen")}
                 </button>
               </>
             )}
@@ -702,7 +724,7 @@ function Workspace({ id }: { id: string }) {
           <div className="stat-grid">
             <div className="stat">
               <span>
-                Belegquellen
+                {t("Belegquellen")}
                 <FileText size={16} />
               </span>
               <strong>{sources.length.toString().padStart(2, "0")}</strong>
@@ -713,17 +735,17 @@ function Workspace({ id }: { id: string }) {
             </div>
             <div className="stat">
               <span>
-                Verglichene Stationen
+                {t("Verglichene Stationen")}
                 <Table2 size={16} />
               </span>
               <strong>
                 {comparison?.ranking.length.toString().padStart(2, "0") || "—"}
               </strong>
-              <small>Ausgangs- und Störungszeitraum</small>
+              <small>{t("Ausgangs- und Störungszeitraum")}</small>
             </div>
             <div className="stat">
               <span>
-                Größte Stationsabweichung
+                {t("Größte Stationsabweichung")}
                 <Activity size={16} />
               </span>
               <strong>
@@ -734,8 +756,8 @@ function Workspace({ id }: { id: string }) {
               </strong>
               <small>
                 {top
-                  ? `${top.station_id} · beschreibender Befund`
-                  : "CSV zum Vergleichen hochladen"}
+                  ? tr`${top.station_id} · beschreibender Befund`
+                  : t("CSV zum Vergleichen hochladen")}
               </small>
             </div>
           </div>
@@ -744,16 +766,18 @@ function Workspace({ id }: { id: string }) {
               <section className="panel">
                 <div className="panel-heading">
                   <div>
-                    <h2>Stationsleistung</h2>
-                    <p>Fehlausschussquoten der Prüfstationen vergleichen.</p>
+                    <h2>{t("Stationsleistung")}</h2>
+                    <p>
+                      {t("Fehlausschussquoten der Prüfstationen vergleichen.")}
+                    </p>
                   </div>
-                  <span className="subtle-tag">CSV-ANALYSE</span>
+                  <span className="subtle-tag">{t("CSV-ANALYSE")}</span>
                 </div>
                 {csvSources.length > 0 && (
                   <label className="source-select">
-                    Quelle
+                    {t("Quelle")}
                     <select
-                      aria-label="CSV-Quelle des Diagramms"
+                      aria-label={t("CSV-Quelle des Diagramms")}
                       value={sourceId}
                       onChange={(e) => setSourceId(e.target.value)}
                     >
@@ -768,25 +792,30 @@ function Workspace({ id }: { id: string }) {
                 {comparison ? (
                   <StationChart data={comparison} onCitation={viewCitation} />
                 ) : (
-                  <Empty title={chartError || "Noch keine Stationsdaten"}>
-                    Prüf-CSV hochladen, um Quoten für Ausgangs- und
-                    Störungszeitraum zu berechnen.
+                  <Empty title={chartError || t("Noch keine Stationsdaten")}>
+                    {t(
+                      "Prüf-CSV hochladen, um Quoten für Ausgangs- und Störungszeitraum zu berechnen.",
+                    )}
                   </Empty>
                 )}
               </section>
               <section className="panel">
                 <div className="panel-heading">
                   <div>
-                    <h2>Dokumente durchsuchen</h2>
-                    <p>Auszüge mit nachvollziehbaren Seitenangaben finden.</p>
+                    <h2>{t("Dokumente durchsuchen")}</h2>
+                    <p>
+                      {t("Auszüge mit nachvollziehbaren Seitenangaben finden.")}
+                    </p>
                   </div>
                   <BookOpen size={19} />
                 </div>
                 <form className="search-form" onSubmit={search}>
                   <Search size={17} />
                   <input
-                    aria-label="Dokumentsuche"
-                    placeholder="Belege durchsuchen, z. B. Beleuchtung Belichtung…"
+                    aria-label={t("Dokumentsuche")}
+                    placeholder={t(
+                      "Belege durchsuchen, z. B. Beleuchtung Belichtung…",
+                    )}
                     value={query}
                     maxLength={500}
                     onChange={(e) => setQuery(e.target.value)}
@@ -796,13 +825,14 @@ function Workspace({ id }: { id: string }) {
                     className="secondary compact"
                     disabled={!!busy || !query.trim()}
                   >
-                    Suchen
+                    {t("Suchen")}
                   </button>
                 </form>
                 {hits === null ? (
                   <p className="hint">
-                    Durchsucht die PDFs dieses Falls nach Wörtern. Relevanz
-                    bedeutet keine sachliche Gewissheit.
+                    {t(
+                      "Durchsucht die PDFs dieses Falls nach Wörtern. Relevanz bedeutet keine sachliche Gewissheit.",
+                    )}
                   </p>
                 ) : hits.length ? (
                   <div className="search-hits">
@@ -814,19 +844,22 @@ function Workspace({ id }: { id: string }) {
                       >
                         <span>
                           {h.filename}
-                          <b>Seite {(h.pages || [h.page]).join(", ")}</b>
+                          <b>
+                            {t("Seite")} {(h.pages || [h.page]).join(", ")}
+                          </b>
                         </span>
                         <p>{h.text}</p>
                         <small>
-                          Quellenangabe prüfen <ArrowRight size={13} />
+                          {t("Quellenangabe prüfen")} <ArrowRight size={13} />
                         </small>
                       </button>
                     ))}
                   </div>
                 ) : (
                   <p className="hint">
-                    Keine passenden Auszüge. Ein leeres Ergebnis beweist nicht,
-                    dass etwas nicht vorhanden ist.
+                    {t(
+                      "Keine passenden Auszüge. Ein leeres Ergebnis beweist nicht, dass etwas nicht vorhanden ist.",
+                    )}
                   </p>
                 )}
               </section>
@@ -834,7 +867,7 @@ function Workspace({ id }: { id: string }) {
             <aside className="right-column">
               <section className="panel evidence-panel">
                 <div className="panel-heading">
-                  <h2>Belegbibliothek</h2>
+                  <h2>{t("Belegbibliothek")}</h2>
                   <span className="count">{sources.length}</span>
                 </div>
                 <div className="source-list">
@@ -842,9 +875,10 @@ function Workspace({ id }: { id: string }) {
                     <SourceRow key={s.id} source={s} caseId={id} />
                   ))}
                   {!sources.length && (
-                    <Empty title="Erste Quelle hinzufügen">
-                      Prüfdaten und unterstützende Dokumente zum Fall
-                      hinzufügen.
+                    <Empty title={t("Erste Quelle hinzufügen")}>
+                      {t(
+                        "Prüfdaten und unterstützende Dokumente zum Fall hinzufügen.",
+                      )}
                     </Empty>
                   )}
                 </div>
@@ -853,35 +887,39 @@ function Workspace({ id }: { id: string }) {
                   onClick={() => setUploadOpen(true)}
                 >
                   <Upload size={16} />
-                  Belege hochladen
+                  {t("Belege hochladen")}
                 </button>
                 <p className="hint">
-                  PDF bis 10 MiB · CSV bis 2 MiB
+                  {t("PDF bis 10 MiB · CSV bis 2 MiB")}
                   <br />
-                  Nur synthetische oder lizenzierte öffentliche Daten.
+                  {t("Nur synthetische oder lizenzierte öffentliche Daten.")}
                 </p>
               </section>
               <section className="insight-card">
                 <span className="eyebrow">
                   <ShieldCheck size={14} />
-                  BELEGE VOR SCHLUSSFOLGERUNGEN
+                  {t("BELEGE VOR SCHLUSSFOLGERUNGEN")}
                 </span>
-                <h3>Ein Befund ist ein Ausgangspunkt.</h3>
+                <h3>{t("Ein Befund ist ein Ausgangspunkt.")}</h3>
                 <p>
-                  Gleichzeitige Änderungen können eine Hypothese nahelegen. Sie
-                  beweisen keine Ursache. Prüfe Originalquellen und lege die
-                  nächste Prüfung fest.
+                  {t(
+                    "Gleichzeitige Änderungen können eine Hypothese nahelegen. Sie beweisen keine Ursache. Prüfe Originalquellen und lege die nächste Prüfung fest.",
+                  )}
                 </p>
               </section>
               <div className="mock-note">
                 <Wrench size={16} />
                 <div>
-                  <strong>MCP-Testumgebung</strong>
+                  <strong>{t("MCP-Testumgebung")}</strong>
                   <p>
                     {run?.use_mock_mcp
-                      ? "Simulation für die ausgewählte Untersuchung aktiviert."
-                      : "Optionale lokale Simulation. Beim Start einer Untersuchung aktivieren."}{" "}
-                    Keine realen Anlagen verbunden.
+                      ? t(
+                          "Simulation für die ausgewählte Untersuchung aktiviert.",
+                        )
+                      : t(
+                          "Optionale lokale Simulation. Beim Start einer Untersuchung aktivieren.",
+                        )}{" "}
+                    {t("Keine realen Anlagen verbunden.")}
                   </p>
                 </div>
               </div>
@@ -897,13 +935,13 @@ function Workspace({ id }: { id: string }) {
                 <b>
                   {run.model_calls}/{run.limits.max_model_calls}
                 </b>{" "}
-                Modellaufrufe
+                {t("Modellaufrufe")}
               </span>
               <span>
                 <b>
                   {run.tool_calls}/{run.limits.max_tool_calls}
                 </b>{" "}
-                Werkzeugaufrufe
+                {t("Werkzeugaufrufe")}
               </span>
               <span>
                 <b>
@@ -915,7 +953,7 @@ function Workspace({ id }: { id: string }) {
                 <b>
                   {elapsed.toFixed(1)}/{run.limits.timeout_seconds}s
                 </b>{" "}
-                aktive Zeit
+                {t("aktive Zeit")}
               </span>
               <span>
                 <b>
@@ -926,16 +964,20 @@ function Workspace({ id }: { id: string }) {
             </div>
             {streamError && (
               <p className="notice">
-                Ereignisverbindung: {streamError}. Bei aktiver Untersuchung wird
-                automatisch neu verbunden.
+                {t("Ereignisverbindung:")} {streamError}
+                {t(
+                  ". Bei aktiver Untersuchung wird automatisch neu verbunden.",
+                )}
               </p>
             )}
             <div className="activity-grid">
               <section className="panel">
                 <div className="panel-heading">
                   <div>
-                    <h2>Untersuchungsverlauf</h2>
-                    <p>Gespeicherte Ereignisse · {events.length} recorded</p>
+                    <h2>{t("Untersuchungsverlauf")}</h2>
+                    <p>
+                      {t("Gespeicherte Ereignisse ·")} {events.length} recorded
+                    </p>
                   </div>
                   {active && <LoaderCircle className="spin" size={17} />}
                 </div>
@@ -948,9 +990,11 @@ function Workspace({ id }: { id: string }) {
               <section className="panel tool-detail">
                 <div className="panel-heading">
                   <div>
-                    <h2>Ereignisdetails</h2>
+                    <h2>{t("Ereignisdetails")}</h2>
                     <p>
-                      Werkzeugargumente und zurückgegebene Beobachtungen prüfen.
+                      {t(
+                        "Werkzeugargumente und zurückgegebene Beobachtungen prüfen.",
+                      )}
                     </p>
                   </div>
                   <Wrench size={18} />
@@ -961,11 +1005,12 @@ function Workspace({ id }: { id: string }) {
                       {selectedEvent.type.replaceAll("_", " ")}
                     </span>
                     <p className="muted small">
-                      {time(selectedEvent.at)} · Ereignis {selectedEvent.id}
+                      {time(selectedEvent.at)} {t("· Ereignis")}{" "}
+                      {selectedEvent.id}
                     </p>
                     {selectedEvent.data.tool_call_id && (
                       <>
-                        <label>Werkzeugaufruf</label>
+                        <label>{t("Werkzeugaufruf")}</label>
                         <code className="break">
                           {String(selectedEvent.data.tool_call_id)}
                         </code>
@@ -973,7 +1018,7 @@ function Workspace({ id }: { id: string }) {
                     )}
                     {selectedEvent.type === "tool_finished" && (
                       <>
-                        <label>Argumente</label>
+                        <label>{t("Argumente")}</label>
                         <Json
                           value={
                             events.find(
@@ -984,7 +1029,7 @@ function Workspace({ id }: { id: string }) {
                             )?.data.arguments || {}
                           }
                         />
-                        <label>Beobachtung</label>
+                        <label>{t("Beobachtung")}</label>
                       </>
                     )}
                     <Json
@@ -994,16 +1039,20 @@ function Workspace({ id }: { id: string }) {
                     />
                   </>
                 ) : (
-                  <Empty title="Ereignis auswählen">
-                    Werkzeugaufruf öffnen, um Eingaben und Belege zu prüfen.
+                  <Empty title={t("Ereignis auswählen")}>
+                    {t(
+                      "Werkzeugaufruf öffnen, um Eingaben und Belege zu prüfen.",
+                    )}
                   </Empty>
                 )}
               </section>
             </div>
           </>
         ) : (
-          <Empty title="Keine Untersuchung ausgewählt">
-            Starte eine Untersuchung, um die Aktivitäten des Agenten zu sehen.
+          <Empty title={t("Keine Untersuchung ausgewählt")}>
+            {t(
+              "Starte eine Untersuchung, um die Aktivitäten des Agenten zu sehen.",
+            )}
           </Empty>
         ))}
       {tab === "report" && (
@@ -1011,8 +1060,10 @@ function Workspace({ id }: { id: string }) {
           <section className="panel report-panel">
             <div className="panel-heading">
               <div>
-                <h2>Untersuchungsbericht</h2>
-                <p>Modellbefunde · anhand der zitierten Belege prüfen.</p>
+                <h2>{t("Untersuchungsbericht")}</h2>
+                <p>
+                  {t("Modellbefunde · anhand der zitierten Belege prüfen.")}
+                </p>
               </div>
               {report && (
                 <button
@@ -1030,7 +1081,7 @@ function Workspace({ id }: { id: string }) {
                   }
                 >
                   <ArrowDownToLine size={15} />
-                  JSON exportieren
+                  {t("JSON exportieren")}
                 </button>
               )}
             </div>
@@ -1038,21 +1089,23 @@ function Workspace({ id }: { id: string }) {
               <>
                 <div className="report-answer">{report.answer}</div>
                 <p className="notice">
-                  Korrelation belegt keine Ursache. Quellenprüfungen bestätigen
-                  Fundstellen, nicht die Richtigkeit einer Aussage.
+                  {t(
+                    "Korrelation belegt keine Ursache. Quellenprüfungen bestätigen Fundstellen, nicht die Richtigkeit einer Aussage.",
+                  )}
                 </p>
-                <h3>Quellenangaben</h3>
+                <h3>{t("Quellenangaben")}</h3>
                 {!report.citation_checks.has_answer_citations && (
                   <p className="notice">
-                    Die Antwort enthält keine erkannten Quellenangaben dieses
-                    Falls.
+                    {t(
+                      "Die Antwort enthält keine erkannten Quellenangaben dieses Falls.",
+                    )}
                   </p>
                 )}
                 {(report.citation_checks.unresolved.length > 0 ||
                   report.citation_checks.malformed.length > 0 ||
                   report.citation_checks.not_returned_by_tools.length > 0) && (
                   <details open className="notice">
-                    <summary>Quellenangaben prüfen</summary>
+                    <summary>{t("Quellenangaben prüfen")}</summary>
                     <Json value={report.citation_checks} />
                   </details>
                 )}
@@ -1067,12 +1120,12 @@ function Workspace({ id }: { id: string }) {
                         {c.filename}
                         <small>
                           {c.citation_id.startsWith("pdf:")
-                            ? `Seite ${(c.pages || [c.page]).join(", ")}`
-                            : `Zeile ${c.row?.row_id} · Zeile ${c.row?.csv_line}`}{" "}
+                            ? tr`Seite ${(c.pages || [c.page]).join(", ")}`
+                            : tr`Zeile ${c.row?.row_id} · Zeile ${c.row?.csv_line}`}{" "}
                           ·{" "}
                           {c.cited_in_answer
-                            ? "In der Antwort zitiert"
-                            : "Vom Werkzeug zurückgegeben"}
+                            ? t("In der Antwort zitiert")
+                            : t("Vom Werkzeug zurückgegeben")}
                         </small>
                       </span>
                       <ChevronRight size={15} />
@@ -1080,7 +1133,7 @@ function Workspace({ id }: { id: string }) {
                   ))}
                 </div>
                 <details className="method">
-                  <summary>Unsicherheit und Einschränkungen</summary>
+                  <summary>{t("Unsicherheit und Einschränkungen")}</summary>
                   <ul>
                     {report.uncertainty.limitations.map((x) => (
                       <li key={x}>{x}</li>
@@ -1090,32 +1143,38 @@ function Workspace({ id }: { id: string }) {
               </>
             ) : (
               <Empty
-                title={active ? "Untersuchung läuft" : "Noch keine Befunde"}
+                title={
+                  active ? t("Untersuchung läuft") : t("Noch keine Befunde")
+                }
               >
                 {active
-                  ? "Prüfe den Fortschritt unter Aktivitäten. Befunde erscheinen hier, sobald die Untersuchung endet."
-                  : "Schließe eine Untersuchung ab, um ihre Befunde zu prüfen und zu exportieren."}
+                  ? t(
+                      "Prüfe den Fortschritt unter Aktivitäten. Befunde erscheinen hier, sobald die Untersuchung endet.",
+                    )
+                  : t(
+                      "Schließe eine Untersuchung ab, um ihre Befunde zu prüfen und zu exportieren.",
+                    )}
               </Empty>
             )}
           </section>
           <section className="panel draft-panel">
             <div className="panel-heading">
               <div>
-                <h2>Berichtsentwurf</h2>
-                <p>Prüfen, bearbeiten und Speichern freigeben.</p>
+                <h2>{t("Berichtsentwurf")}</h2>
+                <p>{t("Prüfen, bearbeiten und Speichern freigeben.")}</p>
               </div>
               <FilePlus2 size={19} />
             </div>
             {run?.status === "completed" && report?.answer ? (
               <>
-                <label htmlFor="draft-title">Titel</label>
+                <label htmlFor="draft-title">{t("Titel")}</label>
                 <input
                   id="draft-title"
                   maxLength={120}
                   value={draftTitle}
                   onChange={(e) => setDraftTitle(e.target.value)}
                 />
-                <label htmlFor="draft-body">Entwurfstext</label>
+                <label htmlFor="draft-body">{t("Entwurfstext")}</label>
                 <textarea
                   id="draft-body"
                   rows={16}
@@ -1124,9 +1183,9 @@ function Workspace({ id }: { id: string }) {
                   onChange={(e) => setDraftBody(e.target.value)}
                 />
                 <p className="hint">
-                  Änderungen bleiben bis zur Prüfanforderung in diesem Browser.
-                  Eine separate Freigabe speichert exakt den Inhalt der
-                  Vorschau.
+                  {t(
+                    "Änderungen bleiben bis zur Prüfanforderung in diesem Browser. Eine separate Freigabe speichert exakt den Inhalt der Vorschau.",
+                  )}
                 </p>
                 <button
                   className="primary full"
@@ -1134,18 +1193,19 @@ function Workspace({ id }: { id: string }) {
                   disabled={!!busy || !draftBody.trim() || !draftTitle.trim()}
                 >
                   <ShieldCheck size={16} />
-                  Entwurf zur Freigabe prüfen
+                  {t("Entwurf zur Freigabe prüfen")}
                 </button>
               </>
             ) : (
               <p className="muted">
-                Für einen Entwurf ist eine abgeschlossene Untersuchung
-                erforderlich.
+                {t(
+                  "Für einen Entwurf ist eine abgeschlossene Untersuchung erforderlich.",
+                )}
               </p>
             )}
             {proposals.filter((p) => p.status === "pending").length > 0 && (
               <div className="saved-drafts">
-                <h3>Ausstehende Freigaben</h3>
+                <h3>{t("Ausstehende Freigaben")}</h3>
                 {proposals
                   .filter((p) => p.status === "pending")
                   .map((p) => (
@@ -1157,7 +1217,7 @@ function Workspace({ id }: { id: string }) {
                       <ShieldCheck size={15} />
                       <span>
                         {p.title}
-                        <small>Wartet auf deine Prüfung</small>
+                        <small>{t("Wartet auf deine Prüfung")}</small>
                       </span>
                       <ChevronRight size={15} />
                     </button>
@@ -1166,7 +1226,7 @@ function Workspace({ id }: { id: string }) {
             )}
             {drafts.length > 0 && (
               <div className="saved-drafts">
-                <h3>Freigegebene Entwürfe</h3>
+                <h3>{t("Freigegebene Entwürfe")}</h3>
                 {drafts.map((d) => (
                   <button
                     className="saved-draft"
@@ -1174,7 +1234,7 @@ function Workspace({ id }: { id: string }) {
                     onClick={() =>
                       download(
                         `eil-draft-${d.id.slice(0, 8)}.md`,
-                        `# ${d.title}\n\n${d.body}
+                        tr`# ${d.title}\n\n${d.body}
 
 ---
 Untersuchung: ${d.run_id}
@@ -1191,7 +1251,7 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
                     <Check size={15} />
                     <span>
                       {d.title}
-                      <small>Freigegeben · Markdown herunterladen</small>
+                      <small>{t("Freigegeben · Markdown herunterladen")}</small>
                     </span>
                     <ArrowDownToLine size={15} />
                   </button>
@@ -1206,7 +1266,9 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
           <Beaker size={13} /> Engineering Intelligence Lab
         </span>
         <span>
-          Lokale Forschung · Synthetische Belege · Menschliche Beurteilung
+          {t(
+            "Lokale Forschung · Synthetische Belege · Menschliche Beurteilung",
+          )}
         </span>
       </footer>
       {uploadOpen && (
@@ -1217,15 +1279,18 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
             setUploadOpen(false);
             setRevision((x) => x + 1);
             setMessage(
-              "Belege hochgeladen und für neue Untersuchungen verfügbar.",
+              t("Belege hochgeladen und für neue Untersuchungen verfügbar."),
             );
           }}
         />
       )}
       {askOpen && (
-        <Modal title="Untersuchung starten" onClose={() => setAskOpen(false)}>
+        <Modal
+          title={t("Untersuchung starten")}
+          onClose={() => setAskOpen(false)}
+        >
           <form onSubmit={start}>
-            <label htmlFor="question">Untersuchungsfrage</label>
+            <label htmlFor="question">{t("Untersuchungsfrage")}</label>
             <textarea
               autoFocus
               id="question"
@@ -1236,10 +1301,12 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
               onChange={(e) => setQuestion(e.target.value)}
             />
             <p className="hint">
-              Diese Untersuchung nutzt einen festen Stand der {sources.length}{" "}
-              aktuellen Belegquelle(n).
+              {t("Diese Untersuchung nutzt einen festen Stand der")}{" "}
+              {sources.length} {t("aktuellen Belegquelle(n).")}
             </p>
-            <label htmlFor="timeout">Aktives Zeitbudget (Sekunden)</label>
+            <label htmlFor="timeout">
+              {t("Aktives Zeitbudget (Sekunden)")}
+            </label>
             <input
               id="timeout"
               type="number"
@@ -1250,11 +1317,12 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
               onChange={(e) => setSeconds(Number(e.target.value))}
             />
             <p className="hint">
-              8 Modellaufrufe · 16 Werkzeugaufrufe · 32.768 Token · 35 Schritte.
-              Budgets bleiben beim Pausieren und Fortsetzen erhalten.
+              {t(
+                "8 Modellaufrufe · 16 Werkzeugaufrufe · 32.768 Token · 35 Schritte. Budgets bleiben beim Pausieren und Fortsetzen erhalten.",
+              )}
             </p>
             <label htmlFor="output-tokens">
-              Maximale Ausgabetoken pro Modellaufruf
+              {t("Maximale Ausgabetoken pro Modellaufruf")}
             </label>
             <select
               id="output-tokens"
@@ -1263,7 +1331,7 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
             >
               <option value={1024}>1,024 (default)</option>
               <option value={2048}>
-                2.048 (längere Überlegungen / Antworten)
+                {t("2.048 (längere Überlegungen / Antworten)")}
               </option>
             </select>
             <label className="checkbox-label">
@@ -1273,17 +1341,17 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
                 onChange={(e) => setUseMcp(e.target.checked)}
               />
               <span>
-                Rein lesenden MCP-Simulationskontext erlauben
+                {t("Rein lesenden MCP-Simulationskontext erlauben")}
                 <small>
-                  Fester lokaler synthetischer Wartungsserver. Keine Falldateien
-                  werden übertragen. Diese Untersuchung kann fiktive
-                  Stationsnotizen lesen.
+                  {t(
+                    "Fester lokaler synthetischer Wartungsserver. Keine Falldateien werden übertragen. Diese Untersuchung kann fiktive Stationsnotizen lesen.",
+                  )}
                 </small>
               </span>
             </label>
             {error && (
               <p className="error-text" role="alert">
-                {error}
+                {t(error)}
               </p>
             )}
             <div className="modal-actions">
@@ -1292,45 +1360,53 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
                 type="button"
                 onClick={() => setAskOpen(false)}
               >
-                Abbrechen
+                {t("Abbrechen")}
               </button>
               <button className="primary" disabled={!!busy || !question.trim()}>
                 <Play size={15} />
-                {busy === "start" ? "Wird gestartet…" : "Untersuchung starten"}
+                {busy === "start"
+                  ? t("Wird gestartet…")
+                  : t("Untersuchung starten")}
               </button>
             </div>
           </form>
         </Modal>
       )}
       {citation && (
-        <Modal title="Belegreferenz" onClose={() => setCitation(null)} wide>
+        <Modal
+          title={t("Belegreferenz")}
+          onClose={() => setCitation(null)}
+          wide
+        >
           <CitationView citation={citation} />
         </Modal>
       )}
       {proposal && (
         <Modal
-          title="Berichtsentwurf freigeben"
+          title={t("Berichtsentwurf freigeben")}
           onClose={() => setProposal(null)}
           wide
         >
           <div className="approval-notice">
             <ShieldCheck size={20} />
             <div>
-              <strong>Diese Aktion speichert einen Berichtsentwurf.</strong>
+              <strong>
+                {t("Diese Aktion speichert einen Berichtsentwurf.")}
+              </strong>
               <p>
-                Prüfe den vollständigen Inhalt unten. Die Freigabe speichert
-                exakt diese Version im Fall. Sie bestätigt nicht die Richtigkeit
-                der Aussagen.
+                {t(
+                  "Prüfe den vollständigen Inhalt unten. Die Freigabe speichert exakt diese Version im Fall. Sie bestätigt nicht die Richtigkeit der Aussagen.",
+                )}
               </p>
             </div>
           </div>
           <h3>{proposal.title}</h3>
           <div className="approval-preview">{proposal.body}</div>
-          <label>SHA-256 des Inhalts</label>
+          <label>{t("SHA-256 des Inhalts")}</label>
           <code className="break">{proposal.sha256}</code>
           {error && (
             <p className="error-text" role="alert">
-              {error}
+              {t(error)}
             </p>
           )}
           <div className="modal-actions">
@@ -1339,7 +1415,7 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
               onClick={() => void decide("reject")}
               disabled={!!busy}
             >
-              Vorschlag ablehnen
+              {t("Vorschlag ablehnen")}
             </button>
             <button
               className="primary"
@@ -1348,8 +1424,8 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
             >
               <Check size={16} />
               {busy === "decision"
-                ? "Wird gespeichert…"
-                : "Entwurf freigeben und speichern"}
+                ? t("Wird gespeichert…")
+                : t("Entwurf freigeben und speichern")}
             </button>
           </div>
         </Modal>
@@ -1359,6 +1435,7 @@ Experimentelle Befunde; Belege prüfen. Korrelation belegt keine Ursache.
 }
 
 function SourceRow({ source, caseId }: { source: Source; caseId: string }) {
+  useLanguage();
   const Icon = source.kind === "csv" ? Table2 : FileText;
   return (
     <details className="source-row">
@@ -1371,8 +1448,8 @@ function SourceRow({ source, caseId }: { source: Source; caseId: string }) {
           <small>
             {source.kind.toUpperCase()} ·{" "}
             {source.row_count
-              ? `${fmt(source.row_count)} Zeilen`
-              : `${source.page_count} Seiten`}
+              ? tr`${fmt(source.row_count)} Zeilen`
+              : tr`${source.page_count} Seiten`}
           </small>
         </span>
         <ChevronDown size={14} />
@@ -1385,7 +1462,7 @@ function SourceRow({ source, caseId }: { source: Source; caseId: string }) {
         <code className="break">{source.sha256}</code>
         <a href={`/api/cases/${caseId}/sources/${source.id}/file`} download>
           <ArrowDownToLine size={13} />
-          Original herunterladen
+          {t("Original herunterladen")}
         </a>
       </div>
     </details>
@@ -1400,6 +1477,7 @@ function UploadModal({
   onClose: () => void;
   onDone: () => void;
 }) {
+  useLanguage();
   const [file, setFile] = useState<File | null>(null),
     [policy, setPolicy] = useState("synthetic"),
     [confirmed, setConfirmed] = useState(false);
@@ -1409,12 +1487,12 @@ function UploadModal({
     e.preventDefault();
     if (!file) return;
     if (!/\.(pdf|csv)$/i.test(file.name)) {
-      setError("PDF- oder CSV-Datei auswählen.");
+      setError(t("PDF- oder CSV-Datei auswählen."));
       return;
     }
     const max = /\.pdf$/i.test(file.name) ? 10 : 2;
     if (file.size > max * 1024 * 1024) {
-      setError(`Diese Datei überschreitet die Grenze von ${max} MiB.`);
+      setError(tr`Diese Datei überschreitet die Grenze von ${max} MiB.`);
       return;
     }
     setBusy(true);
@@ -1432,16 +1510,17 @@ function UploadModal({
     }
   }
   return (
-    <Modal title="Belege hochladen" onClose={onClose}>
+    <Modal title={t("Belege hochladen")} onClose={onClose}>
       <form onSubmit={upload}>
         <p className="muted">
-          Quellen sind unveränderlich und auf diesen Fall beschränkt. Neue
-          Uploads stehen neuen Untersuchungen zur Verfügung.
+          {t(
+            "Quellen sind unveränderlich und auf diesen Fall beschränkt. Neue Uploads stehen neuen Untersuchungen zur Verfügung.",
+          )}
         </p>
         <label className="file-drop" htmlFor="evidence-file">
           <Upload size={25} />
-          <strong>{file?.name || "PDF oder CSV auswählen"}</strong>
-          <span>PDF bis 10 MiB / 20 Seiten · CSV bis 2 MiB</span>
+          <strong>{file?.name || t("PDF oder CSV auswählen")}</strong>
+          <span>{t("PDF bis 10 MiB / 20 Seiten · CSV bis 2 MiB")}</span>
           <input
             id="evidence-file"
             type="file"
@@ -1450,15 +1529,17 @@ function UploadModal({
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
         </label>
-        <label htmlFor="data-policy">Datenkategorie</label>
+        <label htmlFor="data-policy">{t("Datenkategorie")}</label>
         <select
           id="data-policy"
           value={policy}
           onChange={(e) => setPolicy(e.target.value)}
         >
-          <option value="synthetic">Synthetische / generierte Demodaten</option>
+          <option value="synthetic">
+            {t("Synthetische / generierte Demodaten")}
+          </option>
           <option value="licensed-public">
-            Ausdrücklich lizenzierte öffentliche Daten
+            {t("Ausdrücklich lizenzierte öffentliche Daten")}
           </option>
         </select>
         <label className="checkbox-label">
@@ -1469,42 +1550,44 @@ function UploadModal({
             onChange={(e) => setConfirmed(e.target.checked)}
           />
           <span>
-            Ich bestätige, dass diese Datei zur gewählten Datenkategorie gehört
-            und keine internen oder sensiblen Informationen enthält.
+            {t(
+              "Ich bestätige, dass diese Datei zur gewählten Datenkategorie gehört und keine internen oder sensiblen Informationen enthält.",
+            )}
           </span>
         </label>
         <p className="hint">
-          PDF-Konvertierung erfolgt lokal ohne OCR. Gescannte PDFs enthalten
-          möglicherweise keinen extrahierbaren Text.
+          {t(
+            "PDF-Konvertierung erfolgt lokal ohne OCR. Gescannte PDFs enthalten möglicherweise keinen extrahierbaren Text.",
+          )}
         </p>
         <p className="hint">
           <a href="/api/examples/inspection.csv" download>
-            Beispiel-CSV
+            {t("Beispiel-CSV")}
           </a>{" "}
           ·{" "}
           <a href="/api/examples/maintenance.pdf" download>
-            Beispiel-PDF
+            {t("Beispiel-PDF")}
           </a>
         </p>
         {error && (
           <p className="error-text" role="alert">
-            {error}
+            {t(error)}
           </p>
         )}
         <div className="modal-actions">
           <button type="button" className="secondary" onClick={onClose}>
-            Abbrechen
+            {t("Abbrechen")}
           </button>
           <button className="primary" disabled={busy || !file || !confirmed}>
             {busy ? (
               <>
                 <LoaderCircle className="spin" size={16} />
-                Lokale Verarbeitung…
+                {t("Lokale Verarbeitung…")}
               </>
             ) : (
               <>
                 <Upload size={16} />
-                Belege hochladen
+                {t("Belege hochladen")}
               </>
             )}
           </button>
