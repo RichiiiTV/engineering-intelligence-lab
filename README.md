@@ -2,6 +2,12 @@
 
 A local-first **agentic engineering investigation workbench** developed with OpenAI Codex. **Independent of NodeWeft.**
 
+The normal workflow is now **one problem chat**: users describe a fault and optionally
+attach images/error logs. Administrators upload machine manuals/documentation/code;
+the local embedding/LLM backbone organizes and retrieves it automatically. See
+[the workflow, validation and limits](docs/chat-backbone.md). Existing private machine
+data is preserved; the new admin catalog is explicitly shared within the workspace.
+
 ## What is included?
 
 - Generated, versioned synthetic inspection dataset (`data/synthetic_inspection_v1.csv`)

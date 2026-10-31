@@ -1,5 +1,10 @@
 # Private machine workspaces and notebooks
 
+This describes the earlier explicit workspace workflow, now retained for admin/
+Advanced access. The normal-user entry is [automatic problem chat](chat-backbone.md):
+admins upload machine data; users only describe a problem and optionally attach
+images/logs. Existing private sources are not automatically shared.
+
 Open **My machines** from the normal workbench. Add a named machine, then upload
 its manuals, documentation or code exports. You must have permission to process
 the material. Private uploads stay scoped to your account and machine; the shared

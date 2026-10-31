@@ -112,6 +112,8 @@ def export_investigation(run_store, run_id):
             *(run.get("library_lookup") or {}).get("hits", []),
             *(run.get("machine_lookup") or {}).get("hits", []),
             *run.get("machine_source_reads", []),
+            *(run.get("catalog_lookup") or {}).get("hits", []),
+            *run.get("catalog_source_reads", []),
         ]
     }
     library_resolved, library_unknown = [], []
@@ -123,6 +125,16 @@ def export_investigation(run_store, run_id):
             (
                 MachineStore(run_store.directory).documents(run["machine_id"], run["owner_id"]),
                 run["machine_document_ids"],
+            )
+        )
+    if run.get("automatic_catalog"):
+        from .catalog import CatalogStore
+
+        catalog = CatalogStore(run_store.directory)
+        selected = (run.get("catalog_lookup") or {}).get("machine") or {}
+        scopes.extend(
+            catalog.scopes(
+                [m for m in run.get("catalog_snapshot", []) if m["id"] == selected.get("id")]
             )
         )
     for library, scope_ids in scopes:
@@ -149,8 +161,47 @@ def export_investigation(run_store, run_id):
             resolved.append(
                 {**citation, "cited_in_answer": cid in cited, "returned_by_tool": cid in supplied}
             )
+    from .problem_sources import ProblemStore
+
+    problems = ProblemStore(run_store.directory)
+    problem_cited = set(re.findall(r"\[((?:log|image):[^\]]+)\]", str(answer)))
+    problem_supplied = {h["citation_id"] for h in run.get("problem_source_reads", [])} | set(
+        run.get("problem_images_supplied", [])
+    )
+    problem_resolved = []
+    problem_unknown = []
+    for cid in sorted(problem_cited | problem_supplied):
+        try:
+            ref = problems.resolve(cid, run.get("problem_attachment_ids", []), run["owner_id"])
+            visual = run.get("problem_visual_observations", {}).get(cid)
+            if visual:
+                ref.update(
+                    text=visual["visible_text"],
+                    visual_observation=visual,
+                    visual_claims_verified=False,
+                )
+            problem_resolved.append(
+                ref
+                | {
+                    "cited_in_answer": cid in problem_cited,
+                    "returned_by_tool": cid in problem_supplied,
+                }
+            )
+        except EvidenceNotFound:
+            problem_unknown.append(cid)
     return {
         "schema": "eil-evidence-report-v1",
+        "chat_context": run.get("chat_context"),
+        "catalog_routing": {
+            k: v for k, v in (run.get("catalog_lookup") or {}).items() if k != "hits"
+        },
+        "problem_citations": problem_resolved,
+        "problem_citation_checks": {
+            "unresolved": problem_unknown,
+            "not_observed": sorted(problem_cited - problem_supplied),
+            "visual_claims_verified": False,
+        },
+        "attachment_notice": run.get("attachment_notice", ""),
         "verified_evidence": evidence_ledger(store, case_id, allowed)
         if case_id
         else {"comparisons": [], "conflicting_csv_measurements": [], "incomplete_sources": []},
@@ -187,10 +238,13 @@ def export_investigation(run_store, run_id):
             for identity in ids
             if library.machine_id
         ],
-        "machine_id": run.get("machine_id"),
+        "machine_id": run.get("machine_id")
+        or ((run.get("catalog_lookup") or {}).get("machine") or {}).get("id"),
         "notebook_context": run.get("notebook_context"),
         "machine_retrieval": {
-            k: v for k, v in (run.get("machine_lookup") or {}).items() if k != "hits"
+            k: v
+            for k, v in (run.get("machine_lookup") or run.get("catalog_lookup") or {}).items()
+            if k != "hits"
         },
         "library_citations": library_resolved,
         "library_retrieval": {

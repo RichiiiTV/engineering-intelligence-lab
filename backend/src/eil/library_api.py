@@ -130,6 +130,17 @@ def document_file(document_id: str, request: Request):
 @router.get("/api/investigations/{run_id}/library/documents/{document_id}/file")
 def run_document_file(run_id: str, document_id: str, request: Request):
     run = request.app.state.runs.store.get(run_id)
+    if run.get("automatic_catalog"):
+        from .catalog import CatalogStore
+
+        selected = ((run.get("catalog_lookup") or {}).get("machine") or {}).get("id")
+        for machine in run.get("catalog_snapshot", []):
+            if machine["id"] == selected and document_id in machine["document_ids"]:
+                return file_response(
+                    CatalogStore(request.app.state.runs.store.directory)
+                    .library(machine["id"])
+                    .document(document_id, include_inactive=True)
+                )
     if document_id in run.get("machine_document_ids", []) and run.get("machine_id"):
         from .machines import MachineStore
 

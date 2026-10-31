@@ -20,6 +20,7 @@ class UploadBodyLimit:
             (scope["path"].startswith("/api/machines/") and scope["path"].endswith("/sources"))
             or (scope["path"].startswith("/api/cases/") and scope["path"].endswith("/sources"))
             or scope["path"] == "/api/library/documents"
+            or scope["path"] in {"/api/admin/machine-knowledge/uploads", "/api/chat/questions"}
         )
         cap = MAX_PDF_BYTES + 65536 if upload else 128 * 1024
         headers = dict(scope.get("headers", []))

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, post } from "./api";
 import type { LibraryDocument } from "./KnowledgeLibrary";
+import CatalogAdmin from "./CatalogAdmin";
 
 type User = {
   id: string;
@@ -38,7 +39,7 @@ export default function AdminWorkspace({
   currentUserId: string;
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState("documents");
+  const [tab, setTab] = useState("catalog");
   return (
     <div className="user-app">
       <main className="ux-main admin-main">
@@ -48,10 +49,16 @@ export default function AdminWorkspace({
         <h1>Workspace administration</h1>
         <nav aria-label="Administration">
           <button
+            aria-pressed={tab === "catalog"}
+            onClick={() => setTab("catalog")}
+          >
+            Machine knowledge
+          </button>
+          <button
             aria-pressed={tab === "documents"}
             onClick={() => setTab("documents")}
           >
-            Documents
+            Public references
           </button>
           <button
             aria-pressed={tab === "users"}
@@ -66,7 +73,9 @@ export default function AdminWorkspace({
             Audit trail
           </button>
         </nav>
-        {tab === "documents" ? (
+        {tab === "catalog" ? (
+          <CatalogAdmin />
+        ) : tab === "documents" ? (
           <Documents />
         ) : tab === "users" ? (
           <Users currentUserId={currentUserId} />

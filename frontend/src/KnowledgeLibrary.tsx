@@ -150,7 +150,7 @@ export function LibraryReferences({
             {r.data_policy === "synthetic"
               ? "Generated demonstration material"
               : r.data_policy === "internal"
-                ? "Private internal source"
+                ? "Internal reference"
                 : "Licensed public reference"}
           </p>
           <blockquote>{r.text}</blockquote>

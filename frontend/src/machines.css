@@ -1,6 +1,24 @@
 .machine-main {
   max-width: 1160px;
 }
+.admin-main .machine-form button.ux-primary {
+  background: var(--ux-purple);
+  color: #fff;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.admin-main .machine-form button.ux-primary:hover {
+  background: #5840cc;
+}
+.admin-main h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .machine-eyebrow {
   font-size: 11px;
   letter-spacing: 0.12em;

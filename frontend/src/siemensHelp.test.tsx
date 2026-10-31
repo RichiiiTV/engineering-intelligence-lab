@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "./App";
+import App from "./SiemensHelp";
 
 afterEach(() => {
   cleanup();

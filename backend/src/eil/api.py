@@ -36,6 +36,8 @@ from .auth import (
     local_owner,
 )
 from .auth_api import router as auth_router
+from .catalog_api import router as catalog_router
+from .chat_api import router as chat_router
 from .claims import Claims, verify
 from .database import StorageFull
 from .drafts import DraftStore
@@ -570,6 +572,8 @@ def create_app(service_factory=RunService):
     app.include_router(auth_router)
     app.include_router(library_router)
     app.include_router(machine_router)
+    app.include_router(catalog_router)
+    app.include_router(chat_router)
     app.include_router(notebook_router)
 
     @app.middleware("http")

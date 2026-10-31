@@ -1,10 +1,19 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { api, post } from "./api";
 import StorageSettings from "./StorageSettings";
 import AdminWorkspace from "./AdminWorkspace";
 import "./user.css";
 
 type User = { id: string; username: string; role: string };
+const UserContext = createContext<User | null>(null);
+export const useCurrentUser = () => useContext(UserContext);
 
 export default function AuthGate({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -151,7 +160,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       </div>
     );
   return (
-    <>
+    <UserContext.Provider value={user}>
       <aside className="auth-strip">
         <span>Signed in as {user.username}</span>
         <button onClick={() => setAccount(!account)}>Account</button>
@@ -177,7 +186,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
           }}
         />
       )}
-      {account && (
+      {account && user.role === "admin" && (
         <section className="account-panel">
           <StorageSettings admin={user.role === "admin"} />
         </section>
@@ -190,7 +199,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
       ) : (
         children
       )}
-    </>
+    </UserContext.Provider>
   );
 }
 

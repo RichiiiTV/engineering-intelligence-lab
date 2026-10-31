@@ -27,6 +27,8 @@ export interface Limits {
   timeout_seconds: number;
 }
 export interface Run {
+  chat_context?: { id: string; submitted_attachment_ids?: string[] };
+  problem_attachment_ids?: string[];
   id: string;
   case_id: string | null;
   chat_mode?: boolean;
@@ -97,6 +99,22 @@ export interface Hit extends Citation {
   lexical_score: number;
 }
 export interface EvidenceReport {
+  catalog_routing?: {
+    status: string;
+    machine?: { id: string; name: string; basis: string } | null;
+    question?: string;
+  };
+  problem_citations?: {
+    id: string;
+    citation_id: string;
+    filename: string;
+    kind: string;
+    text: string;
+    line_start?: number;
+    line_end?: number;
+    sha256: string;
+  }[];
+  attachment_notice?: string;
   machine_id?: string;
   machine_snapshot?: { id: string; title: string; version: string }[];
   machine_retrieval?: {

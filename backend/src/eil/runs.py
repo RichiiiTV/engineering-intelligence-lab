@@ -58,15 +58,18 @@ def now():
 
 
 def notebook_idle(conn, run):
-    notebook = (run.get("notebook_context") or {}).get("id")
-    if (
-        notebook
-        and conn.execute(
-            "SELECT 1 FROM runs WHERE id<>? AND status IN ('queued','running') AND json_extract(document,'$.notebook_context.id')=? LIMIT 1",
-            (run["id"], notebook),
-        ).fetchone()
-    ):
-        raise RunConflict("Another answer is active in this notebook; wait before continuing")
+    for field in ["notebook_context", "chat_context"]:
+        identity = (run.get(field) or {}).get("id")
+        if (
+            identity
+            and conn.execute(
+                f"SELECT 1 FROM runs WHERE id<>? AND status IN ('queued','running') AND json_extract(document,'$.{field}.id')=? LIMIT 1",
+                (run["id"], identity),
+            ).fetchone()
+        ):
+            raise RunConflict(
+                "Another answer is active in this conversation; wait before continuing"
+            )
 
 
 class RunStore:
@@ -172,6 +175,9 @@ class RunStore:
         machine_id=None,
         machine_document_ids=None,
         notebook_context=None,
+        automatic_catalog=False,
+        chat_context=None,
+        problem_attachment_ids=None,
     ):
         if not question.strip() or len(question) > 4000:
             raise ValueError("Question must contain 1-4000 characters")
@@ -204,6 +210,27 @@ class RunStore:
         from .auth import local_owner
 
         owner_id = owner_id or local_owner(self.directory)
+        catalog_snapshot = []
+        problem_has_logs = False
+        if automatic_catalog:
+            if case_id or machine_id or not chat_mode:
+                raise ValueError("Automatic problem chat has no manually selected case or machine")
+            from .catalog import CatalogStore
+            from .knowledge import KnowledgeStore
+            from .problem_sources import ProblemStore
+
+            catalog_snapshot = CatalogStore(self.directory).snapshot()
+            public = KnowledgeStore(self.directory)
+            public.seed()
+            library_ids = public.snapshot()
+            for identity in problem_attachment_ids or []:
+                attachment = ProblemStore(self.directory).get(identity, owner_id)
+                problem_has_logs = problem_has_logs or (
+                    attachment["kind"] == "log"
+                    and identity in (chat_context or {}).get("submitted_attachment_ids", [])
+                )
+                if attachment["conversation_id"] != (chat_context or {}).get("id"):
+                    raise ValueError("Problem attachment is outside this conversation")
         machine_ids = []
         product_context = {}
         if machine_id:
@@ -239,6 +266,11 @@ class RunStore:
             machine_document_ids=machine_ids,
             product_context=product_context,
             notebook_context=notebook_context,
+            automatic_catalog=automatic_catalog,
+            catalog_snapshot=catalog_snapshot,
+            chat_context=chat_context,
+            problem_attachment_ids=problem_attachment_ids or [],
+            problem_has_logs=problem_has_logs,
             use_mock_mcp=use_mock_mcp,
             status="queued",
             created_at=now(),

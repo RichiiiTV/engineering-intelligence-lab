@@ -61,6 +61,7 @@ def verify_private_model(base_url, model_name):
             or not re.fullmatch(r"(?:sha256:)?[0-9a-f]{64}", entry.get("digest", ""))
         ):
             raise ValueError("A downloaded local GGUF model is required")
+        return entry
     except (httpx.HTTPError, ValueError, TypeError, KeyError, StopIteration) as exc:
         raise ModelUnavailableError(
             "Private machine content requires a verified downloaded local model. Cloud models/aliases are not allowed; no private prompt was sent."
@@ -118,6 +119,21 @@ def _build_model(*, model_name=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL, max_outpu
             f"Cannot validate Ollama model {model_name!r}. Start Ollama, check "
             "EIL_OLLAMA_BASE_URL, and install/select the model using ollama list/pull."
         ) from exc
+
+
+def private_vision_capable(base_url, model_name):
+    verify_private_model(base_url, model_name)
+    with httpx.Client(timeout=5, trust_env=False, follow_redirects=False) as client:
+        with client.stream(
+            "POST", base_url.rstrip("/") + "/api/show", json={"model": model_name}
+        ) as response:
+            response.raise_for_status()
+            content = bytearray()
+            for part in response.iter_bytes():
+                content.extend(part)
+                if len(content) > 2 * 1024**2:
+                    raise ModelUnavailableError("Local model metadata exceeded its limit")
+    return "vision" in json.loads(content).get("capabilities", [])
 
 
 def build_agent(

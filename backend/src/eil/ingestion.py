@@ -44,7 +44,9 @@ class JobStore:
                 )
             ]
 
-    def enqueue(self, machine_id, owner_id, filename, content, metadata, document_id=None):
+    def enqueue(
+        self, machine_id, owner_id, filename, content, metadata, document_id=None, *, catalog=False
+    ):
         MachineStore(self.directory).get(machine_id, owner_id)
         if not document_id and (
             not filename
@@ -71,6 +73,7 @@ class JobStore:
             "cancel_requested": False,
             "error": None,
             "attempt": 1,
+            "catalog": catalog,
         }
         with self.evidence.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
@@ -262,6 +265,13 @@ def process_job(directory, identity):
             ),
             cancelled=lambda: store.get(identity)["cancel_requested"],
         )
+        assignment = None
+        catalog = None
+        if job.get("catalog"):
+            from .catalog import CatalogStore
+
+            catalog = CatalogStore(directory)
+            assignment = catalog.classify(documents, document_id, store, identity)
         with documents.evidence.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
             current = json.loads(
@@ -274,7 +284,17 @@ def process_job(directory, identity):
             current.update(
                 status="completed", phase="ready", progress=100, updated_at=now(), error=None
             )
-            conn.execute("UPDATE knowledge_documents SET active=1 WHERE id=?", (document_id,))
+            if assignment is not None:
+                target, basis = catalog.publish(
+                    conn,
+                    document_id,
+                    job["owner_id"],
+                    assignment,
+                    current.get("catalog_candidates", []),
+                )
+                current.update(assigned_machine_id=target, assignment_basis=basis)
+            else:
+                conn.execute("UPDATE knowledge_documents SET active=1 WHERE id=?", (document_id,))
             conn.execute(
                 "UPDATE ingestion_jobs SET status='completed',document=?,content=X'' WHERE id=?",
                 (json.dumps(current), identity),
@@ -298,7 +318,7 @@ def process_job(directory, identity):
             identity,
             status="canceled" if current["cancel_requested"] else "failed",
             phase="stopped",
-            error=f"{type(exc).__name__}: ingestion could not complete. Check source format, parser assets and local embedding availability; no staged source was published.",
+            error=f"{type(exc).__name__}: ingestion could not complete. Check source format, parser assets and local embedding/classification model availability; no staged source was published.",
         )
 
 
@@ -372,7 +392,14 @@ class IngestionService:
             deadline = time.monotonic() + 600
             while process.is_alive() and not self.stop.wait(0.2):
                 job = self.store.get(identity)
-                if job["cancel_requested"] or time.monotonic() > deadline:
+                if (
+                    job["cancel_requested"]
+                    or time.monotonic() > deadline
+                    or (
+                        job.get("phase") == "classifying"
+                        and time.time() > job.get("classifier_deadline", float("inf"))
+                    )
+                ):
                     break
             if process.is_alive():
                 process.terminate()

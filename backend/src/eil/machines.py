@@ -37,7 +37,8 @@ class MachineStore:
             conn.execute("BEGIN IMMEDIATE")
             if (
                 conn.execute(
-                    "SELECT count(*) FROM machines WHERE owner_id=?", (owner_id,)
+                    "SELECT count(*) FROM machines WHERE owner_id=? AND json_extract(metadata,'$.kind') IS NULL",
+                    (owner_id,),
                 ).fetchone()[0]
                 >= 50
             ):
@@ -62,7 +63,7 @@ class MachineStore:
             return [
                 json.loads(r[0])
                 for r in conn.execute(
-                    "SELECT metadata FROM machines WHERE owner_id=? ORDER BY json_extract(metadata,'$.name'),id",
+                    "SELECT metadata FROM machines WHERE owner_id=? AND json_extract(metadata,'$.kind') IS NULL ORDER BY json_extract(metadata,'$.name'),id",
                     (owner_id,),
                 )
             ]

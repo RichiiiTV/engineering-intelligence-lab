@@ -36,6 +36,25 @@ This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The admin-ingestion/chat-backbone clarification below is implemented and locally
+validated on 2026-10-30. See `docs/chat-backbone.md` for behavior, 254 backend/41
+frontend checks, live local classification/vision results and remaining limits.
+Stop after reporting; no further milestone or production work is authorized.
+
+The user clarified the product flow on 2026-10-30 and authorized this refinement:
+administrators upload machine manuals/documentation/code into an explicitly
+workspace-published machine catalog; local embeddings and bounded LLM extraction
+automatically assign/group the sources. Regular users only chat about a problem
+and optionally attach images/error logs. The backbone handles machine matching,
+retrieval, conversation context and clarification. Do not require user-managed
+machines, notebooks or source selections. Existing private workspaces remain
+private; only the new admin-published catalog is shared with active workspace
+accounts. User problem attachments/conversations remain owner-scoped and are never
+added to that catalog or Siemens queries. Use only local verified models for
+private content, preserve budgets/citations/audits, and ask a chat clarification
+when machine identity is ambiguous. Implement, validate and report this refinement;
+no production deployment or equipment access is authorized.
+
 M6–M10 implementation and local validation completed on 2026-10-30. Results and
 remaining limits are recorded in `docs/m6-m10-results.md`; private-machine usage
 is documented in `docs/machine-workspaces.md`. The final gates passed 245 backend

@@ -21,6 +21,9 @@ def store(request):
 
 
 def owner(request):
+    from .library_api import admin
+
+    admin(request)
     return request.state.principal.id
 
 
@@ -201,7 +204,11 @@ def purge(machine_id: UUID, document_id: UUID, payload: Purge, request: Request)
         )
     with request.app.state.runs.store.connection() as conn:
         for row in conn.execute("SELECT document FROM runs"):
-            if str(document_id) in json.loads(row[0]).get("machine_document_ids", []):
+            run = json.loads(row[0])
+            retained = run.get("machine_document_ids", []) + [
+                i for m in run.get("catalog_snapshot", []) for i in m["document_ids"]
+            ]
+            if str(document_id) in retained:
                 raise EvidenceConflict("An investigation snapshot retains this source")
     with documents.evidence.connection() as conn:
         conn.execute("BEGIN IMMEDIATE")

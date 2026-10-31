@@ -17,6 +17,9 @@ def store(request):
 
 
 def owner(request):
+    from .library_api import admin
+
+    admin(request)
     return request.state.principal.id
 
 

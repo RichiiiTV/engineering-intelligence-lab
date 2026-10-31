@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import { siemensUrl } from "./siemens";
 
 export default function SafeAnswer({
   text,
@@ -6,19 +7,35 @@ export default function SafeAnswer({
   prefix = "",
 }: {
   text: string;
-  references?: { citation_id: string; title?: string }[];
+  references?: { citation_id: string; title?: string; url?: string }[];
   prefix?: string;
 }) {
   function inline(value: string): ReactNode[] {
     return value
-      .split(/(\[(?:kb|pdf|csv|siemens):[^\]]+\]|\*\*[^*]+\*\*|`[^`]+`)/g)
+      .split(
+        /(\[(?:kb|log|image|pdf|csv|siemens):[^\]]+\]|\*\*[^*]+\*\*|`[^`]+`)/g,
+      )
       .map((part, i) => {
         const normalized =
           part.startsWith("`") && part.endsWith("`") ? part.slice(1, -1) : part;
         const ref = references.find(
           (r) => "[" + r.citation_id + "]" === normalized,
         );
-        if (ref && ref.citation_id.startsWith("kb:"))
+        if (
+          ref?.citation_id.startsWith("siemens:") &&
+          ref.url &&
+          siemensUrl(ref.url)
+        )
+          return (
+            <a key={i} href={ref.url} target="_blank" rel="noopener noreferrer">
+              [Siemens source{" "}
+              {references
+                .filter((r) => r.citation_id.startsWith("siemens:"))
+                .indexOf(ref) + 1}
+              ]
+            </a>
+          );
+        if (ref && /^(kb|log|image):/.test(ref.citation_id))
           return (
             <button
               className="source-inline"
@@ -30,6 +47,12 @@ export default function SafeAnswer({
                 );
                 if (target instanceof HTMLDetailsElement) {
                   target.open = true;
+                  let parent = target.parentElement;
+                  while (parent) {
+                    if (parent instanceof HTMLDetailsElement)
+                      parent.open = true;
+                    parent = parent.parentElement;
+                  }
                   target.scrollIntoView({
                     behavior: "smooth",
                     block: "center",

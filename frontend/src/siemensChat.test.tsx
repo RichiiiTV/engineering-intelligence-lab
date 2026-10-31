@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "./App";
+import App from "./UserApp";
 import { userReport } from "./userReport";
 import type { Run, EvidenceReport, Source } from "./types";
 
