@@ -690,7 +690,7 @@
     "revision": "public-privacy-v1",
     "kind": "sanitized historical artifact; not original raw evidence",
     "evaluation_reexecuted": false,
-    "original_sha256": "26fa6ba92475a0e702d38b4b4b049f81a0317c0645d86ac0ab5cab0ffe166a18",
+    "original_sha256": "8046d1fc8faf5d4c0dbbb25c4b891feae9bfe92b0dc87ac21a85e4b4128b9d5c",
     "note": "Personal workstation identifiers were replaced. Original hashes describe the private original; original bytes are retained only in a local backup. Recorded outcomes are unchanged."
   }
 }

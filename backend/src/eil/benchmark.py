@@ -33,7 +33,7 @@ from .tracing import export_trace
 
 SUITE = ROOT / "data/benchmarks/eil-v1"
 CASES = ("known-cause", "ambiguous", "injection")
-VERSION = "eil-benchmark-v1"
+VERSION = "eil-benchmark-v1-public-privacy-v1"
 LIMITS = {
     "max_steps": 65,
     "max_model_calls": 12,

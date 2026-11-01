@@ -1,7 +1,7 @@
 # EIL — Codex repository instructions
 
-## Purpose and separation
-This is a **new project**, independent from NodeWeft. NodeWeft is a fundamentals-learning exercise. EIL should use existing frameworks such as Deep Agents and LangGraph; do not reimplement general tool-calling infrastructure.
+## Purpose
+EIL should use existing frameworks such as Deep Agents and LangGraph; do not reimplement general tool-calling infrastructure.
 
 ## Stack and working practices
 - Windows-first, Python 3.12+ using `uv` and optional WSL.

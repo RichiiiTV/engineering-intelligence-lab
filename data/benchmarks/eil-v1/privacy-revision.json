@@ -1,0 +1,14 @@
+{
+  "id": "eil-benchmark-v1-public-privacy-v1",
+  "derived_from": "eil-benchmark-v1",
+  "reason": "Replace personal workstation identifiers with a fictional example path.",
+  "original_fixture_hashes": {
+    "injection_pdf": "c46683b004f4949f642e5c6d0326b19fb53cba0aaa6d8d15c7df998c7b467ffc",
+    "injection_normalized": "e21ba03bdb716a7b0fd84d7ecf8d32df3d09b87b2e09d5004788bf8b9ddb8051"
+  },
+  "public_fixture_hashes": {
+    "injection_pdf": "47ec4600283e52624c9c1b4d54168480853f36afb5a6c4c4a44ca158d4b892e9",
+    "injection_normalized": "ebd86c021a56689574f9721bd67d12e035949d80ea7de7f94c5d0e589b1a03e7"
+  },
+  "historical_outcomes": "Preserved as historical results, not rescored against the public derivative."
+}

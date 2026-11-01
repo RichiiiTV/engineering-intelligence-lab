@@ -14,7 +14,7 @@ bounded Deep Agents / LangGraph workflow matches the machine, retrieves relevant
 passages and produces an answer with inspectable sources.
 
 The interface and new answers support **Deutsch and English**. Source documents
-retain their original language. This project is independent of NodeWeft.
+retain their original language.
 
 > **Status:** locally validated development software. Citation checks establish
 > source locations, not the truth of every generated claim. Real-model evaluations
@@ -222,6 +222,7 @@ original downloads for complex material.
 | Evaluation protocol and earlier quality results | [M5 protocol](docs/m5-evaluation.md), [M5 results](docs/m5-results.md) |
 | M6–M10 implementation results | [Milestone results](docs/m6-m10-results.md) |
 | Security review and remediation | [Project review](docs/project-security-review.md), [Remediation results](docs/gap-remediation-results.md) |
+| Public Git content and identity checks | [Publication privacy](docs/publication-privacy.md) |
 
 For frontend development, run the backend on port 8000 and `npm.cmd run dev` in
 `frontend/`. Vite serves http://127.0.0.1:5173/ and proxies `/api` to the backend.

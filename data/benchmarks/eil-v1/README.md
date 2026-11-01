@@ -1,5 +1,17 @@
 # EIL benchmark v1
 
+## Public privacy revision
+
+The active fixture revision is `eil-benchmark-v1-public-privacy-v1`. The injection
+PDF and its freshly captured offline Docling passages use a fictional example
+path. `privacy-revision.json` records the old/new hashes and `hashes.json`
+authenticates the public derivative. Original raw fixtures are retained only in
+the operator's private local backup. Historical evaluation outcomes have not
+been rescored; altered evidence exports carry an explicit `privacy_redaction`
+marker and their original hashes do not authenticate the redacted bytes.
+
+## Fixture contract
+
 Owned, generated demo evidence, dedicated to the public domain under CC0-1.0.
 No company data, secrets, production systems or licensed third-party documents.
 
