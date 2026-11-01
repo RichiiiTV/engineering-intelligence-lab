@@ -157,6 +157,37 @@ def route(directory, run, machine_hint=""):
     }
 
 
+def _model_observation(lookup):
+    """Omit storage/admin metadata only from the model transcript, never the snapshot.
+
+    Preserve unknown fields so new applicability warnings or source locations are
+    not silently removed. Exact text, citation/source IDs and product context are
+    kept; the full saved lookup remains available to source readers and exports.
+    """
+    observation = {
+        key: value
+        for key, value in lookup.items()
+        if key not in {"query", "document_ids", "embedding_model", "hits"}
+    }
+    if "hits" in lookup:
+        administrative = {
+            "sha256",
+            "size",
+            "created_at",
+            "created_by",
+            "machine_id",
+            "ingestion_job_id",
+            "classification",
+            "assignment_basis",
+            "license_note",
+        }
+        observation["hits"] = [
+            {key: value for key, value in hit.items() if key not in administrative}
+            for hit in lookup["hits"]
+        ]
+    return json.dumps(observation, ensure_ascii=False, separators=(",", ":"))
+
+
 def catalog_tools(directory, run_id):
     runs = RunStore(directory)
 
@@ -166,10 +197,10 @@ def catalog_tools(directory, run_id):
             raise ValueError("Use a short machine/model hint")
         run = runs.get(run_id)
         if run.get("catalog_lookup") is not None:
-            return json.dumps(run["catalog_lookup"])
+            return _model_observation(run["catalog_lookup"])
         result = route(directory, run, machine_hint)
         runs.change(run_id, lambda r, c: r.update(catalog_lookup=result))
-        return json.dumps(result)
+        return _model_observation(result)
 
     def source(document_id):
         run = runs.get(run_id)

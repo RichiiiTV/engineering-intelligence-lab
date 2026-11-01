@@ -1,238 +1,140 @@
-# Engineering Intelligence Lab
+![EIL — Machine problems. Clearer answers.](docs/images/readme-hero.svg)
 
-**Describe a machine problem. Find the relevant documentation. Investigate with traceable evidence.**
+<h1 align="center">Engineering Intelligence Lab</h1>
 
-[![Acceptance checks](https://github.com/RichiiiTV/engineering-intelligence-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/RichiiiTV/engineering-intelligence-lab/actions/workflows/ci.yml)
-![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB)
-![React + TypeScript](https://img.shields.io/badge/React-TypeScript-3178C6)
-![Local models](https://img.shields.io/badge/Models-Ollama-7655A3)
+<p align="center">
+  A local-first troubleshooting workspace for the people who keep machines running.<br />
+  Describe the problem. Find the relevant evidence. Inspect every source.
+</p>
 
-Engineering Intelligence Lab (EIL) is a local-first engineering troubleshooting
-prototype. Administrators provide machine manuals, documentation and code exports.
-Users describe a problem in chat and optionally attach photos or error logs. A
-bounded Deep Agents / LangGraph workflow matches the machine, retrieves relevant
-passages and produces an answer with inspectable sources.
+<p align="center">
+  <a href="https://github.com/RichiiiTV/engineering-intelligence-lab/actions/workflows/ci.yml"><img src="https://github.com/RichiiiTV/engineering-intelligence-lab/actions/workflows/ci.yml/badge.svg" alt="Offline acceptance and dependency audit" /></a>
+</p>
 
-The interface and new answers support **Deutsch and English**. Source documents
-retain their original language.
+<p align="center">
+  <a href="#start-locally">Get started</a> ·
+  <a href="#from-a-fault-to-the-evidence">See the workflow</a> ·
+  <a href="docs/architecture.md">Architecture</a> ·
+  <a href="docs/project-review-2026-11-01.md">Project review</a>
+</p>
 
-> **Status:** locally validated development software. Citation checks establish
-> source locations, not the truth of every generated claim. Real-model evaluations
-> include documented failures; EIL is not validated for production operation or
-> autonomous equipment control.
+## From a fault to the evidence
 
-[Get started](#get-started-on-windows) · [How it works](#how-it-works) ·
-[Documentation](#documentation) · [Validation](#validation-and-known-limits)
+EIL connects machine documentation to a simple chat. Administrators add manuals,
+code exports and technical references. Local embeddings and a bounded agent
+workflow group the material, identify the relevant machine and retrieve passages
+for a cited answer. Uncertain machine matches lead to a clarification.
 
-## One chat, a document backbone
+| Prepare the knowledge | Describe the problem | Follow the evidence |
+| :--- | :--- | :--- |
+| An administrator uploads and publishes machine documentation. | A user writes in German or English and optionally adds a photo or error log. | The answer links to saved passages, original excerpts and document details. |
 
-- **Automatic machine knowledge:** local embeddings and bounded LLM extraction
-  group administrator-published material by machine identity. Ambiguous matches
-  lead to a clarification in chat.
-- **Grounded retrieval:** keyword and SQLite vector retrieval search the frozen
-  source snapshot for each answer. Citations open the original passage.
-- **Readable sources:** a focused reader formats headings, lists and code, with
-  the exact original excerpt, provenance and an authenticated original-file link.
-- **Images and logs:** optional problem attachments stay private to their owner.
-  Local vision produces an explicitly unverified transcription of image text.
-- **Public Siemens references:** eligible PLC diagnostics can trigger the fixed,
-  read-only Siemens MCP search from canonical product/error identifiers typed in
-  the current question. Private documents, logs, images and history never supply
-  outbound query terms. Add “local only” / “nur lokal” to opt out.
-- **Controlled investigations:** durable checkpoints, cumulative token/step/time
-  budgets, cancellation, source snapshots and local traces make runs inspectable.
-- **Administration:** local accounts, roles, revocable sessions, explicit catalog
-  publication, backup/retention controls and a content-minimal audit trail.
-- **Advanced workspace:** administrators can inspect detailed run activity,
-  deterministic inspection-data analysis, exports and human-approved report drafts.
+> **“Mein Voron 2.4 hat Probleme mit der ersten Schicht. Welche Hinweise gibt die Dokumentation zur Gantry-Ausrichtung?”**
 
-![Source reader showing a cited public Voron passage](docs/images/source-reader.png)
+No machine picker or source setup is needed in the user flow. Start a new chat for
+a new problem; the backbone handles matching, retrieval and conversation context.
 
-*Actual source reader using the licensed Voron test corpus; German controls and
-unchanged English source text. The original excerpt remains available separately.*
+![Actual source reader showing a cited public Voron passage](docs/images/source-reader.png)
 
-## Get started on Windows
+<p align="center"><sub>Actual source reader with the licensed Voron corpus. Source text keeps its original language.</sub></p>
 
-### Prerequisites
+## Built around the investigation
 
-- Python **3.12+** and `uv`.
-- Node.js **22.12+** or **24**, with npm.
-- A local Ollama service for model answers and semantic indexing.
-- Docker Desktop with the Linux engine **only for PDF ingestion**; plain text,
-  Markdown and code exports do not require the PDF worker.
+| Capability | What it gives you |
+| :--- | :--- |
+| **A document backbone** | Local hybrid keyword/vector search, machine grouping and frozen source snapshots. |
+| **Images, logs and code** | Private problem attachments, local vision transcription and static source inspection. Uploaded code is never executed. |
+| **Inspectable answers** | Clickable citations, readable excerpts, provenance and authenticated original downloads. |
+| **Deutsch / English** | Switch the interface and new answers while keeping drafts, history and sources intact. |
+| **Siemens public references** | Optional read-only MCP lookup for eligible PLC identifiers explicitly typed in the current question. Private attachments and history never supply search terms. Use “nur lokal” / “local only” to opt out. |
+| **Workspace controls** | Accounts, roles, revocable sessions, content-minimal audits, backups and explicit catalog publication. |
+| **Bounded agent runs** | Cumulative token, step and time limits; durable checkpoints; cancellation; local traces and an Advanced workspace. |
+
+Published machine knowledge is shared with active workspace accounts. Problem
+chats and attachments stay owner-scoped. Models run locally by default; agents
+have no host shell, unrestricted network access or equipment-write tools.
+
+## Start locally
+
+You need **Python 3.12+**, **uv**, **Node.js 22.12+ or 24**, and a local **Ollama**
+service. Docker Desktop's Linux engine is required only for isolated PDF ingestion.
 
 ```powershell
 git clone https://github.com/RichiiiTV/engineering-intelligence-lab.git
 cd engineering-intelligence-lab
-
 uv sync --locked --extra dev
 Copy-Item .env.example .env
 
-# In your local Ollama installation:
 ollama pull qwen3.5:4b-q8_0
 ollama pull embeddinggemma:300m
 
 Push-Location frontend
-npm.cmd ci
+npm.cmd ci --ignore-scripts
 npm.cmd run build
 Pop-Location
 
 uv run --locked uvicorn eil.api:app --host 127.0.0.1 --port 8000 --timeout-graceful-shutdown 5
 ```
 
-Open **http://127.0.0.1:8000/**. In a second terminal at the repository root:
+Open **http://127.0.0.1:8000/**. In a second terminal, run
+`uv run --locked python -m eil.cli auth-bootstrap` and use its one-time setup code
+to create your administrator account. There are no default credentials.
 
-```powershell
-uv run --locked python -m eil.cli auth-bootstrap
-```
+The backend serves the built UI. Keep one API service per state directory, bound
+to loopback. The [setup guide](docs/getting-started.md) covers model settings,
+PDF conversion, the Windows launcher and development commands.
 
-Use the printed one-time setup code to create your administrator account. Choose
-your own password; there are **no default credentials**. API documentation at
-http://127.0.0.1:8000/docs requires sign-in too.
+**Try a real machine corpus:** the pinned [Voron 2.4 reference pack](docs/public-machine-pilot.md)
+includes public documentation, controller configuration, attribution and upstream
+GPLv3 license notices. Import it through Administration to build a first catalog.
 
-The backend serves the built frontend. Only one API worker/service may own a
-state directory. Keep the application bound to loopback; network deployment is
-outside its validated scope.
-
-### Configure models and PDFs
-
-`.env.example` documents the Ollama URL, generation model, embedding model and
-optional local state directory. `.env`, model files, runtime databases, uploaded
-material, local reports and dependencies are excluded from Git.
-The defaults use [Qwen 3.5 4B Q8_0](https://ollama.com/library/qwen3.5:4b-q8_0)
-and [EmbeddingGemma 300M](https://ollama.com/library/embeddinggemma:300m).
-
-For PDF conversion, build the isolated worker and explicitly prefetch the required
-Docling assets using the [operator guide](docs/security-operations.md#isolated-pdf-conversion).
-The Windows launcher, `scripts\start-workbench.cmd`, builds the UI and runs with
-the optional document dependencies; it does not start Ollama or download models.
-See the operator guide for the full container setup before uploading PDFs.
-
-## Use it
-
-**Administrator:** open **Administration → Machine knowledge / Maschinenwissen**.
-Upload manuals, documentation or code exports and explicitly confirm publication
-to active accounts in this workspace. Watch the ingestion progress and inspect
-assignment evidence. Archive obsolete or inappropriate sources.
-
-**User:** describe the fault and optionally attach an image or log. The backbone
-handles machine matching, retrieval and conversation context. Users do not need
-to select machines, notebooks or documents. Open a new chat for a different problem.
-
-Example questions:
-
-> Mein Voron 2.4 hat Probleme mit der ersten Schicht. Welche Symptome nennt die
-> Dokumentation für eine schlecht ausgerichtete Gantry? Bitte mit Quellen.
-
-> My machine uses a Siemens S7-1500 and shows diagnostic code 16#80A1.
-> What public documentation is available for this code?
-
-Use **Sprache / Language** to switch the interface and the language of new answers.
-Existing answers and source text are not rewritten. Open a citation to inspect
-its saved passage, original excerpt and document details.
-
-### Included real-machine reference pack
-
-The repository includes a pinned **Voron 2.4** public reference pack: official
-product information, V2 Gantry Squaring documentation and an Octopus controller
-configuration. Original snapshots, attribution, hashes and full upstream GPLv3
-license notices are retained.
-
-On a new installation, import the combined Markdown file through the administrator
-workflow; the existing local workspace's published catalog is not part of Git.
-[Import instructions, sources and pilot results](docs/public-machine-pilot.md).
-Three generated CC0 reference guides are also bundled as educational fixtures.
-
-## How it works
+<details>
+<summary><strong>Under the hood</strong></summary>
 
 ```mermaid
 flowchart LR
-    A[Admin uploads] --> B[Local ingestion and embeddings]
-    B --> C[Published machine catalog]
-    D[Problem chat and private attachments] --> E[Machine matching and clarification]
+    A[Admin documentation] --> B[Local ingestion and embeddings]
+    B --> C[Published machine knowledge]
+    D[Problem chat and private attachments] --> E[Matching and clarification]
     C --> E
-    E --> F[Frozen sources and hybrid retrieval]
-    F --> G[Bounded Deep Agents / LangGraph investigation]
-    G --> H[Answer and source reader]
-    P[Public PLC identifiers typed in current question] --> S[Optional Siemens MCP reference]
-    S --> G
+    E --> F[Frozen evidence and hybrid retrieval]
+    F --> G[Deep Agents / LangGraph]
+    G --> H[Cited answer and source reader]
 ```
 
-| Layer | Implementation |
-| --- | --- |
-| API and application controls | FastAPI, Pydantic, local sessions and owner authorization |
-| Agent execution | Deep Agents, LangGraph, explicit Ollama model adapter |
-| Knowledge retrieval | Local Ollama embeddings, SQLite FTS5/BM25, sqlite-vec |
-| Evidence and run state | SQLite snapshots, checkpoints, durable queue and event stream |
-| Deterministic analytics | DuckDB, typed read-only analytical tools |
-| Interface | React, TypeScript, Vite |
-| Optional PDF extraction | Fixed Docling worker in an isolated container |
+**FastAPI + Pydantic** handle the API and application controls. **Deep Agents /
+LangGraph** run bounded investigations through an explicit **Ollama** adapter.
+**SQLite FTS5 + sqlite-vec** provide retrieval; **DuckDB** supplies deterministic
+analytics. The UI uses **React + TypeScript + Vite**. PDF extraction runs in an
+isolated **Docling** container.
 
-Administrator-published knowledge is shared within the workspace. Existing private
-machine workspaces are not automatically published; user problem chats and
-attachments stay owner-scoped. Source/code contents are untrusted data for static
-inspection, never executable instructions. Agents have no host shell, unrestricted
-filesystem/network access, PLC writes or user-management tools.
+</details>
 
-## Validation and known limits
+## Validation and current limits
 
-The latest local publication check is recorded in
-[GitHub publication review](docs/github-publication.md). CI runs the offline
-backend/frontend acceptance checks and dependency advisory checks on pushes.
+EIL is development software with offline acceptance tests, dependency audits and
+documented real-model pilots. The [November 2026 review](docs/project-review-2026-11-01.md)
+records the current fixes, supply-chain checks and performance findings.
 
-```powershell
-uv sync --locked --extra dev --extra hosted
-uv run --locked --extra dev --extra hosted ruff check backend/src/eil tests
-uv run --locked --extra dev --extra hosted ruff format --check backend/src/eil tests
-uv run --locked --extra dev --extra hosted pytest -q
+The real Voron pilot had two expected behaviors and one controller-question
+failure despite relevant retrieved evidence. Earlier M5 quality failures remain
+open; hosted-model validation is deferred. A citation identifies a source location,
+but does not establish that a claim is correct or compatible with installed hardware.
+Machine grouping is heuristic, and image transcriptions are unverified observations.
+Human review is required before acting on equipment. Production operation and
+autonomous equipment control have not been validated.
 
-Push-Location frontend
-npm.cmd ci
-npm.cmd test
-npm.cmd run build
-Pop-Location
-```
+## Explore the project
 
-Offline graph tests use scripted models; passing them does **not** establish
-real-model diagnostic quality. The real Voron pilot produced two expected
-behaviors and one controller-question failure despite relevant retrieved evidence.
-Earlier M5 quality failures remain documented. Hosted-model comparison is deferred
-and requires explicit provider/model configuration and local operator credentials;
-installing the optional adapter does not authorize paid runs.
+| Build and operate | Understand and evaluate |
+| :--- | :--- |
+| [Getting started](docs/getting-started.md) | [Architecture](docs/architecture.md) |
+| [Accounts, backups and PDF setup](docs/security-operations.md) | [Chat backbone and machine matching](docs/chat-backbone.md) |
+| [Knowledge administration](docs/knowledge-library.md) | [German/English and Siemens routing](docs/german-siemens-routing.md) |
+| [Private machine workspaces](docs/machine-workspaces.md) | [M5 evaluation protocol](docs/m5-evaluation.md) · [Results](docs/m5-results.md) |
+| [Source reader](docs/source-reader.md) · [Language switching](docs/languages.md) | [M6–M10 results](docs/m6-m10-results.md) |
+| [Publication privacy](docs/publication-privacy.md) | [Security and performance review](docs/project-review-2026-11-01.md) |
 
-Machine grouping thresholds are heuristics. A citation is a traceable location,
-not a guarantee of claim support, exact hardware compatibility or causality.
-Human review remains necessary before applying proposed checks to equipment.
-The source reader supports a small safe Markdown subset, with full raw text and
-original downloads for complex material.
-
-## Documentation
-
-| Topic | Guide |
-| --- | --- |
-| Chat, automatic matching and privacy | [Chat backbone](docs/chat-backbone.md) |
-| German/English switching | [Languages](docs/languages.md) |
-| Source reader and UI acceptance | [Source reader](docs/source-reader.md) |
-| Public Siemens query boundary | [German operation and Siemens routing](docs/german-siemens-routing.md) |
-| Accounts, sessions, backups and PDF setup | [Local workspace operations](docs/security-operations.md) |
-| Library, users and audit trail | [Knowledge administration](docs/knowledge-library.md) |
-| Private machine workspaces | [Machine workspaces](docs/machine-workspaces.md) |
-| Architecture | [Architecture](docs/architecture.md) |
-| Real-machine corpus and failed pilot | [Voron public-machine pilot](docs/public-machine-pilot.md) |
-| Evaluation protocol and earlier quality results | [M5 protocol](docs/m5-evaluation.md), [M5 results](docs/m5-results.md) |
-| M6–M10 implementation results | [Milestone results](docs/m6-m10-results.md) |
-| Security review and remediation | [Project review](docs/project-security-review.md), [Remediation results](docs/gap-remediation-results.md) |
-| Public Git content and identity checks | [Publication privacy](docs/publication-privacy.md) |
-
-For frontend development, run the backend on port 8000 and `npm.cmd run dev` in
-`frontend/`. Vite serves http://127.0.0.1:5173/ and proxies `/api` to the backend.
-Rebuild `frontend/dist` and reload the loopback app after frontend changes.
-
-## Data and attribution
-
-Committed demo/evaluation material is generated or explicitly licensed public
-content. The Voron reference pack retains its upstream GPLv3 license files and
-provenance; generated starter guides carry their declared CC0 notices. Those
-third-party notices apply to their respective content. Runtime uploads, private
-workspaces, accounts, credentials and investigation history are not distributed
-with this repository.
+Committed demo material is generated or explicitly licensed public content.
+Third-party license notices apply to their respective sources. Runtime uploads,
+private workspaces, accounts, credentials and investigation history stay out of Git.

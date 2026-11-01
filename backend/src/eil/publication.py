@@ -16,7 +16,7 @@ HOME = re.compile(
 )
 SECRET = re.compile(
     rb"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----|"
-    rb"gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,}|"
+    rb"gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{50,}|npm_[A-Za-z0-9]{30,}|"
     rb"\bsk-(?:proj-|ant-)?[A-Za-z0-9_\-]{30,}|\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"
 )
 PDF_STREAM = re.compile(rb"\bstream\r?\n(.*?)\r?\n?endstream", re.S)
@@ -57,6 +57,15 @@ def decoded_pdf_streams(data):
 
 def scan_content(filename, data):
     issues = set()
+    basename = Path(filename).name
+    if basename in {".env", ".netrc", ".pypirc"} or (
+        basename.startswith(".env.") and not basename.endswith(".example")
+    ):
+        issues.add("private credential configuration must not be tracked")
+    if basename == ".npmrc" and re.search(
+        rb"(?m)^\s*[^#;\r\n]*(?:_authToken|_auth|_password)\s*=\s*(?!\$\{)[^\s\r\n]+", data
+    ):
+        issues.add("npm credentials must come from the operator environment")
     if len(data) > LIMIT:
         return ["file exceeds bounded publication review limit"]
     image = filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))

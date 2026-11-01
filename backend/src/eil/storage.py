@@ -273,6 +273,8 @@ class StorageManager:
             raise RunConflict("Retention plan expired or belongs to another account")
         if row["status"] == "completed":
             return {"status": "completed", "backup_id": row["backup_id"]}
+        if not plan["cases"]:
+            raise RunConflict("Retention plan contains no trash to purge")
         for case in plan["cases"]:
             with self.evidence.connection() as conn:
                 current = conn.execute(

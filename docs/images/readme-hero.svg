@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Engineering Intelligence Lab</title>
+  <desc id="desc">Machine documentation flows through a local knowledge backbone into a cited troubleshooting answer.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1200" y2="420" gradientUnits="userSpaceOnUse"><stop stop-color="#121C31"/><stop offset="1" stop-color="#242447"/></linearGradient>
+    <linearGradient id="accent" x1="55" y1="70" x2="99" y2="114" gradientUnits="userSpaceOnUse"><stop stop-color="#B4A3FF"/><stop offset="1" stop-color="#7D68EE"/></linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" stroke="#D4CDFF" stroke-opacity=".045"/></pattern>
+  </defs>
+  <rect width="1200" height="420" rx="20" fill="url(#background)"/>
+  <rect width="1200" height="420" rx="20" fill="url(#grid)"/>
+  <path d="M630 420L852 0H1200V420H630Z" fill="#8774DB" fill-opacity=".045"/>
+  <rect x="54" y="48" width="42" height="42" rx="12" fill="url(#accent)"/>
+  <path d="M65 60H84M65 69H80M65 78H84" stroke="#181D34" stroke-width="3.5" stroke-linecap="round"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="110" y="66" fill="#FAFAFF" font-size="17" font-weight="700" letter-spacing="2">EIL</text>
+    <text x="110" y="86" fill="#B2B9D1" font-size="12" letter-spacing="1.4">ENGINEERING INTELLIGENCE LAB</text>
+    <text x="54" y="161" fill="#FAFAFF" font-size="49" font-weight="700" letter-spacing="-1.5">Machine problems.</text>
+    <text x="54" y="222" fill="#C7BBFF" font-size="49" font-weight="700" letter-spacing="-1.5">Clearer answers.</text>
+    <text x="56" y="270" fill="#C3C9DC" font-size="18">Your manuals, code and logs.</text>
+    <text x="56" y="298" fill="#C3C9DC" font-size="18">One chat. Sources you can inspect.</text>
+    <rect x="54" y="341" width="122" height="30" rx="15" fill="#FFFFFF" fill-opacity=".055" stroke="#FFFFFF" stroke-opacity=".12"/>
+    <circle cx="72" cy="356" r="3.5" fill="#90D7C3"/><text x="83" y="361" fill="#D8DCEC" font-size="12">Local models</text>
+    <rect x="187" y="341" width="121" height="30" rx="15" fill="#FFFFFF" fill-opacity=".055" stroke="#FFFFFF" stroke-opacity=".12"/>
+    <text x="203" y="361" fill="#D8DCEC" font-size="12">Deutsch / English</text>
+    <rect x="319" y="341" width="142" height="30" rx="15" fill="#FFFFFF" fill-opacity=".055" stroke="#FFFFFF" stroke-opacity=".12"/>
+    <text x="335" y="361" fill="#D8DCEC" font-size="12">Read-only by design</text>
+    <rect x="678" y="49" width="464" height="321" rx="16" fill="#131C30" stroke="#69729A" stroke-opacity=".4"/>
+    <circle cx="700" cy="70" r="3" fill="#626D8E"/><circle cx="712" cy="70" r="3" fill="#626D8E"/><circle cx="724" cy="70" r="3" fill="#626D8E"/>
+    <text x="1116" y="74" text-anchor="end" fill="#8F9ABA" font-size="10" letter-spacing="1.5">DOCUMENT → ANSWER</text>
+    <rect x="701" y="94" width="128" height="41" rx="8" fill="#202B44"/><rect x="840" y="94" width="128" height="41" rx="8" fill="#202B44"/><rect x="979" y="94" width="140" height="41" rx="8" fill="#202B44"/>
+    <text x="716" y="119" fill="#CBD2E7" font-size="12" font-family="Consolas, monospace">manual.pdf</text>
+    <text x="853" y="119" fill="#CBD2E7" font-size="12" font-family="Consolas, monospace">controller.st</text>
+    <text x="994" y="119" fill="#CBD2E7" font-size="12" font-family="Consolas, monospace">fault.log</text>
+    <path d="M765 136V151H1049V136M904 136V164" stroke="#8B80BE" stroke-opacity=".7"/>
+    <path d="M900 160L904 164L908 160" stroke="#8B80BE" stroke-linecap="round"/>
+    <rect x="701" y="170" width="418" height="63" rx="10" fill="#302A50" stroke="#9C86EF" stroke-opacity=".6"/>
+    <path d="M721 193L731 187L741 193V205L731 211L721 205V193ZM731 199V211M721 193L731 199L741 193" stroke="#B6A1F7" stroke-width="1.5" stroke-linejoin="round"/>
+    <text x="755" y="197" fill="#EEE9FF" font-size="15" font-weight="600">Machine knowledge</text>
+    <text x="755" y="218" fill="#B9B0D7" font-size="11">Match · Retrieve · Investigate</text>
+    <path d="M904 234V253M900 249L904 253L908 249" stroke="#8B80BE" stroke-linecap="round"/>
+    <rect x="701" y="260" width="418" height="86" rx="10" fill="#1D303C" stroke="#6DAB9D" stroke-opacity=".5"/>
+    <circle cx="731" cy="287" r="10" fill="#335A58"/><path d="M726 287L730 291L736 284" stroke="#A8E4D3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="755" y="292" fill="#DEF2EA" font-size="15" font-weight="600">A grounded starting point</text>
+    <rect x="721" y="309" width="77" height="21" rx="5" fill="#33504F"/><text x="731" y="323" fill="#B7DDCF" font-size="10">Source 1 ↗</text>
+    <rect x="806" y="309" width="77" height="21" rx="5" fill="#33504F"/><text x="816" y="323" fill="#B7DDCF" font-size="10">Source 2 ↗</text>
+    <text x="1102" y="324" text-anchor="end" fill="#9AB7B2" font-size="10">Inspect the evidence</text>
+  </g>
+</svg>

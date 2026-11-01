@@ -12,6 +12,14 @@ def test_publication_rejects_home_paths_and_credentials_without_echoing_values()
     assert not scan_content("api.py", b"/api/auth/users/{user_id}/update")
 
 
+def test_publication_rejects_npm_tokens_and_secret_configuration():
+    assert scan_content("notes.txt", b"npm_" + b"A" * 36) == ["credential pattern"]
+    assert scan_content(".env", b"unrecognized-secret-format")
+    assert scan_content("frontend/.npmrc", b"//registry.npmjs.org/:_authToken=unrecognized-value")
+    assert not scan_content("frontend/.npmrc", b"ignore-scripts=true\n")
+    assert not scan_content("frontend/.npmrc", b"//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n")
+
+
 def test_publication_checks_emails_and_no_reply_commit_identities():
     private = b"person@" + b"private.test"
     assert scan_content("example.txt", private) == ["non-example email address"]

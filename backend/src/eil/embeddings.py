@@ -1,5 +1,6 @@
 """Bounded local Ollama embeddings; no remote provider or agent-selected model/URL."""
 
+import json
 import math
 import os
 import re
@@ -10,6 +11,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from .model_policy import checked_local_model
 from .settings import OLLAMA_BASE_URL
 
 MODEL = os.environ.get("EIL_EMBEDDING_MODEL", "embeddinggemma:300m")
@@ -54,13 +56,16 @@ def embed(texts):
         with httpx.Client(
             base_url=OLLAMA_BASE_URL, timeout=30, trust_env=False, follow_redirects=False
         ) as client:
-            tags = client.get("/api/tags")
-            tags.raise_for_status()
-            model = next((m for m in tags.json()["models"] if m["name"] == MODEL), None)
-            if not model or not model.get("digest"):
-                raise ValueError("Embedding model is not installed")
-            if model.get("remote_host") or MODEL.endswith(":cloud"):
-                raise ValueError("Cloud embedding models are not allowed")
+            with client.stream("GET", "/api/tags") as tags:
+                tags.raise_for_status()
+                catalogue = bytearray()
+                for part in tags.iter_bytes():
+                    catalogue.extend(part)
+                    if len(catalogue) > 2 * 1024**2:
+                        raise ValueError("Oversized model catalogue")
+            model = checked_local_model(
+                next(m for m in json.loads(catalogue)["models"] if m["name"] == MODEL), MODEL
+            )
             with client.stream(
                 "POST",
                 "/api/embed",
@@ -77,8 +82,6 @@ def embed(texts):
                     content.extend(part)
                     if len(content) > 2 * 1024**2:
                         raise ValueError("Embedding response exceeded its limit")
-            import json
-
             vectors = json.loads(content)["embeddings"]
         if len(vectors) != len(texts):
             raise ValueError("Embedding count mismatch")

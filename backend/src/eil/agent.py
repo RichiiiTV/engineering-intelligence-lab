@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import uuid
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
@@ -12,6 +11,7 @@ import httpx
 from ollama import ResponseError
 
 from .analytics import compare_stations, station_metrics
+from .model_policy import checked_local_model
 from .settings import OLLAMA_BASE_URL, OLLAMA_MODEL
 
 if TYPE_CHECKING:
@@ -52,16 +52,7 @@ def verify_private_model(base_url, model_name):
                     if len(content) > 2 * 1024**2:
                         raise ValueError("Oversized model catalogue")
             entry = next(m for m in json.loads(content)["models"] if m["name"] == model_name)
-        if (
-            entry.get("remote_host")
-            or entry.get("remote_model")
-            or "cloud" in model_name.casefold()
-            or entry.get("details", {}).get("format") != "gguf"
-            or entry.get("size", 0) < 1024**2
-            or not re.fullmatch(r"(?:sha256:)?[0-9a-f]{64}", entry.get("digest", ""))
-        ):
-            raise ValueError("A downloaded local GGUF model is required")
-        return entry
+        return checked_local_model(entry, model_name)
     except (httpx.HTTPError, ValueError, TypeError, KeyError, StopIteration) as exc:
         raise ModelUnavailableError(
             "Private machine content requires a verified downloaded local model. Cloud models/aliases are not allowed; no private prompt was sent."
@@ -108,6 +99,7 @@ def _build_model(*, model_name=OLLAMA_MODEL, base_url=OLLAMA_BASE_URL, max_outpu
             client_kwargs={
                 "timeout": httpx.Timeout(REQUEST_TIMEOUT_SECONDS, connect=CONNECT_TIMEOUT_SECONDS),
                 "trust_env": False,
+                "follow_redirects": False,
             },
         )
     except httpx.TimeoutException as exc:

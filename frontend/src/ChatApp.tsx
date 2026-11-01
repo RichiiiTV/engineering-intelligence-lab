@@ -1,5 +1,11 @@
 import { useLanguage, t } from "./i18n";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import {
   Beaker,
   Paperclip,
@@ -45,33 +51,82 @@ export default function ChatApp() {
     [loadError, setLoadError] = useState("");
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
+  const refreshRequest = useRef<AbortController | null>(null),
+    refreshVersion = useRef(0);
+  const active = Boolean(detail?.turns.some((r) => !stopped.has(r.status)));
   const submission = useRef<{ signature: string; id: string } | null>(null),
     input = useRef<HTMLInputElement>(null);
-  async function refresh() {
+  const refresh = useCallback(async () => {
+    const conversationId = selectedRef.current;
+    refreshRequest.current?.abort();
+    const controller = new AbortController();
+    refreshRequest.current = controller;
+    const version = ++refreshVersion.current;
+    const current = () =>
+      !controller.signal.aborted &&
+      version === refreshVersion.current &&
+      conversationId === selectedRef.current;
     try {
-      setRows(
-        (
-          await api<{ conversations: Conversation[] }>(
-            "/api/chat/conversations",
-          )
-        ).conversations,
-      );
-      if (selected) {
-        const result = await api<Detail>("/api/chat/conversations/" + selected);
-        if (selectedRef.current === selected) setDetail(result);
-      }
+      const [list, result] = await Promise.all([
+        api<{ conversations: Conversation[] }>("/api/chat/conversations", {
+          signal: controller.signal,
+        }).then((list) => {
+          if (current()) setRows(list.conversations);
+          return list;
+        }),
+        conversationId
+          ? api<Detail>("/api/chat/conversations/" + conversationId, {
+              signal: controller.signal,
+            })
+          : Promise.resolve(null),
+      ]);
+      if (!current()) return;
+      setRows(list.conversations);
+      if (result) setDetail(result);
       setLoadError("");
     } catch (e) {
-      setLoadError(message(e));
+      if (current()) setLoadError(message(e));
+      controller.abort();
     }
-  }
+  }, []);
   useEffect(() => {
     setDetail(null);
-    void refresh();
-    const timer = setInterval(() => void refresh(), 1500);
-    return () => clearInterval(timer);
-  }, [selected]);
+    setLoadError("");
+    if (document.visibilityState !== "hidden") void refresh();
+    return () => {
+      ++refreshVersion.current;
+      refreshRequest.current?.abort();
+    };
+  }, [selected, refresh]);
+  useEffect(() => {
+    let disposed = false,
+      pending = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const visible = () => document.visibilityState !== "hidden";
+    async function poll() {
+      if (disposed || pending || !visible()) return;
+      pending = true;
+      await refresh();
+      pending = false;
+      if (!disposed && active && visible())
+        timer = setTimeout(() => void poll(), 1500);
+    }
+    const visibility = () => {
+      clearTimeout(timer);
+      if (!visible()) {
+        refreshRequest.current?.abort();
+      } else void poll();
+    };
+    if (active && visible()) timer = setTimeout(() => void poll(), 1500);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, [selected, active, refresh]);
   function select(id: string) {
+    selectedRef.current = id;
     setSelected(id);
     setHistoryOpen(false);
     setQuestion("");
@@ -81,12 +136,14 @@ export default function ChatApp() {
     history.pushState(null, "", id ? "/?chat=" + id : "/");
   }
   useEffect(() => {
-    const pop = () =>
-      setSelected(new URLSearchParams(location.search).get("chat") || "");
+    const pop = () => {
+      const id = new URLSearchParams(location.search).get("chat") || "";
+      selectedRef.current = id;
+      setSelected(id);
+    };
     window.addEventListener("popstate", pop);
     return () => window.removeEventListener("popstate", pop);
   }, []);
-  const active = detail?.turns.some((r) => !stopped.has(r.status));
   function attach(next: FileList | null) {
     if (!next) return;
     const all = [...files, ...Array.from(next)];
@@ -129,15 +186,20 @@ export default function ChatApp() {
         body,
       });
       const id = run.chat_context!.id;
-      setQuestion("");
-      setFiles([]);
+      if (selectedRef.current !== selected) {
+        await refresh();
+        return;
+      }
+      setQuestion((current) => (current === question ? "" : current));
+      setFiles((current) => (current === files ? [] : current));
       submission.current = null;
       if (id !== selected) {
+        selectedRef.current = id;
         setSelected(id);
         history.replaceState(null, "", "/?chat=" + id);
       } else await refresh();
     } catch (e) {
-      setError(message(e));
+      if (selectedRef.current === selected) setError(message(e));
     } finally {
       setBusy(false);
     }
@@ -150,7 +212,12 @@ export default function ChatApp() {
           <span>Engineering Intelligence Lab</span>
         </a>
         <nav aria-label={t("Chat-Navigation")}>
-          <button onClick={() => setHistoryOpen(!historyOpen)}>
+          <button
+            onClick={() => {
+              if (!historyOpen) void refresh();
+              setHistoryOpen(!historyOpen);
+            }}
+          >
             <MessageSquare size={17} />
             {t("Deine Chats")}
           </button>
@@ -285,6 +352,11 @@ export default function ChatApp() {
           <p className="ux-error" role="alert">
             {t(error || loadError)}
           </p>
+        )}
+        {loadError && (
+          <button type="button" onClick={() => void refresh()}>
+            {t("Erneut versuchen")}
+          </button>
         )}
         <p className="chat-footnote">
           {t(

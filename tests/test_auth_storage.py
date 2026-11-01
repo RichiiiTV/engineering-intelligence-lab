@@ -143,6 +143,42 @@ def test_provider_overage_is_atomic_audited_and_cannot_resume(tmp_path):
     assert export_trace(store, run["id"])["charged_tokens"] == 12000
 
 
+def test_empty_member_retention_cannot_consume_backup_quota(tmp_path):
+    from datetime import datetime, timedelta, timezone
+
+    auth = AuthStore(tmp_path / "state")
+    admin = auth.enroll(auth.bootstrap(), "owner", PASSWORD)
+    member = auth.add_user(admin, "member", PASSWORD)
+    manager = StorageManager(tmp_path / "state")
+    for _ in range(5):
+        plan = manager.retention_plan(member)
+        assert plan["cases"] == []
+        for _ in range(2):
+            with pytest.raises(RunConflict, match="no trash to purge"):
+                manager.apply_retention(
+                    plan["id"], plan["sha256"], member, "PERMANENTLY PURGE REVIEWED TRASH"
+                )
+        assert manager.list_backups() == []
+
+    # A real member purge still makes its required recovery backup, and an
+    # administrator retains capacity for an explicit workspace backup.
+    case = manager.evidence.create_case("Generated member case", owner_id=member.id)
+    manager.trash(case["id"], member)
+    with manager.evidence.connection() as conn:
+        conn.execute(
+            "UPDATE cases SET deleted_at=? WHERE id=?",
+            ((datetime.now(timezone.utc) - timedelta(days=91)).isoformat(), case["id"]),
+        )
+    plan = manager.retention_plan(member)
+    result = manager.apply_retention(
+        plan["id"], plan["sha256"], member, "PERMANENTLY PURGE REVIEWED TRASH"
+    )
+    assert result["purged_cases"] == 1
+    assert len(manager.list_backups()) == 1
+    assert manager.create_backup(admin)["id"]
+    assert len(manager.list_backups()) == 2
+
+
 def test_trash_restore_backup_integrity_and_permanent_retention_approval(tmp_path):
     from datetime import datetime, timedelta, timezone
 

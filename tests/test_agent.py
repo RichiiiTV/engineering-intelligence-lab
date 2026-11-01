@@ -128,6 +128,7 @@ def test_ollama_adapter_validates_model_and_sets_http_timeouts(monkeypatch):
     assert kwargs["client_kwargs"]["timeout"].connect == 5
     assert kwargs["client_kwargs"]["timeout"].read == 60
     assert kwargs["client_kwargs"]["trust_env"] is False
+    assert kwargs["client_kwargs"]["follow_redirects"] is False
 
 
 def test_real_ollama_constructor_validates_stubbed_model_listing(monkeypatch):

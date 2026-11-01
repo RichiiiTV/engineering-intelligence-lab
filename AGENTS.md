@@ -36,6 +36,15 @@ EIL should use existing frameworks such as Deep Agents and LangGraph; do not rei
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized a project-wide bug/security and dependency-supply-chain review,
+README redesign, and performance/UX refinements on 2026-11-01. Scoped remediation
+and local validation are complete: 307 backend / 64 frontend tests and both offline
+benchmark gates passed. See `docs/project-review-2026-11-01.md` for the privacy,
+retention, polling and tool-observation fixes, dependency audit, and remaining
+limits. Local Ollama/Docker were unavailable for new decode-throughput measurements;
+hosted validation and earlier model-quality failures remain unchanged. Stop after
+reporting; no production deployment or equipment work is authorized.
+
 The user authorized finding a real publicly licensed machine corpus online and
 adding it on 2026-10-31. The Voron 2.4 pack is published through an authenticated
 admin action: licensed-public, pinned original sources/full GPL license, 63 indexed
