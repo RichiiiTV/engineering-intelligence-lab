@@ -1,5 +1,22 @@
 // Authored interface copy only. Source quotations, user input and model answers are excluded.
 const english: Record<string, string> = {
+  "Quelle schließen": "Close source",
+  Quellenansicht: "Source view",
+  Leseansicht: "Reading view",
+  Originalauszug: "Original excerpt",
+  Originaldatei: "Original file",
+  Textauszug: "Text excerpt",
+  "Eingereichtes Bild": "Submitted image",
+  "Erkannter Bildtext": "Recognized image text",
+  "Zitierter Dokumentauszug": "Cited document excerpt",
+  "Angrenzender Kontext": "Adjacent context",
+  "Medienverweis / Markup (nicht geladen)":
+    "Media reference / markup (not loaded)",
+  "Dokumentdetails und Herkunft": "Document details and provenance",
+  Quellenkennung: "Citation ID",
+  Dateiname: "Filename",
+  "Auszug aus dem gespeicherten Quellenstand. Die Originalsprache bleibt erhalten.":
+    "Excerpt from the saved source snapshot. The original language is preserved.",
   "Interne Maschinendaten": "Internal machine material",
   "Lizenzierte öffentliche Dokumentation": "Licensed public documentation",
   "Lizenz, Urheber und Originalquelle angeben":

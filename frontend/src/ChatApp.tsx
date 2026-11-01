@@ -1,4 +1,4 @@
-import { useLanguage, t, tr } from "./i18n";
+import { useLanguage, t } from "./i18n";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Beaker,
@@ -15,6 +15,7 @@ import type { EvidenceReport, Run } from "./types";
 import { stopped } from "./useInvestigation";
 import { friendlyStatus } from "./userFlow";
 import SafeAnswer from "./SafeAnswer";
+import SourceReader, { SourceCard } from "./SourceReader";
 import { LibraryReferences } from "./KnowledgeLibrary";
 import SiemensReferences from "./SiemensReferences";
 import { displayNotice } from "./locale";
@@ -307,6 +308,7 @@ function ChatTurn({
   useLanguage();
   const [report, setReport] = useState<EvidenceReport | null>(null),
     [error, setError] = useState("");
+  const [openSource, setOpenSource] = useState<string | null>(null);
   useEffect(() => {
     if (!stopped.has(run.status)) return;
     const c = new AbortController();
@@ -324,6 +326,11 @@ function ChatTurn({
     ...(report?.problem_citations || []),
     ...(report?.external_references || []),
   ];
+  const localSources = [
+    ...(report?.library_citations || []),
+    ...(report?.problem_citations || []),
+  ];
+  const selectedSource = localSources.find((r) => r.citation_id === openSource);
   return (
     <article className="chat-turn">
       <div className="chat-human">
@@ -411,6 +418,7 @@ function ChatTurn({
               }
               references={refs}
               prefix={run.id + "-"}
+              onOpenSource={setOpenSource}
             />
           )}
           {report?.attachment_notice && (
@@ -432,40 +440,17 @@ function ChatTurn({
                   report={report}
                   runId={run.id}
                   prefix={run.id + "-"}
+                  onOpenSource={setOpenSource}
                 />
               )}
               <SiemensReferences report={report} />
-              {report.problem_citations?.map((r) => (
-                <details
+              {report.problem_citations?.map((r, i) => (
+                <SourceCard
                   key={r.citation_id}
-                  id={run.id + "-source-" + r.citation_id}
-                  tabIndex={-1}
-                >
-                  <summary>
-                    {r.filename}
-                    {r.line_start
-                      ? tr` · Zeilen ${r.line_start}–${r.line_end}`
-                      : t(" · eingereichtes Bild")}
-                  </summary>
-                  {r.kind === "image" && (
-                    <img
-                      className="chat-thumbnail"
-                      alt={r.filename}
-                      src={"/api/chat/attachments/" + r.id + "/preview"}
-                    />
-                  )}
-                  {r.kind === "image" && (
-                    <p className="ux-small">
-                      {t(
-                        "Vom Modell erkannter Text. Prüfe das Originalbild, wenn einzelne Zeichen entscheidend sind.",
-                      )}
-                    </p>
-                  )}
-                  <blockquote>{r.text}</blockquote>
-                  <a href={"/api/chat/attachments/" + r.id + "/file"}>
-                    {t("Originalanhang herunterladen")}
-                  </a>
-                </details>
+                  source={r}
+                  number={(report.library_citations?.length || 0) + i + 1}
+                  onOpen={setOpenSource}
+                />
               ))}
             </details>
           )}
@@ -475,6 +460,15 @@ function ChatTurn({
         <p className="ux-error" role="alert">
           {t(error)}
         </p>
+      )}
+      {selectedSource && (
+        <SourceReader
+          key={selectedSource.citation_id}
+          source={selectedSource}
+          number={localSources.indexOf(selectedSource) + 1}
+          runId={run.id}
+          onClose={() => setOpenSource(null)}
+        />
       )}
     </article>
   );

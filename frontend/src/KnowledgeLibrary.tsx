@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { api } from "./api";
 import { displayNotice } from "./locale";
 import type { EvidenceReport } from "./types";
+import { SourceCard } from "./SourceReader";
 
 export type LibraryDocument = {
   id: string;
@@ -104,10 +105,12 @@ export function LibraryReferences({
   report,
   runId,
   prefix = "",
+  onOpenSource,
 }: {
   report: EvidenceReport;
   runId: string;
   prefix?: string;
+  onOpenSource?: (citationId: string) => void;
 }) {
   useLanguage();
   if (
@@ -124,9 +127,11 @@ export function LibraryReferences({
       aria-label={t("Bibliotheksquellen")}
     >
       <h2>
-        {report.machine_id
-          ? t("Aus deinen ausgewählten Quellen")
-          : t("Aus deiner Wissensbibliothek")}
+        {onOpenSource
+          ? t("Maschinenwissen")
+          : report.machine_id
+            ? t("Aus deinen ausgewählten Quellen")
+            : t("Aus deiner Wissensbibliothek")}
       </h2>
       {report.machine_retrieval?.notice && (
         <p className="ux-small">
@@ -149,37 +154,46 @@ export function LibraryReferences({
               )}
         </p>
       )}
-      {references.map((r, i) => (
-        <details
-          key={r.citation_id}
-          id={prefix + "source-" + r.citation_id}
-          tabIndex={-1}
-        >
-          <summary>
-            {t("Bibliotheksquelle")} {i + 1}: {r.title} ·{" "}
-            {r.line_start
-              ? `lines ${r.line_start}–${r.line_end}`
-              : r.pages?.length
-                ? `pages ${r.pages.join(", ")}`
-                : `page ${r.page}`}
-          </summary>
-          <p className="ux-small">
-            {r.family} · {r.version} ·{" "}
-            {r.data_policy === "synthetic"
-              ? t("Generiertes Demonstrationsmaterial")
-              : r.data_policy === "internal"
-                ? t("Interne Referenz")
-                : t("Lizenzierte öffentliche Referenz")}
-          </p>
-          <blockquote>{r.text}</blockquote>
-          <p className="ux-small">{r.license_note}</p>
-          <a
-            href={`/api/investigations/${encodeURIComponent(runId)}/library/documents/${encodeURIComponent(r.id)}/file`}
+      {references.map((r, i) =>
+        onOpenSource ? (
+          <SourceCard
+            key={r.citation_id}
+            source={r}
+            number={i + 1}
+            onOpen={onOpenSource}
+          />
+        ) : (
+          <details
+            key={r.citation_id}
+            id={prefix + "source-" + r.citation_id}
+            tabIndex={-1}
           >
-            {t("Quelldokument herunterladen")}
-          </a>
-        </details>
-      ))}
+            <summary>
+              {t("Bibliotheksquelle")} {i + 1}: {r.title} ·{" "}
+              {r.line_start
+                ? `lines ${r.line_start}–${r.line_end}`
+                : r.pages?.length
+                  ? `pages ${r.pages.join(", ")}`
+                  : `page ${r.page}`}
+            </summary>
+            <p className="ux-small">
+              {r.family} · {r.version} ·{" "}
+              {r.data_policy === "synthetic"
+                ? t("Generiertes Demonstrationsmaterial")
+                : r.data_policy === "internal"
+                  ? t("Interne Referenz")
+                  : t("Lizenzierte öffentliche Referenz")}
+            </p>
+            <blockquote>{r.text}</blockquote>
+            <p className="ux-small">{r.license_note}</p>
+            <a
+              href={`/api/investigations/${encodeURIComponent(runId)}/library/documents/${encodeURIComponent(r.id)}/file`}
+            >
+              {t("Quelldokument herunterladen")}
+            </a>
+          </details>
+        ),
+      )}
       {!!(
         report.library_citation_checks?.unresolved.length ||
         report.library_citation_checks?.not_returned_by_tools.length

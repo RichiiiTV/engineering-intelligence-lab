@@ -6,10 +6,12 @@ export default function SafeAnswer({
   text,
   references = [],
   prefix = "",
+  onOpenSource,
 }: {
   text: string;
   references?: { citation_id: string; title?: string; url?: string }[];
   prefix?: string;
+  onOpenSource?: (citationId: string) => void;
 }) {
   useLanguage();
   function inline(value: string): ReactNode[] {
@@ -44,6 +46,10 @@ export default function SafeAnswer({
               key={i}
               title={ref.title || t("Quellabschnitt öffnen")}
               onClick={() => {
+                if (onOpenSource) {
+                  onOpenSource(ref.citation_id);
+                  return;
+                }
                 const target = document.getElementById(
                   prefix + "source-" + ref.citation_id,
                 );
