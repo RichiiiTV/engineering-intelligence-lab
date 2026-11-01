@@ -134,5 +134,8 @@ manifest = dict(
     documents=documents,
     cases=cases,
 )
-(root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+# Preserve the original reviewed Windows baseline byte-for-byte on every OS.
+(root / "manifest.json").write_text(
+    json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\r\n"
+)
 print(len(cases), "versioned cases generated")

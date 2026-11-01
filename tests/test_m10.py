@@ -17,6 +17,25 @@ def test_generated_knowledge_suite_has_reviewed_hashes_and_separate_gates(tmp_pa
     }
 
 
+def test_knowledge_generator_preserves_reviewed_manifest_and_sources_on_every_os(tmp_path):
+    import hashlib
+    import json
+    import shutil
+    import subprocess
+    import sys
+
+    from eil.knowledge_benchmark import MANIFEST_SHA256, PACK
+
+    generator = tmp_path / "generate.py"
+    shutil.copyfile(PACK / "generate.py", generator)
+    subprocess.run([sys.executable, str(generator)], check=True, capture_output=True)
+    raw = (tmp_path / "manifest.json").read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == MANIFEST_SHA256
+    for document in json.loads(raw)["documents"]:
+        source = (tmp_path / document["filename"]).read_bytes()
+        assert hashlib.sha256(source).hexdigest() == document["sha256"]
+
+
 def test_changed_knowledge_baseline_cannot_be_scored_as_original(tmp_path, monkeypatch):
     import shutil
 

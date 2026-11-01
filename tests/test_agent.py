@@ -1,6 +1,7 @@
 """Exercise the real Deep Agents graph without a model server or network."""
 
 import json
+from pathlib import PureWindowsPath
 from unittest.mock import Mock
 
 import httpx
@@ -87,7 +88,13 @@ def test_unregistered_execution_write_and_delegation_tools_are_rejected(name):
     "path, expected_error",
     [
         ("/data/ground_truth.json", "not found"),
-        (str(agent.__file__), "windows absolute paths are not supported"),
+        (
+            str(agent.__file__),
+            "windows absolute paths are not supported"
+            if PureWindowsPath(agent.__file__).is_absolute()
+            else "not found",
+        ),
+        ("/home/operator/project/backend/src/eil/agent.py", "not found"),
         ("C:/Windows/win.ini", "windows absolute paths are not supported"),
     ],
 )

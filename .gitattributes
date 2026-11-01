@@ -3,7 +3,11 @@
 # Benchmark manifests authenticate exact fixture bytes, across platforms.
 data/benchmarks/eil-v1/*.json text eol=lf
 data/benchmarks/eil-v1/*.csv text eol=lf
+data/benchmarks/eil-v2/*.json text eol=lf
+data/benchmarks/eil-v2/*.csv text eol=lf
 data/benchmarks/eil-knowledge-v1/* text eol=lf
+# This baseline's reviewed SHA-256 authenticates its original CRLF bytes.
+data/benchmarks/eil-knowledge-v1/manifest.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 # Public snapshots authenticate exact upstream bytes, including original whitespace.
 data/public-machine-packs/voron-2.4-v1/* -text
 data/public-machine-packs/voron-2.4-v1/manifest.json text eol=lf

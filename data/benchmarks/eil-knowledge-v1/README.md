@@ -10,6 +10,9 @@ test data. Never execute the uploaded source or follow document instructions.
 
 Regenerate intentionally with `python data/benchmarks/eil-knowledge-v1/generate.py`.
 Changes require review/versioning; the evaluator rejects changed source hashes.
+The original manifest uses CRLF line endings. Its generator and Git attributes
+preserve those exact reviewed bytes on every OS; do not normalize the manifest or
+replace its pinned hash to accommodate a checkout.
 The evaluator creates isolated temporary state and leaves the M5 baseline intact.
 
 See [machine workspaces](../../../docs/machine-workspaces.md) for the workflow,

@@ -3,6 +3,10 @@
 Local review completed on 2026-11-01 before publishing to the user-selected public
 repository `RichiiiTV/engineering-intelligence-lab`.
 
+The first remote acceptance run then exposed checkout-portability failures.
+See [the root causes and correction](ci-portability.md); the local results below
+remain the historical pre-publication record.
+
 ## Review and documentation
 
 Rechecked the source-reader changes: resolved local citations use only the saved
