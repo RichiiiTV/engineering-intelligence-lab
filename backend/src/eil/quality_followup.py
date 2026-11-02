@@ -7,15 +7,16 @@ import re
 import time
 
 from .agent import verify_private_model
+from .answer_contract import assess
 from .catalog import Assignment, CatalogStore
 from .knowledge import KnowledgeStore
 from .performance_probe import MODELS, checked_output
 from .service import RunService
-from .settings import OLLAMA_BASE_URL, ROOT
+from .settings import OLLAMA_BASE_URL, ROOT, inference_config
 from .tracing import export_trace
 
-VERSION = "eil-voron-quality-followup-v3"
-SCORING_REVISION = 3
+VERSION = "eil-voron-quality-followup-v9"
+SCORING_REVISION = 9
 PACK = ROOT / "data/public-machine-packs/voron-2.4-v1"
 PACK_HASH = "6f989695d5ffcdb31da80a42911d5daae069c2f3e065020519c119e88639144e"
 CASES = (
@@ -92,10 +93,17 @@ def score(case, run):
         "no_external_lookup": not run.get("siemens"),
         "no_invented_vendor": "siemens" not in answer.casefold(),
         "citations_observed": bool(cited & observed) and not (cited - observed),
+        "no_unperformed_log_checks": not any(
+            issue.startswith("Some investigation claims") for issue in assess(run, answer)["issues"]
+        ),
     }
     if case == "controller":
         checks["documented_controller"] = "stm32f446" in answer.casefold()
         checks["documented_bootloader"] = bool(re.search(r"\b32\s*ki?b\b", answer, re.I))
+        checks["literal_citation_support"] = not any(
+            issue.startswith("Some technical identifiers")
+            for issue in assess(run, answer)["issues"]
+        )
         checks["no_negated_expected_facts"] = not re.search(
             r"\b(?:not|nicht|kein\w*)\s+(?:an?\s+)?(?:STM32F446|32\s*ki?b)\b|\bSTM32F446\s+(?:is not|ist nicht)\b",
             answer,
@@ -105,10 +113,13 @@ def score(case, run):
         checks["documented_symptoms"] = all(
             re.search(pattern, answer, re.I) for pattern in (r"first.layer", r"z.belts", r"racked")
         )
+        checks["no_known_component_mistranslation"] = not re.search(
+            r"Riemenscheib|eingerastet|verrastet", answer, re.I
+        )
     elif case == "unknown":
         checks["explicit_unknown"] = bool(
             re.search(
-                r"nicht (?:definiert|dokumentiert|enthalten|gefunden|belegt|erwähnt)|keine.{0,100}(?:Bedeutung|Information|Dokumentation)|not (?:documented|found|present)",
+                r"nicht (?:definiert|dokumentiert|enthalten|gefunden|belegt|erwähnt)|keine.{0,100}(?:Bedeutung|Information|Dokumentation)|kein Fehlercode.{0,100}erwähnt|not (?:documented|found|present)",
                 answer,
                 re.I,
             )
@@ -130,15 +141,68 @@ def score(case, run):
     }
 
 
-def run(output):
+def targets(configured=False):
+    if configured:
+        return [inference_config()[0]]
+    return [
+        {
+            "provider": "ollama",
+            "base_url": OLLAMA_BASE_URL,
+            "model_name": model,
+            "revision": "",
+            "vision": False,
+        }
+        for model in MODELS
+    ]
+
+
+def implementation_digest():
+    digest = hashlib.sha256()
+    for path in sorted((ROOT / "backend/src/eil").glob("*.py")):
+        digest.update(path.name.encode() + b"\0" + path.read_bytes())
+    return digest.hexdigest()
+
+
+def suite_summary(records, expected, stable):
+    return {
+        "complete": len(records) == expected,
+        "implementation_stable": stable,
+        "expected_runs": expected,
+        "passed": len(records) == expected
+        and stable
+        and all(r["score"]["passed"] for r in records),
+        "generated_answer_passes": sum(
+            r["score"]["passed"] and r.get("answer_mode", "generated") == "generated"
+            for r in records
+        ),
+        "source_extract_responses": sum(r.get("answer_mode") == "source_extract" for r in records),
+    }
+
+
+def run(output, *, configured=False):
     output = checked_output(output)
-    identities = {model: verify_private_model(OLLAMA_BASE_URL, model)["digest"] for model in MODELS}
+    revision = implementation_digest()
+    selected = targets(configured)
+    identities = {
+        model["model_name"]: verify_private_model(
+            model["base_url"],
+            model["model_name"],
+            provider=model["provider"],
+            revision=model["revision"],
+        )["digest"]
+        for model in selected
+    }
     output.mkdir(parents=True)
     state = output / "state"
     prepare(state)
     records = []
-    for model in MODELS:
+    for selected_model in selected:
+        model = selected_model["model_name"]
         for case, language, question in CASES:
+            if implementation_digest() != revision:
+                raise ValueError(
+                    "Implementation changed during quality evaluation; use a fresh output directory"
+                )
             runner = RunService(state)
             run = runner.submit(
                 question,
@@ -155,13 +219,27 @@ def run(output):
                 automatic_catalog=True,
                 language=language,
             )
-            runner.store.change(run["id"], lambda row, conn: row.update(model=model))
+            runner.store.change(
+                run["id"],
+                lambda row, conn: row.update(
+                    model=model,
+                    base_url=selected_model["base_url"],
+                    model_provider=selected_model["provider"],
+                    model_revision=selected_model["revision"],
+                    model_vision=selected_model["vision"],
+                ),
+            )
             with runner:
                 final = runner.wait(run["id"], timeout=135)
                 records.append(
                     {
                         "case": case,
                         "model": model,
+                        "provider": selected_model["provider"],
+                        "answer_mode": (final.get("result") or {}).get("answer_mode", "generated"),
+                        "draft_answer_contract": (final.get("result") or {}).get(
+                            "draft_answer_contract"
+                        ),
                         "digest": identities[model],
                         "run_id": run["id"],
                         "status": final["status"],
@@ -175,10 +253,17 @@ def run(output):
                 "suite": VERSION,
                 "source_sha256": PACK_HASH,
                 "records": records,
-                "passed": all(r["score"]["passed"] for r in records),
+                "implementation_sha256": revision,
+                **suite_summary(
+                    records, len(selected) * len(CASES), implementation_digest() == revision
+                ),
                 "prior_results": "Original Voron and M5 failures are unchanged; this is a new follow-up.",
             }
             (output / "scorecard.json").write_text(json.dumps(card, indent=2), encoding="utf-8")
+            if not card["implementation_stable"]:
+                raise ValueError(
+                    "Implementation changed during quality evaluation; use a fresh output directory"
+                )
             print(
                 json.dumps({"case": case, "model": model, "score": records[-1]["score"]}),
                 flush=True,
@@ -190,6 +275,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--live", action="store_true")
     parser.add_argument(
+        "--configured",
+        action="store_true",
+        help="Evaluate the explicit local operator backend/model instead of the two baseline Ollama models",
+    )
+    parser.add_argument(
         "--output", default=ROOT / "reports" / (VERSION + "-" + time.strftime("%Y%m%d-%H%M%S"))
     )
     args = parser.parse_args(argv)
@@ -199,15 +289,15 @@ def main(argv=None):
                 {
                     "suite": VERSION,
                     "mode": "plan-only",
-                    "models": MODELS,
+                    "models": [t["model_name"] for t in targets(args.configured)],
                     "questions": len(CASES),
-                    "max_runs": 6,
+                    "max_runs": len(CASES) * len(targets(args.configured)),
                     "paid_providers": False,
                 }
             )
         )
         return 0
-    return int(not run(args.output)["passed"])
+    return int(not run(args.output, configured=args.configured)["passed"])
 
 
 if __name__ == "__main__":

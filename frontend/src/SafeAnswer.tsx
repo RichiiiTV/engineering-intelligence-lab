@@ -17,9 +17,11 @@ export default function SafeAnswer({
   function inline(value: string): ReactNode[] {
     return value
       .split(
-        /(\[(?:kb|log|image|pdf|csv|siemens):[^\]]+\]|\*\*[^*]+\*\*|`[^`]+`)/g,
+        /(\\[\\`*_{}\[\]<>#!]|\[(?:kb|log|image|pdf|csv|siemens):[^\]]+\]|\*\*[^*]+\*\*|`[^`]+`)/g,
       )
       .map((part, i) => {
+        if (/^\\[\\`*_{}\[\]<>#!]$/.test(part))
+          return <Fragment key={i}>{part.slice(1)}</Fragment>;
         const normalized =
           part.startsWith("`") && part.endsWith("`") ? part.slice(1, -1) : part;
         const ref = references.find(

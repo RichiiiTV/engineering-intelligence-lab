@@ -70,9 +70,14 @@ passed**:
 
 | Question | Q8_0 | Q4_K_M |
 | --- | --- | --- |
-| Controller MCU and bootloader size | Failed: output limit reached before a final answer. | Failed: expected facts appeared, but the citation contract flagged the supporting passage. |
+| Controller MCU and bootloader size | Failed: `EvidenceNotFound` after a citation ID was passed as a document ID. | Failed: expected facts appeared, but the citation contract flagged the supporting passage. |
 | Documented gantry symptoms | Passed narrow checks. | Passed narrow checks. |
 | Unknown error identifier | Passed bounded refusal checks. | Passed bounded refusal checks. |
+
+Correction on 2 November: the saved Q8 trace shows the ID mismatch above, rather
+than the output-limit cause originally described here. The outcome is unchanged.
+See the separate [citation/model follow-up](citation-quality-and-models.md) for
+remediation and subsequent results; V3 artifacts have not been rewritten.
 
 Earlier v1/v2 outputs remain separate. V1's initial lexical 6/6 score was
 insufficient: manual review found an incorrect Q4 controller citation and a

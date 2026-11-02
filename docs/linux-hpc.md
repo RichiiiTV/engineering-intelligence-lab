@@ -13,6 +13,9 @@ tool-call parser and memory limits. No cluster job has been submitted or tested
 on the user's HPC. Linux CI and local Bash/protocol checks are separate from a
 real GPU deployment test.
 
+For L40S, A100 40 GB, A100 80 GB and four A100 40 GB allocations, see the
+[GPU model profiles](gpu-model-profiles.md) and their operator template generator.
+
 ## Start the app on Linux
 
 Use Python 3.12+, `uv`, Node.js 22.12+ or 24, and npm. Use a separate Linux
@@ -169,6 +172,9 @@ GPU. Choose limits appropriate to model size and available VRAM. Configure with
 `EIL_VLLM_EMBEDDING_*` variables. No hardware-specific throughput is promised.
 The chat server also caps generated responses at 2,048 tokens; application
 per-call/cumulative budgets still apply.
+`EIL_VLLM_MAX_NUM_SEQS` / `EIL_VLLM_EMBEDDING_MAX_NUM_SEQS` lower the sequence caps
+(1–8). `EIL_VLLM_DTYPE` / `EIL_VLLM_EMBEDDING_DTYPE` explicitly select precision.
+These profile limits are starting points, not tested VRAM fits.
 
 ## Slurm allocation
 

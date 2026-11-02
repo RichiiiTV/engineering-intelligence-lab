@@ -112,3 +112,30 @@ def test_cited_passage_must_contain_literal_technical_values_and_repair_is_bound
     assert RunMiddleware(runs, run["id"]).after_model(state, None) is None
     final = assess(runs.get(run["id"]), f"STM32F446, 32 KiB [{good}]")
     assert final["outcome"] == "references_checked" and final["claim_entailment"] == "not_verified"
+
+
+def test_configured_profile_plan_and_partial_quality_reports_never_pass(monkeypatch, capsys):
+    from eil.quality_followup import suite_summary
+
+    monkeypatch.setattr(
+        "eil.quality_followup.inference_config",
+        lambda: (
+            {
+                "provider": "vllm",
+                "model_name": "generated-native-alias",
+                "base_url": "http://127.0.0.1:8002/v1",
+                "revision": "a" * 64,
+                "vision": False,
+            },
+            {},
+        ),
+    )
+    assert main(["--configured"]) == 0
+    plan = json.loads(capsys.readouterr().out)
+    assert plan["models"] == ["generated-native-alias"] and plan["max_runs"] == 3
+    records = [{"score": {"passed": True}, "answer_mode": "source_extract"}]
+    assert not suite_summary(records, 3, True)["passed"]
+    assert not suite_summary(records, 1, False)["passed"]
+    result = suite_summary(records, 1, True)
+    assert result["passed"] and result["generated_answer_passes"] == 0
+    assert result["source_extract_responses"] == 1

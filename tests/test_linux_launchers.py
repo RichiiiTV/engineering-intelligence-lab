@@ -1,5 +1,6 @@
 """Native launcher smoke checks: no packages, services or HPC jobs are started."""
 
+import json
 import os
 import shutil
 import subprocess
@@ -105,6 +106,53 @@ def test_native_vllm_check_verifies_generated_files_without_starting_server(tmp_
         timeout=5,
     )
     assert rejected.returncode == 2
+    # A generated fake CLI exercises actual argv assembly, never a GPU engine.
+    engine = tmp_path / "fake-engine"
+    for package in ("vllm", "vllm/entrypoints", "vllm/entrypoints/cli"):
+        folder = engine / package
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "__init__.py").write_text("")
+    (engine / "vllm/entrypoints/cli/main.py").write_text(
+        "import json,sys\nprint(json.dumps(sys.argv[1:]))\n"
+    )
+    metadata = engine / "vllm-0.32.0.dist-info"
+    metadata.mkdir()
+    (metadata / "METADATA").write_text("Metadata-Version: 2.1\nName: vllm\nVersion: 0.32.0\n")
+    launch_env = env | {
+        "PYTHONPATH": str(engine),
+        "EIL_VLLM_DTYPE": "bfloat16",
+        "EIL_VLLM_MAX_NUM_SEQS": "2",
+        "EIL_VLLM_VISION": "0",
+    }
+    launched = subprocess.run(
+        command[:-1], env=launch_env, capture_output=True, text=True, timeout=5
+    )
+    assert launched.returncode == 0, launched.stderr
+    args = json.loads(launched.stdout.splitlines()[-1])
+    assert args[args.index("--dtype") + 1] == "bfloat16"
+    assert args[args.index("--max-num-seqs") + 1] == "2"
+    assert "--language-model-only" in args
+    assert env["EIL_VLLM_API_KEY"] not in launched.stdout + launched.stderr
+    launched = subprocess.run(
+        command[:-1],
+        env=launch_env | {"EIL_VLLM_VISION": "1"},
+        capture_output=True,
+        text=True,
+        timeout=5,
+    )
+    assert launched.returncode == 0
+    args = json.loads(launched.stdout.splitlines()[-1])
+    assert "--language-model-only" not in args
+    assert json.loads(args[args.index("--limit-mm-per-prompt") + 1]) == {
+        "image": 1,
+        "video": 0,
+        "audio": 0,
+    }
+    for setting in ({"EIL_VLLM_DTYPE": "fp8"}, {"EIL_VLLM_MAX_NUM_SEQS": "0"}):
+        rejected = subprocess.run(
+            command, env=env | setting, capture_output=True, text=True, timeout=5
+        )
+        assert rejected.returncode == 2
     cache.chmod(0o755)
     rejected = subprocess.run(command, env=env, capture_output=True, text=True, timeout=5)
     assert rejected.returncode != 0 and "no group/other permissions" in rejected.stderr

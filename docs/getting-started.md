@@ -98,8 +98,8 @@ The loopback app serves the production build; rebuild it after frontend changes.
 
 ```powershell
 uv sync --locked --extra dev --extra hosted --extra inference
-uv run --locked ruff check backend/src/eil tests scripts/model_manifest.py
-uv run --locked ruff format --check backend/src/eil tests scripts/model_manifest.py
+uv run --locked ruff check backend/src/eil tests scripts/model_manifest.py scripts/hpc_profiles.py
+uv run --locked ruff format --check backend/src/eil tests scripts/model_manifest.py scripts/hpc_profiles.py
 uv run --locked pytest -q
 uv run --locked python -m eil.publication --history
 uv run --locked python -m eil.supply_chain

@@ -44,8 +44,8 @@ jobs:
           bash scripts/start-ollama-hpc.sh --help
       - run: uv run python -m eil.publication --history
       - run: uv run python -m eil.supply_chain
-      - run: uv run ruff check backend/src/eil tests scripts/model_manifest.py
-      - run: uv run ruff format --check backend/src/eil tests scripts/model_manifest.py
+      - run: uv run ruff check backend/src/eil tests scripts/model_manifest.py scripts/hpc_profiles.py
+      - run: uv run ruff format --check backend/src/eil tests scripts/model_manifest.py scripts/hpc_profiles.py
       - run: uv run pytest -q
       - run: uv run python -m eil.benchmark --provider offline --agent-mode both --repetitions 2 --output reports/ci-calibration
       - run: uv run python -m eil.benchmark_extended --provider offline --agent-mode both --repetitions 2 --output reports/ci-extended-calibration

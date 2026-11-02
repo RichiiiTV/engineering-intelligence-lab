@@ -45,6 +45,8 @@ if [[ "$mode" == chat ]]; then
   parallel=${EIL_VLLM_TENSOR_PARALLEL_SIZE:-1}
   memory=${EIL_VLLM_GPU_MEMORY_UTILIZATION:-0.8}
   model_len=${EIL_VLLM_MAX_MODEL_LEN:-8192}
+  dtype=${EIL_VLLM_DTYPE:-auto}
+  sequences=${EIL_VLLM_MAX_NUM_SEQS:-8}
   export VLLM_API_KEY=$EIL_VLLM_API_KEY
 else
   : "${EIL_VLLM_EMBEDDING_MODEL_PATH:?Set the prefetched local embedding model directory}"
@@ -59,6 +61,8 @@ else
   parallel=${EIL_VLLM_EMBEDDING_TENSOR_PARALLEL_SIZE:-1}
   memory=${EIL_VLLM_EMBEDDING_GPU_MEMORY_UTILIZATION:-0.8}
   model_len=${EIL_VLLM_EMBEDDING_MAX_MODEL_LEN:-2048}
+  dtype=${EIL_VLLM_EMBEDDING_DTYPE:-auto}
+  sequences=${EIL_VLLM_EMBEDDING_MAX_NUM_SEQS:-8}
   export VLLM_API_KEY=${EIL_VLLM_EMBEDDING_API_KEY:-${EIL_VLLM_API_KEY:-}}
   [[ -n "$VLLM_API_KEY" ]] || { printf '%s\n' 'Set the embedding runtime API key.' >&2; exit 2; }
 fi
@@ -68,6 +72,9 @@ fi
 [[ "$port" =~ ^[0-9]{4,5}$ ]] && (( 10#$port >= 1024 && 10#$port <= 65535 )) || { printf '%s\n' 'Use an unprivileged TCP port.' >&2; exit 2; }
 [[ "$parallel" =~ ^[1-9][0-9]?$ ]] || { printf '%s\n' 'Invalid tensor parallel size.' >&2; exit 2; }
 [[ "$model_len" =~ ^[1-9][0-9]{0,3}$ ]] && (( 10#$model_len <= 8192 )) || { printf '%s\n' 'Model length must be from 1 through 8192 tokens.' >&2; exit 2; }
+[[ "$dtype" =~ ^(auto|bfloat16|float16|float32)$ ]] || { printf '%s\n' 'Choose a supported native model dtype.' >&2; exit 2; }
+[[ "$sequences" =~ ^[1-8]$ ]] || { printf '%s\n' 'Scheduled sequences must be from 1 through 8.' >&2; exit 2; }
+[[ "${EIL_VLLM_VISION:-0}" =~ ^[01]$ ]] || { printf '%s\n' 'Vision must be explicitly 0 or 1.' >&2; exit 2; }
 [[ "$memory" =~ ^0\.[0-9]+$ ]] || { printf '%s\n' 'GPU memory utilization must be between 0 and 1.' >&2; exit 2; }
 "$EIL_VLLM_PYTHON" -c 'import sys; sys.exit(0 if 0<float(sys.argv[1])<1 else "GPU memory utilization must be between 0 and 1")' "$memory"
 if [[ "$mode" == chat && ! "$EIL_VLLM_TOOL_CALL_PARSER" =~ ^[A-Za-z0-9_-]{1,80}$ ]]; then
@@ -92,7 +99,7 @@ fi
 "$EIL_VLLM_PYTHON" -c 'import importlib.metadata,sys; sys.exit(0 if importlib.metadata.version("vllm")=="0.32.0" else "Install the reviewed vllm==0.32.0 server version")'
 args=(serve "$model_path" --tokenizer "$model_path" --served-model-name "$alias"
   --host 127.0.0.1 --port "$port" --tensor-parallel-size "$parallel"
-  --gpu-memory-utilization "$memory" --max-model-len "$model_len" --max-num-seqs 8
+  --gpu-memory-utilization "$memory" --max-model-len "$model_len" --max-num-seqs "$sequences" --dtype "$dtype"
   --allowed-media-domains eil-no-remote-media.invalid
   --no-trust-remote-code --no-trust-request-chat-template --no-trust-request-mm-kwargs
   --no-enable-prefix-caching
@@ -101,6 +108,11 @@ args=(serve "$model_path" --tokenizer "$model_path" --served-model-name "$alias"
 if [[ "$mode" == chat ]]; then
   args+=(--runner generate --enable-auto-tool-choice --tool-call-parser "$EIL_VLLM_TOOL_CALL_PARSER"
     --generation-config vllm --override-generation-config '{"max_new_tokens":2048}')
+  if [[ "${EIL_VLLM_VISION:-0}" == 1 ]]; then
+    args+=(--limit-mm-per-prompt '{"image":1,"video":0,"audio":0}' --mm-processor-cache-gb 0)
+  else
+    args+=(--language-model-only)
+  fi
 else
   args+=(--runner pooling)
 fi

@@ -36,6 +36,22 @@ EIL should use existing frameworks such as Deep Agents and LangGraph; do not rei
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized fixing citation-quality failures and implementing model profiles
+for L40S, A100 40 GB, A100 80 GB and four A100 40 GB on 2026-11-02. Keep operator
+selection separate from normal chat; no model downloads, paid provider, HPC job,
+equipment access or production deployment is authorized. Preserve failed drafts
+and historical benchmark results. Extractive citation fallbacks must be clearly
+labelled and must not count as successful model answers. See
+`docs/citation-quality-and-models.md` and `docs/gpu-model-profiles.md`; stop after
+implementation, validation and the already authorized normal GitHub publication.
+Local checks: 409 backend / 75 frontend tests, 23 WSL launcher/profile checks and
+both offline gates passed. Final expanded live V8 passed 5/6: both controller
+citations are corrected; Q4 gantry stopped at its unchanged output-token cap.
+V7 exercised one labelled source-excerpt fallback. Preserve these outcomes and
+do not describe either the small models or the unrun GPU profiles as fully
+quality/hardware validated. A suspected unperformed log check was corrected by
+the event trace: the tool actually searched an empty attachment set.
+
 The user authorized completing the outstanding review refinements, Linux support,
 a native vLLM backbone and a normal push to GitHub on 2026-11-02. The target is
 Slurm with NVIDIA GPUs. The user reports the available module

@@ -5,6 +5,20 @@ import { setLanguage } from "./i18n";
 
 afterEach(cleanup);
 
+it("shows escaped source excerpts literally without activating embedded references or markup", () => {
+  const { container } = render(
+    <SafeAnswer
+      text={"> \\# Original \\[mcu\\] \\<script\\>alert(1)\\</script\\>\n> \\`source\\` \\[kb:example:p1:c0\\]\n\n[kb:example:p1:c0]"}
+      references={[{ citation_id: "kb:example:p1:c0", title: "Original" }]}
+    />,
+  );
+  const quote = container.querySelector("blockquote");
+  expect(quote?.textContent).toContain("# Original [mcu] <script>alert(1)</script>");
+  expect(quote?.textContent).toContain("`source` [kb:example:p1:c0]");
+  expect(quote?.querySelector("button,a,code,script,img")).toBeNull();
+  expect(container.querySelectorAll("button").length).toBe(1);
+});
+
 it("separates headings, adjacent lists and paragraphs without requiring blank lines", () => {
   render(
     <SafeAnswer

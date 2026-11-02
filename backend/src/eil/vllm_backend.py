@@ -293,6 +293,18 @@ def build_model(base_url, model_name, revision, *, max_output_tokens=1024, visio
 
 
 def embedding_vectors(config, texts):
+    input_format = config.get("input_format", "plain")
+    if input_format not in {"plain", "qwen3"}:
+        raise ModelUnavailableError("Unreviewed embedding input format")
+    if input_format == "qwen3":
+        prefix = "task: search result | query: "
+        texts = [
+            "Instruct: Retrieve relevant machine documentation passages that answer the question.\nQuery: "
+            + text.removeprefix(prefix)
+            if text.startswith(prefix)
+            else text
+            for text in texts
+        ]
     verify_model(config["base_url"], config["model_name"], config["revision"], embedding=True)
     try:
         with client(embedding=True, timeout=30) as http:
@@ -317,6 +329,13 @@ def embedding_vectors(config, texts):
         ):
             raise ValueError("Embedding indices mismatch")
         vectors = [item["embedding"] for item in sorted(records, key=lambda item: item["index"])]
-        return "vllm:" + config["model_name"] + "@sha256:" + config["revision"], vectors
+        return (
+            "vllm:"
+            + config["model_name"]
+            + "@sha256:"
+            + config["revision"]
+            + ("|qwen3-input-v1" if input_format == "qwen3" else ""),
+            vectors,
+        )
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
         raise ModelUnavailableError("vLLM embeddings are unavailable") from exc

@@ -163,6 +163,9 @@ def machine_tools(directory, run_id):
 
     def read_machine_source(document_id: str, start_line: int = 1, end_line: int = 80) -> str:
         """Read a bounded line range from this run's frozen machine source. No paths, includes, execution or other machines. Cite the returned exact reference."""
+        from .answer_contract import source_document_id
+
+        document_id = source_document_id(runs.get(run_id), document_id)
         if document_id not in allowed:
             raise EvidenceNotFound("Source is outside the frozen machine selection")
         if not 1 <= start_line <= end_line or end_line - start_line >= 150:

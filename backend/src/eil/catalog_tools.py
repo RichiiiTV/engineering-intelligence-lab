@@ -3,6 +3,7 @@
 import json
 import struct
 
+from .answer_contract import source_document_id
 from .catalog import CatalogStore, centroid, normalized
 from .code_sources import inspect
 from .embeddings import EmbeddingUnavailable, embed
@@ -181,9 +182,11 @@ def _model_observation(lookup):
             "classification",
             "assignment_basis",
             "license_note",
+            "offset",
         }
         observation["hits"] = [
             {key: value for key, value in hit.items() if key not in administrative}
+            | {"document_id": hit["id"]}
             for hit in lookup["hits"]
         ]
     return json.dumps(observation, ensure_ascii=False, separators=(",", ":"))
@@ -205,6 +208,7 @@ def catalog_tools(directory, run_id):
 
     def source(document_id):
         run = runs.get(run_id)
+        document_id = source_document_id(run, document_id)
         lookup = run.get("catalog_lookup") or {}
         if lookup.get("status") != "identified" or document_id not in lookup["document_ids"]:
             raise EvidenceNotFound("Source is outside this answer machine snapshot")
@@ -222,7 +226,7 @@ def catalog_tools(directory, run_id):
         return library, library.document(document_id, include_inactive=True)
 
     def read_catalog_source(document_id: str, start_line: int = 1, end_line: int = 80) -> str:
-        """Read 1–150 lines of a source from the automatically identified machine. No host paths, includes, execution, network or device access. Use returned exact kb citations."""
+        """Read 1–150 lines of the identified machine source. Pass document_id or an exact observed citation_id from the lookup hits. Cite each claim with the returned passage that contains it. No host paths, includes, execution, network or device access."""
         if not 1 <= start_line <= end_line or end_line - start_line >= 150:
             raise ValueError("Read 1–150 positive lines")
         library, document = source(document_id)

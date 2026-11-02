@@ -50,6 +50,10 @@ def inference_config(*, ollama_base_url=None, ollama_model=None):
         "base_url": VLLM_EMBEDDING_BASE_URL if EMBEDDING_PROVIDER == "vllm" else OLLAMA_BASE_URL,
         "revision": VLLM_EMBEDDING_REVISION if EMBEDDING_PROVIDER == "vllm" else "",
     }
+    if EMBEDDING_PROVIDER == "vllm":
+        embedding["input_format"] = os.environ.get("EIL_VLLM_EMBEDDING_INPUT_FORMAT", "plain")
+        if embedding["input_format"] not in {"plain", "qwen3"}:
+            raise ValueError("Choose a supported native embedding input format")
     for config in (generation, embedding):
         try:
             url = urlsplit(config["base_url"])

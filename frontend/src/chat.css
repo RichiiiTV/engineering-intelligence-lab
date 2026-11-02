@@ -291,3 +291,7 @@
     max-width: 90%;
   }
 }
+.safe-answer blockquote {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

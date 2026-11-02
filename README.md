@@ -89,6 +89,8 @@ PDF conversion, the Windows launcher and development commands.
 **Linux or an HPC?** Follow the [Linux and Slurm guide](docs/linux-hpc.md) for the
 Bash launcher, site Ollama modules, SSH tunnels and separately installed native
 vLLM. Ollama remains the default. Cluster-specific GPU validation is still required.
+Ready-to-review [GPU profiles](docs/gpu-model-profiles.md) cover L40S, A100 40 GB,
+A100 80 GB and four A100 40 GB with explicit model and memory settings.
 
 **Try a real machine corpus:** the pinned [Voron 2.4 reference pack](docs/public-machine-pilot.md)
 includes public documentation, controller configuration, attribution and upstream
@@ -124,11 +126,15 @@ documented real-model pilots. The [November 2026 review](docs/project-review-202
 records the current fixes, supply-chain checks and performance findings.
 The [performance and HPC follow-up](docs/performance-and-hpc-followup.md) records
 measured token rates, cache experiments, current quality checks and Linux support.
+The [citation and model follow-up](docs/citation-quality-and-models.md) covers
+bounded citation repair and clearly labelled source excerpts when a draft fails.
 
 The real Voron pilot had two expected behaviors and one controller-question
 failure despite relevant retrieved evidence. Fresh M5 runs passed 6/6 checks for
-each local quantization; the separate Voron follow-up still failed both controller
-cases. Original failures remain recorded, and hosted-model validation is deferred.
+each local quantization. Later citation fixes add bounded repairs and original
+source excerpts when a draft fails; those fallback excerpts are counted separately
+from model answers. Historical Voron failures remain recorded, and hosted-model
+validation is deferred.
 A citation identifies a source location,
 but does not establish that a claim is correct or compatible with installed hardware.
 Machine grouping is heuristic, and image transcriptions are unverified observations.
@@ -141,6 +147,7 @@ autonomous equipment control have not been validated.
 | :--- | :--- |
 | [Getting started](docs/getting-started.md) | [Architecture](docs/architecture.md) |
 | [Linux / Slurm / native vLLM](docs/linux-hpc.md) | [Performance and quality follow-up](docs/performance-and-hpc-followup.md) |
+| [GPU model profiles](docs/gpu-model-profiles.md) | [Citation quality fixes](docs/citation-quality-and-models.md) |
 | [Accounts, backups and PDF setup](docs/security-operations.md) | [Chat backbone and machine matching](docs/chat-backbone.md) |
 | [Knowledge administration](docs/knowledge-library.md) | [German/English and Siemens routing](docs/german-siemens-routing.md) |
 | [Private machine workspaces](docs/machine-workspaces.md) | [M5 evaluation protocol](docs/m5-evaluation.md) · [Results](docs/m5-results.md) |

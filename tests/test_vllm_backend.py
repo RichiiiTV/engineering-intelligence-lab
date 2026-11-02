@@ -357,3 +357,20 @@ def test_real_graph_uses_sdk_tools_and_actual_usage(transport, tmp_path, monkeyp
     assert len(chat) == 2 and {t["function"]["name"] for t in chat[0]["tools"]} == {
         "read_generated_fact"
     }
+
+
+def test_qwen_embedding_query_instruction_and_cache_identity_are_explicit_and_frozen(transport):
+    requests, state = transport
+    state["embedding"] = [[1.0] * 32, [1.0] * 32]
+    config = {"base_url": BASE, "model_name": MODEL, "revision": REVISION, "input_format": "qwen3"}
+    original = [
+        "task: search result | query: Welche Steuerung?",
+        "title: Generated | text: STM32F446",
+    ]
+    key, vectors = vllm_backend.embedding_vectors(config, original)
+    posted = json.loads(next(r.content for r in requests if r.url.path == "/v1/embeddings"))
+    assert posted["input"][0].startswith("Instruct:")
+    assert posted["input"][0].endswith("Query: Welche Steuerung?")
+    assert posted["input"][1] == original[1]
+    assert key.endswith("|qwen3-input-v1") and len(vectors) == 2
+    assert original[0].startswith("task:")

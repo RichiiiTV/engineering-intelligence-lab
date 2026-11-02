@@ -124,10 +124,10 @@ def test_fresh_and_cached_catalog_projection_preserves_evidence_and_raw_export(
             "section",
             "line_start",
             "line_end",
-            "offset",
             "compatibility_notice",
         ):
             assert hit[key] == original["hits"][0][key]
+        assert "offset" not in hit  # Byte offsets are not source line numbers.
     saved = runs.get(run["id"])
     assert saved["catalog_lookup"] == frozen
     report = export_investigation(runs, run["id"])

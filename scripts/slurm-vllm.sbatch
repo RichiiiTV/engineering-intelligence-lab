@@ -7,10 +7,12 @@
 # No job is submitted by this repository or by an agent.
 set -euo pipefail
 umask 077
+: "${SLURM_JOB_ID:?Submit this template with sbatch, not on a login node}"
 : "${EIL_REPO_DIR:?Set the existing checkout directory before sbatch}"
 : "${EIL_VLLM_CHAT_CUDA_VISIBLE_DEVICES:?Choose chat GPU identifiers inside this allocation}"
 : "${EIL_VLLM_EMBEDDING_CUDA_VISIBLE_DEVICES:?Choose embedding GPU identifiers inside this allocation}"
 cd -- "$EIL_REPO_DIR"
+"${EIL_VLLM_PYTHON:?Set the native server Python}" scripts/hpc_profiles.py --check-allocation
 children=()
 cleanup() {
   local child
