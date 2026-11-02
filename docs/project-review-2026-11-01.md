@@ -123,7 +123,10 @@ No remote provider was substituted, and no unrelated Docker stack was started.
 | 4 | Compare smaller quantizations/model choices on the same evidence and evaluation suite. | Require diagnostic quality and citation support to hold before accepting a throughput gain. Existing failed quality cases must remain visible. |
 | 5 | Add an optional streamed progress/answer experience and clearer ingestion summaries. | Keep a clear distinction between provisional text and final validated citations; test reconnect, cancellation, language freezing and keyboard/mobile access. |
 
-These are proposals, not completed performance claims. Ollama exposes the
+These were proposals at the time of this review. Their subsequent implementation,
+measurements and remaining failures are recorded in the separate
+[performance/HPC follow-up](performance-and-hpc-followup.md); the original results
+below remain unchanged. Ollama exposes the
 [load, prompt-evaluation and evaluation metrics](https://docs.ollama.com/api/generate)
 needed for the first step. No numerical decoding throughput target is asserted.
 

@@ -21,6 +21,7 @@ import type { EvidenceReport, Run } from "./types";
 import { stopped } from "./useInvestigation";
 import { friendlyStatus } from "./userFlow";
 import SafeAnswer from "./SafeAnswer";
+import LiveProgress from "./LiveProgress";
 import SourceReader, { SourceCard } from "./SourceReader";
 import { LibraryReferences } from "./KnowledgeLibrary";
 import SiemensReferences from "./SiemensReferences";
@@ -44,6 +45,13 @@ export default function ChatApp() {
     [detail, setDetail] = useState<Detail | null>(null);
   const [rows, setRows] = useState<Conversation[]>([]),
     [historyOpen, setHistoryOpen] = useState(false);
+  const [liveProgress, setLiveProgress] = useState(() => {
+    try {
+      return localStorage.getItem("eil-live-progress-v1") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [question, setQuestion] = useState(""),
     [files, setFiles] = useState<File[]>([]),
     [busy, setBusy] = useState(false),
@@ -273,6 +281,7 @@ export default function ChatApp() {
                   run.chat_context?.submitted_attachment_ids?.includes(a.id),
                 )}
                 refresh={refresh}
+                liveProgress={liveProgress}
               />
             ))}
           </section>
@@ -358,6 +367,23 @@ export default function ChatApp() {
             {t("Erneut versuchen")}
           </button>
         )}
+        <label className="chat-progress-option">
+          <input
+            type="checkbox"
+            checked={liveProgress}
+            onChange={(e) => {
+              const enabled = e.target.checked;
+              setLiveProgress(enabled);
+              try {
+                localStorage.setItem("eil-live-progress-v1", String(enabled));
+              } catch {
+                /* The preference remains in memory if storage is unavailable. */
+              }
+            }}
+          />
+          {t("Fortschritt live anzeigen")}
+          <span>{t("Die Antwort erscheint nach Abschluss.")}</span>
+        </label>
         <p className="chat-footnote">
           {t(
             "Bei eindeutiger Siemens-SPS-Diagnose suche ich automatisch öffentlich nach Produktfamilie und eingegebenem Fehlercode. Interne Namen und Anhänge werden dabei nicht übertragen. Mit „nur lokal“ bleibt die Frage lokal. Chats und Anhänge bleiben privat. Prüfe vorgeschlagene Maßnahmen, bevor du sie umsetzt.",
@@ -372,10 +398,12 @@ function ChatTurn({
   run,
   attachments,
   refresh,
+  liveProgress,
 }: {
   run: Run;
   attachments: Attachment[];
   refresh: () => Promise<void>;
+  liveProgress: boolean;
 }) {
   useLanguage();
   const [report, setReport] = useState<EvidenceReport | null>(null),
@@ -427,11 +455,19 @@ function ChatTurn({
       {!stopped.has(run.status) ? (
         <div className="chat-thinking">
           <LoaderCircle size={17} className="chat-spinner" />
-          <span>
-            {run.status === "queued"
-              ? t("Wartet auf die Untersuchung…")
-              : t("Problem und Maschinenwissen werden geprüft…")}
-          </span>
+          {liveProgress ? (
+            <LiveProgress
+              runId={run.id}
+              status={run.status}
+              onTerminal={refresh}
+            />
+          ) : (
+            <span>
+              {run.status === "queued"
+                ? t("Wartet auf die Untersuchung…")
+                : t("Problem und Maschinenwissen werden geprüft…")}
+            </span>
+          )}
           <button
             onClick={() =>
               void post("/api/investigations/" + run.id + "/cancel")

@@ -8,13 +8,14 @@ import time
 import uuid
 from pathlib import Path
 
-import sqlite_vec
-
 from .embeddings import EmbeddingUnavailable, batch_lifetime, embed
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore, checked_id
 from .passages import ProductContext, compatible, context_for, location
 from .pdf_ingest import MAX_PDF_BYTES, parse_pdf
+from .performance import timed
+from .retrieval_cache import INDEXES, snapshot_digest
 from .runs import now
+from .text_sources import plain_chunks
 
 MAX_DOCUMENTS, MAX_PASSAGES = 100, 10000
 
@@ -52,6 +53,9 @@ class KnowledgeStore:
                 ).fetchone()
                 if not machine or machine["owner_id"] != owner_id:
                     raise EvidenceNotFound("Machine not found")
+
+    def _scope(self):
+        return (str(self.evidence.path), self.machine_id, self.owner_id)
 
     def list(self, *, all_documents=False):
         with self.evidence.connection() as conn:
@@ -155,12 +159,7 @@ class KnowledgeStore:
             text = content.decode("utf-8-sig")
             if "\x00" in text:
                 raise ValueError("Text documents must be UTF-8 text")
-            passages = [
-                {"page": n + 1, "text": page[start : start + 1200]}
-                for n, page in enumerate(text.split("\f"))
-                for start in range(0, len(page), 1000)
-                if page[start : start + 1200].strip()
-            ]
+            passages = plain_chunks(text)
             if suffix in code_types:
                 from .code_sources import chunks
 
@@ -221,6 +220,7 @@ class KnowledgeStore:
                     for i, p in enumerate(passages)
                 ],
             )
+        INDEXES.invalidate(self._scope())
         return metadata
 
     def seed(self):
@@ -265,6 +265,7 @@ class KnowledgeStore:
             conn.execute(
                 "UPDATE knowledge_documents SET active=? WHERE id=?", (int(active), identity)
             )
+        INDEXES.invalidate(self._scope())
 
     def index(self, identity, *, progress=None, cancelled=None):
         document = self.document(identity, include_inactive=True)
@@ -295,6 +296,7 @@ class KnowledgeStore:
                 progress(min(start + 16, len(passages)), len(passages))
         with self.evidence.connection() as conn:
             conn.executemany("UPDATE knowledge_passages SET vector=?,model=? WHERE id=?", output)
+        INDEXES.invalidate(self._scope())
         return {"document_id": identity, "indexed_passages": len(output), "model": key}
 
     def resolve(self, citation, allowed):
@@ -317,6 +319,10 @@ class KnowledgeStore:
         )
 
     def search(self, query, allowed, *, product_context=None):
+        with timed("retrieval_total"):
+            return self._search(query, allowed, product_context=product_context)
+
+    def _search(self, query, allowed, *, product_context=None):
         if (
             not isinstance(query, str)
             or not query.strip()
@@ -329,10 +335,11 @@ class KnowledgeStore:
         for identity in allowed:
             checked_id(identity)
         context = context_for(query, product_context)
+        documents = {
+            identity: self.document(identity, include_inactive=True) for identity in allowed
+        }
         excluded = [
-            identity
-            for identity in allowed
-            if not compatible(self.document(identity, include_inactive=True), context)[0]
+            identity for identity in allowed if not compatible(documents[identity], context)[0]
         ]
         allowed = [i for i in allowed if i not in excluded]
         if not allowed:
@@ -352,64 +359,71 @@ class KnowledgeStore:
         lexical, semantic, key, notice = [], [], None, None
         semantic_used = False
         terms = sorted(set(re.findall(r"\w+", query.lower())))[:64]
-        with sqlite3.connect(":memory:") as index:
-            index.execute("CREATE VIRTUAL TABLE terms USING fts5(text,id UNINDEXED)")
-            index.executemany(
-                "INSERT INTO terms VALUES (?,?)", [(p["text"], p["id"]) for p in corpus]
-            )
-            if terms:
-                lexical = [
-                    r[0]
-                    for r in index.execute(
-                        "SELECT id FROM terms WHERE terms MATCH ? ORDER BY bm25(terms),id LIMIT 12",
-                        (" OR ".join('"' + t + '"' for t in terms),),
-                    )
-                ]
-            if any(p["vector"] for p in corpus):
-                try:
-                    key, vectors = embed(["task: search result | query: " + query])
-                    key += "|retrieval-v2"
-                    index.enable_load_extension(True)
-                    try:
-                        sqlite_vec.load(index)
-                    finally:
-                        index.enable_load_extension(False)
-                    index.execute("CREATE TABLE vectors(id TEXT, vector BLOB)")
-                    index.executemany(
-                        "INSERT INTO vectors VALUES (?,?)",
+        scope = self._scope()
+        fingerprint = snapshot_digest([documents[i] for i in allowed], corpus)
+        vector = None
+        if any(p["vector"] for p in corpus):
+            try:
+                key, vectors = embed(["task: search result | query: " + query])
+                key += "|retrieval-v2"
+                vector = vectors[0]
+            except EmbeddingUnavailable:
+                notice = "Semantic search unavailable; keyword search was used."
+        else:
+            notice = "Documents have not been indexed for semantic search; keyword search was used."
+
+        def rank(model=None, query_vector=None):
+            with INDEXES.acquire(
+                scope,
+                fingerprint,
+                corpus,
+                model=model,
+                dimensions=len(query_vector) if query_vector is not None else None,
+            ) as index:
+                with timed("retrieval_lexical"):
+                    lexical = (
                         [
-                            (p["id"], p["vector"])
-                            for p in corpus
-                            if p["model"] == key
-                            and p["vector"] is not None
-                            and len(p["vector"]) == len(vectors[0])
-                        ],
+                            r[0]
+                            for r in index.execute(
+                                "SELECT id FROM terms WHERE terms MATCH ? ORDER BY bm25(terms),id LIMIT 12",
+                                (" OR ".join('"' + t + '"' for t in terms),),
+                            )
+                        ]
+                        if terms
+                        else []
                     )
-                    semantic = [
-                        r[0]
-                        for r in index.execute(
-                            "SELECT id FROM vectors WHERE vec_distance_cosine(vector,?)<0.65 ORDER BY vec_distance_cosine(vector,?),id LIMIT 12",
-                            (vectors[0], vectors[0]),
-                        )
-                    ]
-                    semantic_used = bool(index.execute("SELECT 1 FROM vectors LIMIT 1").fetchone())
-                    if not semantic_used:
-                        notice = (
-                            "Embedding model changed; reindex documents. Keyword search was used."
-                        )
-                except (EmbeddingUnavailable, sqlite3.Error):
-                    notice = "Semantic search unavailable; keyword search was used."
-            else:
-                notice = (
-                    "Documents have not been indexed for semantic search; keyword search was used."
-                )
+                semantic, used = [], False
+                if query_vector is not None:
+                    with timed("retrieval_vector"):
+                        semantic = [
+                            r[0]
+                            for r in index.execute(
+                                "SELECT id FROM vectors WHERE vec_distance_cosine(vector,?)<0.65 ORDER BY vec_distance_cosine(vector,?),id LIMIT 12",
+                                (query_vector, query_vector),
+                            )
+                        ]
+                        used = bool(index.execute("SELECT 1 FROM vectors LIMIT 1").fetchone())
+                return lexical, semantic, used
+
+        try:
+            lexical, semantic, semantic_used = rank(key if vector is not None else None, vector)
+            if vector is not None and not semantic_used:
+                notice = "Embedding model changed; reindex documents. Keyword search was used."
+        except sqlite3.Error:
+            if vector is None:
+                raise
+            INDEXES.invalidate(scope)
+            notice = "Semantic search unavailable; keyword search was used."
+            lexical, semantic, semantic_used = rank()
         scores = {}
         for ranking in (lexical, semantic):
             for rank, citation in enumerate(ranking):
                 scores[citation] = scores.get(citation, 0) + 1 / (60 + rank + 1)
-        hits = [
-            self.resolve(cid, allowed) for cid in sorted(scores, key=lambda c: (-scores[c], c))[:3]
-        ]
+        with timed("retrieval_resolve"):
+            hits = [
+                self.resolve(cid, allowed)
+                for cid in sorted(scores, key=lambda c: (-scores[c], c))[:3]
+            ]
         return {
             "hits": hits,
             "query": query,

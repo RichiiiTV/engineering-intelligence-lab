@@ -28,6 +28,8 @@ export const statusLabel = (value: string) =>
   )[value] || value;
 
 const notices: Record<string, string> = {
+  "Vendor identification is not established by the human question or source text; citation IDs are opaque.":
+    "Der Hersteller ist weder durch die Frage noch durch den Quellentext belegt. Quellenkennungen enthalten keine Herstellerinformation.",
   "Citation resolution checks location and source identity, not whether a claim follows.":
     "Quellenprüfungen bestätigen Fundstelle und Quellenidentität, nicht die Unterstützung einer Aussage.",
   "Lexical scores are relevance scores, not calibrated probabilities.":
@@ -48,6 +50,10 @@ const notices: Record<string, string> = {
     "Die ausgewählten Quellen wurden nicht abgerufen.",
   "Some references were not returned by the source tools.":
     "Einige Quellenangaben wurden von den Quellwerkzeugen nicht zurückgegeben.",
+  "Some technical identifiers or memory sizes are absent from the cited passages.":
+    "Einige technische Kennungen oder Speichergrößen stehen nicht in den zitierten Abschnitten.",
+  "The configured self-hosted vLLM request failed. Check the local service and reviewed model configuration.":
+    "Die Anfrage an den konfigurierten vLLM-Server ist fehlgeschlagen. Prüfe den lokalen Dienst und die freigegebene Modellkonfiguration.",
   "The answer has no observed source citations.":
     "Die Antwort enthält keine beobachteten Quellenbelege.",
   "Safety classification or interlock role is not established by the retrieved sources.":

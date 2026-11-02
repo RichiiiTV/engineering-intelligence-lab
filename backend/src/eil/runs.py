@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, ConfigDict, Field
 
 from .database import MAX_EVENT_BYTES, MAX_RUNS, StorageFull, configure, storage_error
-from .settings import OLLAMA_BASE_URL, OLLAMA_MODEL
+from .settings import OLLAMA_BASE_URL, OLLAMA_MODEL, inference_config
 
 STOPPED = frozenset(
     {"completed", "failed", "paused", "cancelled", "interrupted", "timed_out", "budget_exceeded"}
@@ -206,7 +206,10 @@ class RunStore:
             siemens = PublicSiemensQuery.model_validate(siemens).model_dump()
             if case_id is None:
                 chat_mode = True
-        url = urlsplit(OLLAMA_BASE_URL)
+        generation, embedding = inference_config(
+            ollama_base_url=OLLAMA_BASE_URL, ollama_model=OLLAMA_MODEL
+        )
+        url = urlsplit(generation["base_url"])
         if url.scheme not in {"http", "https"} or not url.hostname or url.username or url.password:
             raise ValueError("Configure an HTTP Ollama URL without embedded credentials")
         run_id = str(uuid.uuid4())
@@ -292,8 +295,12 @@ class RunStore:
             tool_calls=0,
             tokens=0,
             limits=limits.model_dump(),
-            model=OLLAMA_MODEL,
-            base_url=OLLAMA_BASE_URL,
+            model=generation["model_name"],
+            base_url=generation["base_url"],
+            model_provider=generation["provider"],
+            model_revision=generation["revision"],
+            model_vision=generation["vision"],
+            embedding_config=embedding,
             worker_pid=None,
             case_id=case_id,
             source_ids=source_ids,

@@ -34,11 +34,18 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: python -m pip install uv==0.13.5
-      - run: uv sync --locked --extra dev --extra hosted
+      - run: uv sync --locked --extra dev --extra hosted --extra inference
+      - name: Linux launcher syntax and safe help
+        if: runner.os == 'Linux'
+        run: |
+          bash -n scripts/start-workbench.sh scripts/start-vllm-native.sh scripts/slurm-vllm.sbatch scripts/start-ollama-hpc.sh scripts/slurm-ollama.sbatch
+          bash scripts/start-workbench.sh --help
+          bash scripts/start-vllm-native.sh --help
+          bash scripts/start-ollama-hpc.sh --help
       - run: uv run python -m eil.publication --history
       - run: uv run python -m eil.supply_chain
-      - run: uv run ruff check backend/src/eil tests
-      - run: uv run ruff format --check backend/src/eil tests
+      - run: uv run ruff check backend/src/eil tests scripts/model_manifest.py
+      - run: uv run ruff format --check backend/src/eil tests scripts/model_manifest.py
       - run: uv run pytest -q
       - run: uv run python -m eil.benchmark --provider offline --agent-mode both --repetitions 2 --output reports/ci-calibration
       - run: uv run python -m eil.benchmark_extended --provider offline --agent-mode both --repetitions 2 --output reports/ci-extended-calibration
@@ -62,7 +69,7 @@ jobs:
         with:
           node-version: '24'
       - run: python -m pip install uv==0.13.5
-      - run: uv sync --locked --extra dev --extra hosted
+      - run: uv sync --locked --extra dev --extra hosted --extra inference
       - run: uv tool run pip-audit --path .venv/lib/python3.12/site-packages --skip-editable
       - run: npm ci --ignore-scripts
         working-directory: frontend

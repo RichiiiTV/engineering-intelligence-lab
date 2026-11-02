@@ -114,6 +114,27 @@
   color: #8b8697;
   margin: 15px 0;
 }
+.chat-progress-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 14px 0 0;
+  color: var(--ux-muted);
+  font-size: 11px;
+}
+.chat-progress-option input {
+  accent-color: var(--ux-purple);
+}
+.chat-progress-option span {
+  color: #8b8697;
+}
+.chat-live-progress small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+}
 .chat-file-list {
   display: flex;
   gap: 8px;

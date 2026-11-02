@@ -545,6 +545,24 @@ async def events(
     )
 
 
+@router.get("/api/investigations/{run_id}/progress")
+async def progress(
+    run_id: str,
+    request: Request,
+    after: int = Query(default=0, ge=0, le=2**53 - 1),
+    last_event_id: int | None = Header(default=None, ge=0, le=2**53 - 1),
+):
+    from .progress import stream_progress
+
+    store = service(request).store
+    store.get(run_id)
+    return StreamingResponse(
+        stream_progress(store, run_id, request, max(after, last_event_id or 0)),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
+
+
 def create_app(service_factory=RunService):
     @asynccontextmanager
     async def lifespan(app):

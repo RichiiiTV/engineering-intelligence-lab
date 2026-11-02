@@ -1069,5 +1069,32 @@ const english: Record<string, string> = {
     "No selected source matches the requested product/version.",
   "Diese Antwort liest nur den angefragten Bildtext ab; es wurde keine Maschinendiagnose durchgeführt.":
     "This answer only transcribes the requested image text; no machine diagnosis was performed.",
+  "Fortschritt live anzeigen": "Show live progress",
+  "Die Anfrage an den konfigurierten vLLM-Server ist fehlgeschlagen. Prüfe den lokalen Dienst und die freigegebene Modellkonfiguration.":
+    "The configured self-hosted vLLM request failed. Check the local service and reviewed model configuration.",
+  "Einige technische Kennungen oder Speichergrößen stehen nicht in den zitierten Abschnitten.":
+    "Some technical identifiers or memory sizes are absent from the cited passages.",
+  "Der Hersteller ist weder durch die Frage noch durch den Quellentext belegt. Quellenkennungen enthalten keine Herstellerinformation.":
+    "Vendor identification is not established by the human question or source text; citation IDs are opaque.",
+  "Die Antwort erscheint nach Abschluss.":
+    "The answer appears when the investigation finishes.",
+  "Passende Quellen werden gelesen…": "Reading relevant sources…",
+  "Antwort wird erarbeitet…": "Working on the answer…",
+  "Antwort und Quellen werden vorbereitet…":
+    "Preparing the answer and sources…",
+  "Untersuchung wird angehalten…": "Stopping the investigation…",
+  "Untersuchung angehalten": "Investigation stopped",
+  "Live-Fortschritt unterbrochen. Der Status wird weiter aktualisiert.":
+    "Live progress disconnected. Status updates continue.",
+  "Upload-Übersicht": "Upload summary",
+  "Verarbeitung abgeschlossen": "Processing completed",
+  "Abgeschlossen:": "Completed:",
+  "In Arbeit:": "In progress:",
+  "Aufmerksamkeit nötig:": "Needs attention:",
+  "Zuordnungsergebnis wird geladen…": "Loading the assignment result…",
+  "Identität nicht belegt:": "Identity not established:",
+  "Produktfamilie:": "Product family:",
+  "Abschnitte indexiert": "passages indexed",
+  "Semantische Indexierung unvollständig": "Semantic indexing incomplete",
 };
 export default english;

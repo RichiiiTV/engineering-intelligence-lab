@@ -49,6 +49,8 @@ a new problem; the backbone handles matching, retrieval and conversation context
 | **Siemens public references** | Optional read-only MCP lookup for eligible PLC identifiers explicitly typed in the current question. Private attachments and history never supply search terms. Use “nur lokal” / “local only” to opt out. |
 | **Workspace controls** | Accounts, roles, revocable sessions, content-minimal audits, backups and explicit catalog publication. |
 | **Bounded agent runs** | Cumulative token, step and time limits; durable checkpoints; cancellation; local traces and an Advanced workspace. |
+| **Local or HPC inference** | Windows/Linux workbench, Slurm/NVIDIA Ollama modules and an optional native vLLM backend with no Docker requirement for inference. |
+| **Visible progress** | Opt-in live investigation stages and clearer ingestion status, with completed answers and citations kept together. |
 
 Published machine knowledge is shared with active workspace accounts. Problem
 chats and attachments stay owner-scoped. Models run locally by default; agents
@@ -84,6 +86,10 @@ The backend serves the built UI. Keep one API service per state directory, bound
 to loopback. The [setup guide](docs/getting-started.md) covers model settings,
 PDF conversion, the Windows launcher and development commands.
 
+**Linux or an HPC?** Follow the [Linux and Slurm guide](docs/linux-hpc.md) for the
+Bash launcher, site Ollama modules, SSH tunnels and separately installed native
+vLLM. Ollama remains the default. Cluster-specific GPU validation is still required.
+
 **Try a real machine corpus:** the pinned [Voron 2.4 reference pack](docs/public-machine-pilot.md)
 includes public documentation, controller configuration, attribution and upstream
 GPLv3 license notices. Import it through Administration to build a first catalog.
@@ -103,7 +109,8 @@ flowchart LR
 ```
 
 **FastAPI + Pydantic** handle the API and application controls. **Deep Agents /
-LangGraph** run bounded investigations through an explicit **Ollama** adapter.
+LangGraph** run bounded investigations through explicit **Ollama** or optional
+self-hosted **vLLM** adapters.
 **SQLite FTS5 + sqlite-vec** provide retrieval; **DuckDB** supplies deterministic
 analytics. The UI uses **React + TypeScript + Vite**. PDF extraction runs in an
 isolated **Docling** container.
@@ -115,10 +122,14 @@ isolated **Docling** container.
 EIL is development software with offline acceptance tests, dependency audits and
 documented real-model pilots. The [November 2026 review](docs/project-review-2026-11-01.md)
 records the current fixes, supply-chain checks and performance findings.
+The [performance and HPC follow-up](docs/performance-and-hpc-followup.md) records
+measured token rates, cache experiments, current quality checks and Linux support.
 
 The real Voron pilot had two expected behaviors and one controller-question
-failure despite relevant retrieved evidence. Earlier M5 quality failures remain
-open; hosted-model validation is deferred. A citation identifies a source location,
+failure despite relevant retrieved evidence. Fresh M5 runs passed 6/6 checks for
+each local quantization; the separate Voron follow-up still failed both controller
+cases. Original failures remain recorded, and hosted-model validation is deferred.
+A citation identifies a source location,
 but does not establish that a claim is correct or compatible with installed hardware.
 Machine grouping is heuristic, and image transcriptions are unverified observations.
 Human review is required before acting on equipment. Production operation and
@@ -129,6 +140,7 @@ autonomous equipment control have not been validated.
 | Build and operate | Understand and evaluate |
 | :--- | :--- |
 | [Getting started](docs/getting-started.md) | [Architecture](docs/architecture.md) |
+| [Linux / Slurm / native vLLM](docs/linux-hpc.md) | [Performance and quality follow-up](docs/performance-and-hpc-followup.md) |
 | [Accounts, backups and PDF setup](docs/security-operations.md) | [Chat backbone and machine matching](docs/chat-backbone.md) |
 | [Knowledge administration](docs/knowledge-library.md) | [German/English and Siemens routing](docs/german-siemens-routing.md) |
 | [Private machine workspaces](docs/machine-workspaces.md) | [M5 evaluation protocol](docs/m5-evaluation.md) · [Results](docs/m5-results.md) |

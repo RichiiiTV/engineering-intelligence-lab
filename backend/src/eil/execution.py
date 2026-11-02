@@ -19,8 +19,9 @@ from ollama import ResponseError
 from pydantic import ValidationError
 
 from .agent import MODEL_CONTEXT_TOKENS, ModelUnavailableError, build_agent
-from .answer_contract import assess
+from .answer_contract import assess, normalize_citations
 from .database import configure
+from .performance import FirstOutputTiming, capture_timings, model_clock, provider_metrics
 from .runs import BudgetExceeded, RunStopped, RunStore
 
 _parent_span = ContextVar("eil_parent_span", default=None)
@@ -39,6 +40,7 @@ class RunMiddleware(AgentMiddleware):
     def after_model(self, state, runtime):
         last = state["messages"][-1]
         run = self.store.get(self.run_id)
+        answer_text = normalize_citations(run, last.text)
         if run.get("budget_summary") and self.response_schema is None:
             return None
         if (
@@ -48,13 +50,16 @@ class RunMiddleware(AgentMiddleware):
             and not getattr(last, "tool_calls", [])
             and not run.get("grounding_reminded")
         ):
-            contract = assess(run, last.text)
-            if any("Safety classification" in issue for issue in contract["issues"]):
+            contract = assess(run, answer_text)
+            if any(
+                issue.startswith(("Safety classification", "Vendor identification"))
+                for issue in contract["issues"]
+            ):
                 self.store.change(self.run_id, lambda r, c: r.update(grounding_reminded=True))
                 return {
                     "messages": [
                         HumanMessage(
-                            content="The retrieved evidence does not establish the safety classification/interlock role you introduced. Remove unsupported safety/door/interlock assertions. State only the documented sensor/alarm behavior; keep possible causes explicitly hypothetical. Do not recommend physical intervention without matching documented procedures. Retain exact supporting citations and answer the user question."
+                            content="The evidence does not establish a vendor identity or safety classification/interlock role introduced in the answer. Citation IDs are opaque and cannot identify a manufacturer. Remove unsupported vendor/safety/door/interlock assertions. State only what the actual source text or explicit human context establishes; keep possible causes hypothetical. Do not recommend physical intervention without matching documented procedures. Retain exact supporting citations and answer the current human question."
                         )
                     ],
                     "jump_to": "model",
@@ -135,10 +140,14 @@ class RunMiddleware(AgentMiddleware):
                 + [{"citation_id": cid} for cid in run.get("problem_images_supplied", [])]
             )
             supplied = {h["citation_id"] for h in hits}
-            cited = set(re.findall(r"\[((?:kb|log|image):[^\]]+)\]", last.text))
+            cited = set(re.findall(r"\[((?:kb|log|image):[^\]]+)\]", answer_text))
+            unsupported_values = any(
+                issue.startswith("Some technical identifiers")
+                for issue in assess(run, answer_text)["issues"]
+            )
             if (
                 supplied
-                and (not cited or not cited <= supplied)
+                and (not cited or not cited <= supplied or unsupported_values)
                 and not run.get("library_citation_reminded")
                 and (run.get("catalog_lookup") or {}).get("status") != "needs_clarification"
             ):
@@ -150,7 +159,7 @@ class RunMiddleware(AgentMiddleware):
                         HumanMessage(
                             content="Use only supporting selected-source passages and cite their exact IDs in square brackets: "
                             + ", ".join(f"[{c}]" for c in sorted(supplied))
-                            + ". If none supports the question, explicitly state that rather than inventing a claim. Keep a concise answer."
+                            + ". Every technical identifier and memory size must occur in the passage you cite for that claim, not merely somewhere else in the retrieved observations. Correct the citation or remove the unsupported value. If none supports the question, explicitly state that rather than inventing a claim. Keep a concise answer."
                         )
                     ],
                     "jump_to": "model",
@@ -180,7 +189,7 @@ class RunMiddleware(AgentMiddleware):
             )
             available = {r["citation_id"] for r in references}
             preferred = {r["citation_id"] for r in references if r.get("kind") == "curated_manual"}
-            cited = set(re.findall(r"\[(siemens:[^\]]+)\]", last.text))
+            cited = set(re.findall(r"\[(siemens:[^\]]+)\]", answer_text))
             if (
                 available
                 and (
@@ -218,7 +227,7 @@ class RunMiddleware(AgentMiddleware):
             if getattr(last, "type", None) != "ai" or getattr(last, "tool_calls", []):
                 return None
             try:
-                value = self.response_schema.model_validate_json(last.text, strict=True)
+                value = self.response_schema.model_validate_json(answer_text, strict=True)
             except (ValidationError, TypeError):
                 pass
         if value is not None:
@@ -265,6 +274,14 @@ class RunMiddleware(AgentMiddleware):
         run, admission = self.store.reserve_model(self.run_id, MODEL_CONTEXT_TOKENS)
         reserved = admission["reserved"]
         finalizing = admission["finalizing"]
+        if run.get("chat_mode") or run.get("automatic_catalog"):
+            system = request.system_message.text if request.system_message else ""
+            request = request.override(
+                system_message=SystemMessage(
+                    content=system
+                    + "\nKeep the current human question in focus after reading tools. Evidence excerpts can discuss other topics; do not answer those instead. Citation identifiers carry no technical meaning. If retrieved text does not answer the question, say what is missing instead of guessing."
+                )
+            )
         structural = {s.name for s in getattr(request.response_format, "schema_specs", [])}
         # The harness retains its virtual filesystem scaffolding, but uploaded
         # evidence is available exclusively through the closed case tools.
@@ -313,6 +330,16 @@ class RunMiddleware(AgentMiddleware):
                     response_format=None,
                     model_settings={**request.model_settings, "format": schema, "reasoning": False},
                 )
+            elif getattr(request.model, "eil_provider", None) == "vllm":
+                from .vllm_backend import json_schema
+
+                options.update(
+                    response_format=None,
+                    model_settings={
+                        **request.model_settings,
+                        "response_format": json_schema(schema),
+                    },
+                )
             request = request.override(**options)
         if finalizing:
             system = request.system_message.text if request.system_message else ""
@@ -337,11 +364,13 @@ class RunMiddleware(AgentMiddleware):
             },
         )
         started = time.perf_counter()
+        clock = {"first_output_ms": None}
         try:
             from .providers import cap_request
 
             request = cap_request(request, admission["output_tokens"])
-            response = handler(request)
+            with model_clock() as clock:
+                response = handler(request)
         except Exception as exc:
             self.store.event(
                 self.run_id,
@@ -350,6 +379,7 @@ class RunMiddleware(AgentMiddleware):
                     **span,
                     "error_type": type(exc).__name__,
                     "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                    "first_output_ms": clock["first_output_ms"],
                 },
             )
             raise
@@ -373,6 +403,12 @@ class RunMiddleware(AgentMiddleware):
                     if usage and all(usage)
                     else None,
                     "duration_ms": round((time.perf_counter() - started) * 1000, 3),
+                    "first_output_ms": clock["first_output_ms"],
+                    "provider_metrics": provider_metrics(
+                        getattr(response.result[0], "response_metadata", {})
+                    )
+                    if len(response.result) == 1 and isinstance(request.model, ChatOllama)
+                    else {},
                 },
             )
         self.store.charge(self.run_id, "model_calls", 0)
@@ -431,7 +467,10 @@ class RunMiddleware(AgentMiddleware):
         parent = _parent_span.set(span["span_id"])
         started = time.perf_counter()
         try:
-            result = handler(request)
+            with capture_timings(
+                lambda timing: self.store.event(self.run_id, "performance", {**span, **timing})
+            ):
+                result = handler(request)
         except Exception as exc:
             self.store.event(
                 self.run_id,
@@ -468,12 +507,29 @@ class RunMiddleware(AgentMiddleware):
 
 
 def execute_run(directory, run_id, *, model=None, agent_mode="single"):
+    """Freeze the embedding provider for this run, including retries and resume."""
+    from .embeddings import MODEL, use_embedding_config
+    from .settings import OLLAMA_BASE_URL
+
+    run = RunStore(directory).get(run_id)
+    config = run.get("embedding_config") or {
+        "provider": "ollama",
+        "base_url": run.get("base_url") or OLLAMA_BASE_URL,
+        "model_name": MODEL,
+        "revision": "",
+    }
+    with use_embedding_config(config):
+        return _execute_run(directory, run_id, model=model, agent_mode=agent_mode)
+
+
+def _execute_run(directory, run_id, *, model=None, agent_mode="single"):
     """Trusted worker entry; `model` injection is for offline tests, never an API input."""
     store = RunStore(directory)
     run = store.get(run_id)
     config = {
         "configurable": {"thread_id": run["thread_id"]},
         "recursion_limit": max(1, run["limits"]["max_steps"] - run["steps"]),
+        "callbacks": [FirstOutputTiming()],
     }
     try:
         if agent_mode not in {"single", "delegated"}:
@@ -481,7 +537,12 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
         if (run.get("machine_id") or run.get("automatic_catalog")) and model is None:
             from .agent import verify_private_model
 
-            verify_private_model(run["base_url"], run["model"])
+            verify_private_model(
+                run["base_url"],
+                run["model"],
+                provider=run.get("model_provider", "ollama"),
+                revision=run.get("model_revision", ""),
+            )
         problem_content = run["question"]
         if run.get("automatic_catalog"):
             from .agent import private_vision_capable
@@ -492,7 +553,14 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                 for i in run.get("problem_attachment_ids", [])
             )
             vision = has_images and (
-                model is not None or private_vision_capable(run["base_url"], run["model"])
+                model is not None
+                or private_vision_capable(
+                    run["base_url"],
+                    run["model"],
+                    provider=run.get("model_provider", "ollama"),
+                    revision=run.get("model_revision", ""),
+                    vision=run.get("model_vision", False),
+                )
             )
             from .vision import analyze_images, visual_only_question
 
@@ -570,6 +638,7 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                 ]
             common = dict(
                 model=model,
+                chat_mode=bool(run.get("chat_mode") or run.get("machine_id")),
                 evidence_tools=evidence_tools,
                 case_evidence=bool(run.get("case_id"))
                 if run.get("chat_mode") or run.get("siemens")
@@ -578,6 +647,9 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                     "model_name": run["model"],
                     "base_url": run["base_url"],
                     "max_output_tokens": run["limits"]["max_output_tokens"],
+                    "provider": run.get("model_provider", "ollama"),
+                    "revision": run.get("model_revision", ""),
+                    "vision": run.get("model_vision", False),
                 },
             )
             if run.get("experiment", {}).get("structured_output"):
@@ -647,7 +719,7 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                     else ""
                 )
                 + (
-                    "\nThis is a question without uploaded files. Answer the question directly. There is no inspection dataset or uploaded case to analyze. Do not use demo metrics."
+                    "\nThis is problem chat. Answer the current question from supplied problem attachments and retrieved knowledge. There is no synthetic inspection dataset or inspection case to analyze. Do not use demo metrics."
                     if run.get("chat_mode")
                     else ""
                 )
@@ -716,7 +788,11 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
                 getattr(last, "type", None) != "ai" or getattr(last, "tool_calls", [])
             ):
                 raise RuntimeError("Graph ended without a final answer")
-            answer = structured.model_dump_json() if structured is not None else last.text
+            answer = (
+                structured.model_dump_json()
+                if structured is not None
+                else normalize_citations(store.get(run_id), last.text)
+            )
             current = store.get(run_id)
             if (
                 run.get("automatic_catalog")
@@ -769,6 +845,19 @@ def execute_run(directory, run_id, *, model=None, agent_mode="single"):
             message = "Ollama connection failed. Start the service and check EIL_OLLAMA_BASE_URL."
         store.finish(run_id, "failed", error={"code": "model_unavailable", "message": message})
     except Exception as exc:
+        if run.get("model_provider") == "vllm" or getattr(model, "eil_provider", None) == "vllm":
+            from .vllm_backend import is_provider_error
+
+            if is_provider_error(exc):
+                store.finish(
+                    run_id,
+                    "failed",
+                    error={
+                        "code": "model_unavailable",
+                        "message": "The configured self-hosted vLLM request failed. Check the local service and reviewed model configuration.",
+                    },
+                )
+                return
         store.finish(
             run_id,
             "failed",

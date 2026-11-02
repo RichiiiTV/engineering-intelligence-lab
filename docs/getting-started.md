@@ -97,9 +97,9 @@ Vite serves http://127.0.0.1:5173/ and proxies `/api` to the backend.
 The loopback app serves the production build; rebuild it after frontend changes.
 
 ```powershell
-uv sync --locked --extra dev --extra hosted
-uv run --locked ruff check backend/src/eil tests
-uv run --locked ruff format --check backend/src/eil tests
+uv sync --locked --extra dev --extra hosted --extra inference
+uv run --locked ruff check backend/src/eil tests scripts/model_manifest.py
+uv run --locked ruff format --check backend/src/eil tests scripts/model_manifest.py
 uv run --locked pytest -q
 uv run --locked python -m eil.publication --history
 uv run --locked python -m eil.supply_chain
@@ -122,3 +122,6 @@ new install hook, before changing that policy.
 
 See the [current project review](project-review-2026-11-01.md) for checked versions,
 security findings, performance observations and remaining validation limits.
+See [Linux/HPC setup](linux-hpc.md) for Bash launchers, the site's Ollama module
+and the optional separately installed native vLLM server. The `inference` extra
+installs the client only and does not start a model service.

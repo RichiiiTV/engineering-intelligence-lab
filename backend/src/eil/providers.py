@@ -11,7 +11,7 @@ from .runs import BudgetExceeded
 
 def benchmark_model(provider, model_name, *, base_url=None):
     if provider == "ollama":
-        options = {"model_name": model_name, "max_output_tokens": 2048}
+        options = {"model_name": model_name, "max_output_tokens": 2048, "provider": "ollama"}
         if base_url is not None:
             options["base_url"] = base_url
         return _build_model(**options)
@@ -42,6 +42,13 @@ def cap_request(request, output_tokens):
     if isinstance(request.model, ChatOllama):
         return request.override(
             model=request.model.model_copy(update={"num_predict": output_tokens})
+        )
+    if getattr(request.model, "eil_provider", None) == "vllm":
+        # The adapter checks the actual final chat/tools/schema payload with
+        # vLLM's local tokenizer. It never downloads an OpenAI tokenizer.
+        return request.override(
+            model=request.model.model_copy(update={"max_tokens": output_tokens}),
+            model_settings={k: v for k, v in request.model_settings.items() if k != "reasoning"},
         )
     from langchain_core.utils.function_calling import convert_to_openai_tool
     from langchain_openai import ChatOpenAI

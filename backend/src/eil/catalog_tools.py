@@ -10,6 +10,7 @@ from .evidence import EvidenceNotFound
 from .knowledge import KnowledgeStore
 from .problem_sources import ProblemStore
 from .runs import RunStore
+from .text_sources import line_hits
 
 
 def matching(text, machines):
@@ -229,17 +230,9 @@ def catalog_tools(directory, run_id):
             raise ValueError("Use the retrieved PDF page passages")
         lines = document["raw"].decode("utf-8-sig").splitlines()
         text = "\n".join(lines[start_line - 1 : end_line])
-        if len(text) > 16000:
-            raise ValueError("Read fewer lines (16,000 characters maximum)")
-        with library.evidence.connection() as conn:
-            refs = [
-                r[0]
-                for r in conn.execute(
-                    "SELECT id FROM knowledge_passages WHERE document_id=? AND coalesce(json_extract(metadata,'$.line_start'),1)<=? AND coalesce(json_extract(metadata,'$.line_end'),2147483647)>=? ORDER BY rowid LIMIT 8",
-                    (document_id, end_line, start_line),
-                )
-            ]
-        hits = [library.resolve(cid, [document_id]) for cid in refs]
+        if len(text) > 6000:
+            raise ValueError("Read fewer lines (6,000 characters maximum)")
+        hits = line_hits(library, document, start_line, end_line)
 
         def remember(r, c):
             prior = {h["citation_id"]: h for h in r.get("catalog_source_reads", [])}
@@ -247,7 +240,7 @@ def catalog_tools(directory, run_id):
             r["catalog_source_reads"] = list(prior.values())[-32:]
 
         runs.change(run_id, remember)
-        return json.dumps(
+        return _model_observation(
             {
                 "text": text,
                 "line_start": start_line,

@@ -172,8 +172,8 @@ def machine_tools(directory, run_id):
             raise ValueError("Use the page/paragraph search for PDF sources")
         lines = document["raw"].decode("utf-8-sig").splitlines()
         text = "\n".join(lines[start_line - 1 : end_line])
-        if len(text) > 16000:
-            raise ValueError("Line range exceeds the 16,000 character limit")
+        if len(text) > 6000:
+            raise ValueError("Line range exceeds the 6,000 character limit")
         result = {
             "document_id": document_id,
             "filename": document["filename"],
@@ -182,15 +182,9 @@ def machine_tools(directory, run_id):
             "text": text,
             "execution": "never",
         }
-        with documents.evidence.connection() as conn:
-            refs = [
-                r[0]
-                for r in conn.execute(
-                    "SELECT id FROM knowledge_passages WHERE document_id=? AND coalesce(json_extract(metadata,'$.line_start'),1)<=? AND coalesce(json_extract(metadata,'$.line_end'),2147483647)>=? ORDER BY id LIMIT 8",
-                    (document_id, end_line, start_line),
-                )
-            ]
-        hits = [documents.resolve(ref, allowed) for ref in refs]
+        from .text_sources import line_hits
+
+        hits = line_hits(documents, document, start_line, end_line)
 
         def remember(r, c):
             known = {h["citation_id"]: h for h in r.get("machine_source_reads", [])}

@@ -2,6 +2,8 @@
 
 from decimal import Decimal
 
+from .performance import STAGES, provider_metrics
+
 
 def run_events(store, run_id):
     cursor = 0
@@ -17,6 +19,11 @@ def export_trace(store, run_id, *, input_usd_per_million=None, output_usd_per_mi
     for event in run_events(store, run_id):
         data = event["data"]
         span_id = data.get("span_id")
+        if event["type"] == "performance" and span_id in spans:
+            if data.get("stage") in STAGES:
+                timing = {k: data[k] for k in ("stage", "duration_ms", "cache_hit") if k in data}
+                spans[span_id].setdefault("timings", []).append(timing)
+            continue
         if not span_id or not event["type"].startswith(("model_", "tool_")):
             continue  # Older audit events remain readable; never invent timing.
         span = spans.setdefault(
@@ -45,6 +52,10 @@ def export_trace(store, run_id, *, input_usd_per_million=None, output_usd_per_mi
             for key in ("tokens", "input_tokens", "output_tokens", "usage_known", "error_type"):
                 if key in data:
                     span[key] = data[key]
+            if "first_output_ms" in data:
+                span["first_output_ms"] = data["first_output_ms"]
+            if "provider_metrics" in data:
+                span["provider_metrics"] = provider_metrics(data["provider_metrics"])
     model_spans = [s for s in spans.values() if s["kind"] == "model"]
     known = (
         bool(model_spans)
@@ -73,6 +84,8 @@ def export_trace(store, run_id, *, input_usd_per_million=None, output_usd_per_mi
         "run_id": run_id,
         "status": run["status"],
         "model": run["model"],
+        "model_provider": run.get("model_provider", "ollama"),
+        "model_revision": run.get("model_revision") or None,
         "experiment": run.get("experiment"),
         "elapsed_seconds": run["elapsed_seconds"],
         "charged_tokens": run["tokens"],

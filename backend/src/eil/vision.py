@@ -50,10 +50,24 @@ def analyze_images(directory, run, *, model=None):
     if not images:
         return {}
     if model is None:
-        metadata = verify_private_model(run["base_url"], run["model"])
-        key = metadata["digest"] + "|visual-observation-v1"
+        metadata = verify_private_model(
+            run["base_url"],
+            run["model"],
+            provider=run.get("model_provider", "ollama"),
+            revision=run.get("model_revision", ""),
+        )
+        key = (
+            ("vllm:" if run.get("model_provider") == "vllm" else "")
+            + metadata["digest"]
+            + "|visual-observation-v1"
+        )
         model = _build_model(
-            model_name=run["model"], base_url=run["base_url"], max_output_tokens=768
+            model_name=run["model"],
+            base_url=run["base_url"],
+            max_output_tokens=768,
+            provider=run.get("model_provider", "ollama"),
+            revision=run.get("model_revision", ""),
+            vision=run.get("model_vision", False),
         )
     else:
         key = "injected-test|visual-observation-v1"
@@ -82,6 +96,8 @@ def analyze_images(directory, run, *, model=None):
         limited = (
             model.model_copy(update={"num_predict": min(768, admission["output_tokens"])})
             if isinstance(model, ChatOllama)
+            else model.model_copy(update={"max_tokens": min(768, admission["output_tokens"])})
+            if getattr(model, "eil_provider", None) == "vllm"
             else model
         )
         response = limited.bind(format=Observation.model_json_schema()).invoke(

@@ -9,6 +9,8 @@ type Source = {
   filename: string;
   active: boolean;
   assignment_basis: string;
+  passages?: number;
+  indexed_passages?: number;
   classification?: {
     identity_evidence: string;
     confidence: string;
@@ -30,6 +32,7 @@ type Job = {
   error?: string;
   classifier_calls?: number;
   assigned_machine_id?: string;
+  document_id?: string;
 };
 const terminal = new Set([
   "completed",
@@ -209,12 +212,29 @@ export default function CatalogAdmin() {
       {jobs.length > 0 && (
         <section className="machine-card">
           <h3>{t("Upload-Aktivitäten")}</h3>
+          <p className="ux-small" aria-label={t("Upload-Übersicht")}>
+            {t("Abgeschlossen:")}{" "}
+            {jobs.filter((j) => j.status === "completed").length}
+            {" · "}
+            {t("In Arbeit:")}{" "}
+            {jobs.filter((j) => !terminal.has(j.status)).length}
+            {" · "}
+            {t("Aufmerksamkeit nötig:")}{" "}
+            {
+              jobs.filter(
+                (j) =>
+                  terminal.has(j.status) &&
+                  j.status !== "completed" &&
+                  j.phase !== "discarded",
+              ).length
+            }
+          </p>
           {jobs.slice(0, 15).map((j) => (
             <div className="machine-source" key={j.id}>
               <strong>{j.filename}</strong>
               <small>
                 {j.status === "completed"
-                  ? t("Bereit")
+                  ? t("Verarbeitung abgeschlossen")
                   : j.phase === "classifying"
                     ? t("Maschine wird erkannt…")
                     : statusLabel(j.phase)}{" "}
@@ -223,6 +243,47 @@ export default function CatalogAdmin() {
                   ? tr` · Zuordnungsversuche ${j.classifier_calls}/3`
                   : ""}
               </small>
+              {j.status === "completed" &&
+                (() => {
+                  const machine = machines.find(
+                    (m) => m.id === j.assigned_machine_id,
+                  );
+                  const source = machine?.documents.find(
+                    (d) => d.id === j.document_id,
+                  );
+                  if (!machine || !source)
+                    return (
+                      <p className="ux-small">
+                        {t("Zuordnungsergebnis wird geladen…")}
+                      </p>
+                    );
+                  return (
+                    <p
+                      className={
+                        machine.identity_kind === "unknown"
+                          ? "ux-caution"
+                          : "ux-small"
+                      }
+                    >
+                      {machine.identity_kind === "unknown"
+                        ? t("Identität nicht belegt:")
+                        : machine.identity_kind === "product_family"
+                          ? t("Produktfamilie:")
+                          : t("Maschine:")}{" "}
+                      <strong>{machine.name}</strong>
+                      {" · "}
+                      {source.indexed_passages ?? 0}/{source.passages ?? 0}{" "}
+                      {t("Abschnitte indexiert")}
+                      {" · "}
+                      {source.active ? t("Verfügbar") : t("Archiviert")}
+                      {source.active &&
+                        (source.indexed_passages ?? 0) <
+                          (source.passages ?? 0) && (
+                          <> · {t("Semantische Indexierung unvollständig")}</>
+                        )}
+                    </p>
+                  );
+                })()}
               {!terminal.has(j.status) && (
                 <progress value={j.progress} max={100} />
               )}{" "}
@@ -311,7 +372,8 @@ export default function CatalogAdmin() {
                   {d.active ? t("Verfügbar") : t("Archiviert")}
                 </summary>
                 <p className="ux-small">
-                  {t("Zuordnung:")}{" "}
+                  {d.indexed_passages ?? 0}/{d.passages ?? 0}{" "}
+                  {t("Abschnitte indexiert")} · {t("Zuordnung:")}{" "}
                   {d.assignment_basis === "semantic-inference"
                     ? t("Schlussfolgerung aus Embeddings und LLM")
                     : d.assignment_basis === "source-identity"

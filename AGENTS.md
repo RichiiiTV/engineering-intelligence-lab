@@ -36,6 +36,24 @@ EIL should use existing frameworks such as Deep Agents and LangGraph; do not rei
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user authorized completing the outstanding review refinements, Linux support,
+a native vLLM backbone and a normal push to GitHub on 2026-11-02. The target is
+Slurm with NVIDIA GPUs. The user reports the available module
+`ollama/0.14.0-GCCcore-13.3.0-CUDA-12.6.3`; vLLM is not a site module, so its
+optional server uses a separate operator-provisioned environment. Track this as
+the active goal through validation and publication. Preserve the default Ollama
+backend and older evaluation failures. See `docs/linux-hpc.md` and
+`docs/performance-and-hpc-followup.md` for implementation, measurements and limits.
+Local integrated validation passed 389 backend tests (7 platform/capability skips),
+74 frontend tests, 17 WSL manifest/launcher checks and 28 offline benchmark runs.
+Fresh M5 gates passed 6/6 per local quantization; the public Voron follow-up still
+failed both controller cases and manual German terminology checks. Do not promote
+the faster quantization, persistent disk cache or keep-alive experiment to defaults.
+The legacy Ollama module has known advisories; do not describe it as security
+validated. No HPC connection/job, equipment work, paid model run or production
+deployment is authorized. Hosted quality remains deferred. Stop after the scoped
+work, checks and publication are complete and report remaining limits.
+
 The user authorized a project-wide bug/security and dependency-supply-chain review,
 README redesign, and performance/UX refinements on 2026-11-01. Scoped remediation
 and local validation are complete: 307 backend / 64 frontend tests and both offline

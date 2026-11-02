@@ -180,10 +180,19 @@ class CatalogStore:
         candidates = self.candidates(centroid(vectors))
         if model is None:
             from .agent import _build_model, verify_private_model
-            from .settings import OLLAMA_BASE_URL, OLLAMA_MODEL
+            from .settings import inference_config
 
-            verify_private_model(OLLAMA_BASE_URL, OLLAMA_MODEL)
-            model = _build_model(max_output_tokens=768)
+            configured = job.get("classifier_model_config")
+            if configured is None:
+                configured, _ = inference_config()
+                jobs.change(job_id, classifier_model_config=configured)
+            verify_private_model(
+                configured["base_url"],
+                configured["model_name"],
+                provider=configured["provider"],
+                revision=configured["revision"],
+            )
+            model = _build_model(**configured, max_output_tokens=768)
         started = time.monotonic()
         jobs.change(
             job_id,

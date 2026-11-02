@@ -13,6 +13,7 @@ from pathlib import Path
 from .evidence import EvidenceConflict, EvidenceNotFound, EvidenceStore, checked_id
 from .machines import MachineStore
 from .runs import now
+from .settings import inference_config
 
 TERMINAL = {"completed", "failed", "canceled", "interrupted", "timed_out"}
 
@@ -58,6 +59,7 @@ class JobStore:
                 "Upload a plain, bounded source filename and nonempty file (10 MiB maximum)"
             )
         identity = str(uuid.uuid4())
+        generation, embedding = inference_config()
         job = {
             "id": identity,
             "machine_id": machine_id,
@@ -74,6 +76,8 @@ class JobStore:
             "error": None,
             "attempt": 1,
             "catalog": catalog,
+            "classifier_model_config": generation,
+            "embedding_config": embedding,
         }
         with self.evidence.connection() as conn:
             conn.execute("BEGIN IMMEDIATE")
@@ -219,6 +223,32 @@ def parse_batches(content, store, identity):
 
 
 def process_job(directory, identity):
+    """Keep backend identity stable across queueing, retries and operator changes."""
+    from .embeddings import MODEL, use_embedding_config
+    from .settings import OLLAMA_BASE_URL, OLLAMA_MODEL
+
+    jobs = JobStore(directory)
+    job = jobs.get(identity)
+    embedding = job.get("embedding_config") or {
+        "provider": "ollama",
+        "base_url": OLLAMA_BASE_URL,
+        "model_name": MODEL,
+        "revision": "",
+    }
+    generation = job.get("classifier_model_config") or {
+        "provider": "ollama",
+        "base_url": OLLAMA_BASE_URL,
+        "model_name": OLLAMA_MODEL,
+        "revision": "",
+        "vision": False,
+    }
+    if "embedding_config" not in job or "classifier_model_config" not in job:
+        jobs.change(identity, embedding_config=embedding, classifier_model_config=generation)
+    with use_embedding_config(embedding):
+        return _process_job(directory, identity)
+
+
+def _process_job(directory, identity):
     parent = multiprocessing.parent_process()
     if parent is not None:
 
