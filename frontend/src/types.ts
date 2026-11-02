@@ -27,6 +27,7 @@ export interface Limits {
   timeout_seconds: number;
 }
 export interface Run {
+  finish_from_evidence?: boolean;
   chat_context?: { id: string; submitted_attachment_ids?: string[] };
   problem_attachment_ids?: string[];
   id: string;
@@ -51,6 +52,7 @@ export interface Run {
   error: { code: string; message: string; resource?: string | null } | null;
   result: {
     answer: string;
+    answer_mode?: string;
     warning: string;
     capacity_limited?: boolean;
     answer_contract?: {

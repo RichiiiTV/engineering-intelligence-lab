@@ -27,6 +27,7 @@ import { LibraryReferences } from "./KnowledgeLibrary";
 import SiemensReferences from "./SiemensReferences";
 import { displayNotice } from "./locale";
 import { getLanguage } from "./i18n";
+import { continuationLabel, tokenContinuation } from "./budgetRecovery";
 import "./user.css";
 import "./machines.css";
 import "./chat.css";
@@ -409,7 +410,10 @@ function ChatTurn({
   const [report, setReport] = useState<EvidenceReport | null>(null),
     [error, setError] = useState("");
   const [openSource, setOpenSource] = useState<string | null>(null);
+  const [continuing, setContinuing] = useState(false);
+  const extraTokens = tokenContinuation(run);
   useEffect(() => {
+    setReport(null);
     if (!stopped.has(run.status)) return;
     const c = new AbortController();
     void api<EvidenceReport>("/api/investigations/" + run.id + "/export", {
@@ -483,9 +487,9 @@ function ChatTurn({
           {run.status !== "completed" && (
             <p className="ux-caution">
               {friendlyStatus(run.status)}.{" "}
-              {run.status === "budget_exceeded"
+              {run.status === "budget_exceeded" || run.status === "timed_out"
                 ? t(
-                    "Stelle eine gezieltere Rückfrage, um die Untersuchung fortzusetzen.",
+                    "Dein Fortschritt und die bisherigen Quellen sind gespeichert. Die Untersuchung ist noch nicht abgeschlossen.",
                   )
                 : run.status === "cancelled"
                   ? t("Du kannst mit einer weiteren Frage fortfahren.")
@@ -493,6 +497,43 @@ function ChatTurn({
                       "Die Untersuchung konnte nicht abgeschlossen werden. Versuche es erneut oder ergänze relevante Fehlerangaben.",
                     )}
             </p>
+          )}
+          {extraTokens !== null && (
+            <div className="chat-recovery">
+              <p>
+                {run.error?.resource === "output_tokens"
+                  ? t(
+                      "Mit den vorhandenen Belegen eine kurze Antwort versuchen. Es werden keine neuen Suchen gestartet.",
+                    )
+                  : extraTokens
+                    ? t(
+                        "Nur mit deinem Klick wird zusätzliche Tokenkapazität freigegeben. Bisheriger Verbrauch und andere Grenzen bleiben erhalten.",
+                      )
+                    : t(
+                        "Mit dem verbleibenden Budget fortsetzen. Bisheriger Verbrauch und Quellen bleiben erhalten.",
+                      )}
+              </p>
+              <button
+                className="ux-secondary"
+                disabled={continuing}
+                onClick={async () => {
+                  setContinuing(true);
+                  setError("");
+                  try {
+                    await post("/api/investigations/" + run.id + "/continue", {
+                      additional_tokens: extraTokens,
+                    });
+                    await refresh();
+                  } catch (e) {
+                    setError(message(e));
+                  } finally {
+                    setContinuing(false);
+                  }
+                }}
+              >
+                {continuationLabel(run, extraTokens)}
+              </button>
+            </div>
           )}
           {report?.catalog_routing?.machine && (
             <p className="chat-machine-tag">
@@ -510,13 +551,14 @@ function ChatTurn({
                 {report.answer_contract.issues.map(displayNotice).join(" ")}
               </p>
             )}
-          {report?.answer_contract?.outcome === "budget_limited" && (
-            <p className="ux-caution">
-              {t(
-                "Teilweise Belegprüfung: Diese Antwort hat ihr Untersuchungsbudget erreicht.",
-              )}
-            </p>
-          )}
+          {report?.answer_contract?.outcome === "budget_limited" &&
+            run.result?.answer_mode !== "budget_source_extract" && (
+              <p className="ux-caution">
+                {t(
+                  "Teilweise Belegprüfung: Diese Antwort hat ihr Untersuchungsbudget erreicht.",
+                )}
+              </p>
+            )}
           {(report?.answer || run.result?.answer) && (
             <SafeAnswer
               text={

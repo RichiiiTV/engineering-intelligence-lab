@@ -212,7 +212,13 @@ def test_trace_api_is_read_only_and_omits_content(tmp_path):
 def test_delegation_cannot_reset_cumulative_budgets(tmp_path, limits):
     store, run = calibration(tmp_path, mode="delegated", limits=limits)
     assert run["status"] in {"budget_exceeded", "failed"}
-    assert run["result"] is None
+    if run["status"] == "budget_exceeded":
+        assert run["result"]["answer_mode"] == "budget_source_extract"
+        assert run["result"]["answer_contract"]["outcome"] == "budget_limited"
+    else:
+        assert run["result"] is None
+    score, _ = score_run(store, run["id"], "known-cause", "delegated")
+    assert not score["passed"] and not score["checks"]["completed"]
     assert run["model_calls"] <= run["limits"]["max_model_calls"]
     assert run["tool_calls"] <= run["limits"]["max_tool_calls"]
     assert run["tokens"] <= run["limits"]["max_total_tokens"]

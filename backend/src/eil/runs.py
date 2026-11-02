@@ -431,7 +431,9 @@ class RunStore:
                 return
             run.update(
                 status=status,
-                result=result,
+                result=self._budget_result(run, conn)
+                if result is None and status in {"budget_exceeded", "timed_out"}
+                else result,
                 error=error,
                 control=None,
                 finished_at=now(),
@@ -441,6 +443,19 @@ class RunStore:
             self.audit(run, "investigation_finished")
 
         return self.change(run_id, update)
+
+    @staticmethod
+    def _budget_result(run, conn):
+        from .budget_recovery import partial_result
+
+        events = [
+            json.loads(row[0])
+            for row in conn.execute(
+                "SELECT data FROM events WHERE run_id=? AND type='tool_finished' ORDER BY id DESC LIMIT 40",
+                (run["id"],),
+            )
+        ]
+        return partial_result(run, reversed(events))
 
     def recover(self):
         with self.connection() as conn:
@@ -493,7 +508,8 @@ class RunStore:
                 )
             reserved = context_tokens + output
             finalizing = (
-                run["model_calls"] + 1 >= limits["max_model_calls"]
+                run.get("finish_from_evidence", False)
+                or run["model_calls"] + 1 >= limits["max_model_calls"]
                 or run["tool_calls"] >= limits["max_tool_calls"]
                 or remaining - reserved < context_tokens + limits["max_output_tokens"]
             )
@@ -516,14 +532,21 @@ class RunStore:
         def update(run, conn):
             error = run.get("error") or {}
             notebook_idle(conn, run)
+            output_stop = error.get("resource") == "output_tokens"
             token_stop = error.get("resource") == "tokens" or (
                 error.get("resource") is None
                 and str(error.get("message", "")).startswith("tokens budget exhausted")
             )
-            if run["status"] != "budget_exceeded" or not token_stop:
+            if run.get("case_deleted"):
                 raise RunConflict(
-                    "Only an investigation stopped by its token allowance can continue this way"
+                    "Restore the case from Trash before controlling its investigations"
                 )
+            if run["status"] != "budget_exceeded" or not (token_stop or output_stop):
+                raise RunConflict(
+                    "Only an investigation stopped by its token allowance or output limit can continue this way"
+                )
+            if (output_stop or run.get("finish_from_evidence")) and additional_tokens:
+                raise RunConflict("Finishing from evidence cannot increase the token allowance")
             limits = run["limits"]
             if any(
                 run[counter] >= limits[limit]
@@ -551,6 +574,8 @@ class RunStore:
             run.setdefault("initial_limits", dict(limits))
             previous = limits["max_total_tokens"]
             run["limits"] = {**limits, "max_total_tokens": new_limit}
+            if output_stop:
+                run["finish_from_evidence"] = True
             run.update(status="queued", control=None, error=None, finished_at=None)
             self._event(
                 conn,
@@ -562,6 +587,7 @@ class RunStore:
                     "additional_tokens": additional_tokens,
                     "tokens_already_used": run["tokens"],
                     "reason": "explicit_user_continuation",
+                    "finish_from_evidence": bool(run.get("finish_from_evidence")),
                 },
             )
 
@@ -579,13 +605,14 @@ class RunStore:
                     "resource": "provider_usage",
                     "message": "Provider usage exceeded the admitted token envelope; actual usage was recorded.",
                 }
-                run.update(
-                    status="budget_exceeded",
-                    error=error,
-                    result=None,
-                    control=None,
-                    finished_at=now(),
-                )
+                stopped = run["status"] == "running" and not run["control"]
+                if stopped:
+                    run.update(
+                        status="budget_exceeded",
+                        error=error,
+                        result=self._budget_result(run, conn),
+                        finished_at=now(),
+                    )
                 self._event(
                     conn,
                     run_id,
@@ -597,7 +624,8 @@ class RunStore:
                         "cumulative_tokens": run["tokens"],
                     },
                 )
-                self._event(conn, run_id, "budget_exceeded", {"error": error})
+                if stopped:
+                    self._event(conn, run_id, "budget_exceeded", {"error": error})
 
         run = self.change(run_id, update)
         if actual > reserved:

@@ -187,7 +187,9 @@ def test_truncated_model_output_is_not_a_success(tmp_path):
         run = service.submit("output_limit:truncated")
         result = service.wait(run["id"], timeout=20)
     assert result["status"] == "budget_exceeded"
-    assert result["result"] is None
+    assert result["result"]["answer_mode"] == "budget_source_extract"
+    assert result["result"]["answer_contract"]["outcome"] == "budget_limited"
+    assert "Teilweise Belegprüfung" in result["result"]["answer"]
     assert "output limit" in result["error"]["message"]
 
 

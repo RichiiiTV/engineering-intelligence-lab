@@ -128,6 +128,8 @@ The [performance and HPC follow-up](docs/performance-and-hpc-followup.md) record
 measured token rates, cache experiments, current quality checks and Linux support.
 The [citation and model follow-up](docs/citation-quality-and-models.md) covers
 bounded citation repair and clearly labelled source excerpts when a draft fails.
+Budget and time stops now preserve a [partial evidence preview](docs/budget-stop-recovery.md),
+with explicit continuation where existing limits allow it.
 
 The real Voron pilot had two expected behaviors and one controller-question
 failure despite relevant retrieved evidence. Fresh M5 runs passed 6/6 checks for

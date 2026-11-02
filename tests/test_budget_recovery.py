@@ -1,9 +1,11 @@
+import json
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from fastapi.testclient import TestClient
 from langchain.agents.middleware.types import ModelRequest, ModelResponse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from langchain_core.outputs import ChatGeneration, ChatResult
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.sqlite import SqliteSaver
 
@@ -14,6 +16,262 @@ from eil.runs import BudgetExceeded, RunConflict, RunStore
 from eil.service import RunService
 from tests.auth_helpers import sign_in
 from tests.fakes import ControlledOllama, controlled_worker
+
+
+class OutputStopOllama(ChatOllama):
+    directory: str
+    run_id: str
+    always_truncate: bool = False
+
+    def _generate(self, messages, stop=None, run_manager=None, **kwargs):
+        run = RunStore(self.directory).get(self.run_id)
+        assert (
+            sum(isinstance(m, HumanMessage) and m.content == run["question"] for m in messages) == 1
+        )
+        tools = [m for m in messages if isinstance(m, ToolMessage)]
+        if not tools:
+            answer = AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "name": "read_knowledge_library",
+                        "args": {},
+                        "id": "read",
+                        "type": "tool_call",
+                    }
+                ],
+            )
+        else:
+            cid = json.loads(tools[-1].content)["hits"][0]["citation_id"]
+            if run.get("finish_from_evidence") and not self.always_truncate:
+                assert not kwargs.get("tools")
+                assert any("CAPACITY SUMMARY" in m.text for m in messages if m.type == "system")
+                answer = AIMessage(
+                    content=f"Alarm E17: sensor-stop condition [{cid}]. Cause unverified."
+                )
+            else:
+                answer = AIMessage(
+                    content="UNSUPPORTED TRUNCATED DRAFT: replace the controller.",
+                    response_metadata={"done_reason": "length"},
+                )
+        answer.usage_metadata = {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150}
+        return ChatResult(generations=[ChatGeneration(message=answer)])
+
+
+def library_run(directory, monkeypatch, *, language="de"):
+    from eil.embeddings import EmbeddingUnavailable
+    from eil.knowledge import KnowledgeStore
+    from tests.test_knowledge_admin import add
+
+    def offline(*args, **kwargs):
+        raise EmbeddingUnavailable("offline test")
+
+    monkeypatch.setattr("eil.knowledge.embed", offline)
+    library = KnowledgeStore(directory)
+    source = add(library, "Alarm E17: sensor-stop condition. Cause is unverified.")
+    store = RunStore(directory)
+    run = store.create(
+        "Alarm E17",
+        chat_mode=True,
+        use_library=True,
+        library_document_ids=[source["id"]],
+        language=language,
+    )
+    store.claim()
+    return store, run, source
+
+
+def test_output_stop_has_cited_partial_and_explicit_checkpoint_finish_only(tmp_path, monkeypatch):
+    from eil.answer_contract import assess
+    from eil.exports import export_investigation
+    from eil.knowledge import KnowledgeStore
+    from tests.test_knowledge_admin import add
+
+    store, run, source = library_run(tmp_path, monkeypatch)
+    model = OutputStopOllama(model="offline", directory=str(tmp_path), run_id=run["id"])
+    execute_run(tmp_path, run["id"], model=model)
+    stopped = store.get(run["id"])
+    assert stopped["status"] == "budget_exceeded"
+    assert stopped["error"]["resource"] == "output_tokens"
+    assert stopped["model_calls"] == 2 and stopped["tokens"] == 300
+    partial = stopped["result"]
+    assert partial["answer_mode"] == "budget_source_extract"
+    assert "Teilweise Belegprüfung" in partial["answer"]
+    assert "Alarm E17: sensor-stop condition" in partial["answer"]
+    assert "TRUNCATED" not in partial["answer"]
+    report = export_investigation(store, run["id"])
+    assert report["status"] == "budget_exceeded"
+    assert report["answer_contract"]["outcome"] == "budget_limited"
+    assert report["library_citation_checks"]["unresolved"] == []
+    assert report["library_citation_checks"]["not_returned_by_tools"] == []
+    assert assess(stopped, partial["answer"])["claim_entailment"] == "not_verified"
+    assert report["library_citations"][0]["id"] == source["id"]
+    add(KnowledgeStore(tmp_path), "Alarm E17 NEW source must not enter the snapshot.")
+    with pytest.raises(RunConflict, match="cannot increase"):
+        store.continue_tokens(run["id"], 32768)
+    queued = store.continue_tokens(run["id"])
+    assert queued["result"] == partial
+    assert queued["limits"] == stopped["limits"]
+    assert queued["tokens"] == stopped["tokens"]
+    assert queued["language"] == "de" and queued["library_document_ids"] == [source["id"]]
+    with pytest.raises(RunConflict):
+        store.continue_tokens(run["id"])
+    store.claim()
+    execute_run(tmp_path, run["id"], model=model)
+    final = store.get(run["id"])
+    assert final["status"] == "completed", final
+    assert final["attempts"] == 2 and final["tokens"] == 450
+    assert final["model_calls"] == 3 and final["tool_calls"] == 1
+    assert final["limits"] == stopped["limits"]
+    assert final["thread_id"] == stopped["thread_id"]
+    assert final["result"]["capacity_limited"] is True
+    assert len([e for e in store.events(run["id"]) if e["type"] == "tool_finished"]) == 1
+
+
+def test_repeated_output_stop_remains_incomplete_and_never_retries_automatically(
+    tmp_path, monkeypatch
+):
+    store, run, _ = library_run(tmp_path, monkeypatch, language="en")
+    model = OutputStopOllama(
+        model="offline", directory=str(tmp_path), run_id=run["id"], always_truncate=True
+    )
+    execute_run(tmp_path, run["id"], model=model)
+    store.continue_tokens(run["id"])
+    store.claim()
+    execute_run(tmp_path, run["id"], model=model)
+    final = store.get(run["id"])
+    assert final["status"] == "budget_exceeded"
+    assert final["model_calls"] == 3 and final["tokens"] == 450
+    assert "Partial evidence review" in final["result"]["answer"]
+    assert "TRUNCATED" not in final["result"]["answer"]
+    assert store.claim() is None
+
+
+@pytest.mark.parametrize(
+    "status,resource",
+    [
+        ("budget_exceeded", "model_calls"),
+        ("budget_exceeded", "steps"),
+        ("budget_exceeded", "tool_calls"),
+        ("timed_out", None),
+    ],
+)
+def test_nonrecoverable_limits_keep_partial_but_cannot_continue(tmp_path, status, resource):
+    store = RunStore(tmp_path)
+    run = store.create("Generated question", chat_mode=True, language="en")
+    store.claim()
+    store.finish(run["id"], status, error={"resource": resource, "message": "limit"})
+    final = store.get(run["id"])
+    assert final["status"] == status
+    assert "No suitable text evidence" in final["result"]["answer"]
+    assert final["tokens"] == final["model_calls"] == final["tool_calls"] == 0
+    with pytest.raises(RunConflict):
+        store.continue_tokens(run["id"], 32768)
+
+
+def test_partial_preview_filters_frozen_scope_and_renders_untrusted_text_literally():
+    from eil.budget_recovery import partial_result
+
+    run = {
+        "question": "Alarm",
+        "language": "en",
+        "library_document_ids": ["allowed"],
+        "problem_attachment_ids": ["log1"],
+        "source_ids": ["pdf1"],
+        "library_lookup": {
+            "hits": [
+                {"citation_id": "kb:allowed:p1:c1", "text": "Alarm <img src=x> [kb:foreign:p1:c1]"},
+                {"citation_id": "kb:foreign:p1:c1", "text": "FOREIGN_SECRET"},
+            ]
+        },
+        "problem_source_reads": [
+            {"citation_id": "log:log1:l1-2", "text": "Alarm E17"},
+            {"citation_id": "log:foreign:l1", "text": "PRIVATE_FOREIGN_LOG"},
+        ],
+    }
+    events = [
+        {
+            "name": "search_case_documents",
+            "status": "success",
+            "observation": json.dumps(
+                {"hits": [{"citation_id": "pdf:pdf1:p1:c1", "text": "Alarm: saved PDF excerpt"}]}
+            ),
+        },
+        {"name": "task", "status": "success", "observation": "INFERRED_DRAFT"},
+        {"name": "read_case_citation", "status": "error", "observation": "ERROR_TEXT"},
+    ]
+    result = partial_result(run, events)
+    assert len(result["preview_citation_ids"]) == 3
+    assert "saved PDF excerpt" in result["answer"]
+    assert r"\<img src=x\>" in result["answer"]
+    for forbidden in (
+        "FOREIGN_SECRET",
+        "PRIVATE_FOREIGN_LOG",
+        "INFERRED_DRAFT",
+        "ERROR_TEXT",
+        "kb:foreign",
+    ):
+        assert forbidden not in result["answer"]
+
+
+def test_cancel_wins_over_budget_finish_and_overage_does_not_resume_it(tmp_path):
+    store = RunStore(tmp_path)
+    run = store.create("Generated cancel", chat_mode=True)
+    store.claim()
+    _, admission = store.reserve_model(run["id"], 8192)
+    store.control(run["id"], "cancel")
+    with pytest.raises(BudgetExceeded):
+        store.settle_tokens(run["id"], admission["reserved"], admission["reserved"] + 100)
+    store.finish(run["id"], "budget_exceeded", error={"resource": "tokens"})
+    saved = store.get(run["id"])
+    assert saved["control"] == "cancel" and saved["result"] is None
+    assert saved["tokens"] == admission["reserved"] + 100
+    store.finish(run["id"], "cancelled", force=True)
+    assert store.get(run["id"])["status"] == "cancelled"
+
+
+def test_partial_export_and_continuation_remain_owner_scoped(tmp_path):
+    from eil.auth import COOKIE, AuthStore
+    from tests.auth_helpers import PASSWORD
+
+    auth = AuthStore(tmp_path)
+    owner = auth.enroll(auth.bootstrap(), "test-owner", PASSWORD)
+    member = auth.add_user(owner, "other-member", PASSWORD)
+    store = RunStore(tmp_path)
+    run = store.create("Owner problem", chat_mode=True, owner_id=owner.id)
+    store.claim()
+    store.finish(run["id"], "budget_exceeded", error={"resource": "output_tokens"})
+    with TestClient(
+        create_app(lambda: RunService(tmp_path, worker_target=controlled_worker)),
+        base_url="http://127.0.0.1",
+    ) as client:
+        token, _ = auth.login(member.username, PASSWORD)
+        client.cookies.set(COOKIE, token)
+        base = f"/api/investigations/{run['id']}"
+        assert client.get(base).status_code == 404
+        assert client.get(base + "/export").status_code == 404
+        assert client.post(base + "/continue", json={}).status_code == 404
+        assert store.get(run["id"])["status"] == "budget_exceeded"
+
+
+def test_output_finish_cannot_bypass_other_limits_or_deleted_case(tmp_path, monkeypatch):
+    store, run, _ = library_run(tmp_path, monkeypatch)
+    store.finish(run["id"], "budget_exceeded", error={"resource": "output_tokens"})
+    original = store.get(run["id"])
+    for counter, limit in (
+        ("tokens", "max_total_tokens"),
+        ("model_calls", "max_model_calls"),
+        ("tool_calls", "max_tool_calls"),
+        ("steps", "max_steps"),
+        ("elapsed_seconds", "timeout_seconds"),
+    ):
+        store.change(run["id"], lambda r, c: r.update({counter: r["limits"][limit]}))
+        with pytest.raises(RunConflict):
+            store.continue_tokens(run["id"])
+        store.change(run["id"], lambda r, c: r.update({counter: original[counter]}))
+    store.change(run["id"], lambda r, c: r.update(case_deleted=True))
+    with pytest.raises(RunConflict, match="Restore"):
+        store.continue_tokens(run["id"])
 
 
 def stopped_run(directory, *, tokens=23018, maximum=32768):

@@ -18,7 +18,8 @@ import { Modal } from "./components";
 import { stopped, useInvestigation } from "./useInvestigation";
 import { friendlyStatus, readableAnswer } from "./userFlow";
 import { userReport } from "./userReport";
-import { tokenContinuation } from "./budgetRecovery";
+import { continuationLabel, tokenContinuation } from "./budgetRecovery";
+import SafeAnswer from "./SafeAnswer";
 import SiemensReferences from "./SiemensReferences";
 import { LibraryReferences } from "./KnowledgeLibrary";
 import { advancedUrl, message } from "./UserApp";
@@ -310,9 +311,7 @@ export default function UserResults({
                     }
                   >
                     <Play size={17} />
-                    {extraTokens
-                      ? t("Mit zusätzlicher Kapazität fortsetzen")
-                      : t("Untersuchung fortsetzen")}
+                    {continuationLabel(run, extraTokens)}
                   </button>
                 )}
                 {!active && !resumable && extraTokens === null && (
@@ -328,6 +327,26 @@ export default function UserResults({
                     "Verbindung unterbrochen. Wird neu verbunden; die gespeicherte Untersuchung bleibt unverändert.",
                   )}
                 </p>
+              )}
+            </section>
+          )}
+          {!completed && !active && run.result?.capacity_limited && (
+            <section className="ux-finding-card">
+              <h2>{t("Teilweise Belegprüfung")}</h2>
+              <SafeAnswer
+                text={report?.answer || run.result.answer}
+                references={[
+                  ...(report?.citations || []),
+                  ...(report?.library_citations || []),
+                  ...(report?.problem_citations || []),
+                ]}
+              />
+              {report && (
+                <>
+                  <AnswerReferences report={report} onOpen={openCitation} />
+                  <LibraryReferences report={report} runId={id} />
+                  <SiemensReferences report={report} />
+                </>
               )}
             </section>
           )}

@@ -36,6 +36,20 @@ EIL should use existing frameworks such as Deep Agents and LangGraph; do not rei
 `uv run python -m eil.cli agent`  # requires running Ollama + configured model
 
 ## Current milestone
+The user explicitly authorized budget-stop recovery as a goal on 2026-11-02.
+Return a labelled, deterministic preview of already retrieved text after a bounded
+stop, with exact scoped citations and no new inference or retrieval. Preserve the
+terminal failure, actual cumulative usage, language, ownership and source snapshot.
+Only a human continuation may queue another request. Output-limit continuation is
+finish-only within unchanged limits; total-token continuation retains the existing
+131,072 hard cap. Never retry automatically or count a preview as a successful
+model answer. See `docs/budget-stop-recovery.md`; stop after implementation,
+validation and the already authorized normal GitHub publication. No later
+milestone, hosted run, HPC job, equipment or production work is authorized.
+Local validation passed 419 backend / 79 frontend tests, both offline gates and
+the privacy guard (609 tracked files/history, zero findings). The original V8
+output-stop failure is preserved; its saved evidence was previewed offline only.
+
 The user authorized fixing citation-quality failures and implementing model profiles
 for L40S, A100 40 GB, A100 80 GB and four A100 40 GB on 2026-11-02. Keep operator
 selection separate from normal chat; no model downloads, paid provider, HPC job,

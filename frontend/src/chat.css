@@ -295,3 +295,13 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.chat-recovery {
+  margin: 0 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--border, #d9e0e8);
+  border-radius: 12px;
+}
+.chat-recovery p {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+}

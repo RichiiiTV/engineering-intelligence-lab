@@ -1,5 +1,14 @@
 // Authored interface copy only. Source quotations, user input and model answers are excluded.
 const english: Record<string, string> = {
+  "Aus vorhandenen Belegen abschließen": "Finish from existing evidence",
+  "Dein Fortschritt und die bisherigen Quellen sind gespeichert. Die Untersuchung ist noch nicht abgeschlossen.":
+    "Your progress and existing sources are saved. The investigation is still incomplete.",
+  "Mit den vorhandenen Belegen eine kurze Antwort versuchen. Es werden keine neuen Suchen gestartet.":
+    "Try a short answer using existing evidence. No new searches will be started.",
+  "Nur mit deinem Klick wird zusätzliche Tokenkapazität freigegeben. Bisheriger Verbrauch und andere Grenzen bleiben erhalten.":
+    "Your click explicitly grants additional token capacity. Previous usage and other limits are preserved.",
+  "Mit dem verbleibenden Budget fortsetzen. Bisheriger Verbrauch und Quellen bleiben erhalten.":
+    "Continue within the remaining budget. Previous usage and sources are preserved.",
   "Quelle schließen": "Close source",
   Quellenansicht: "Source view",
   Leseansicht: "Reading view",

@@ -135,7 +135,10 @@ def normalize_citations(run, answer):
 
 def assess(run, answer):
     answer = normalize_citations(run, str(answer))
-    if run.get("budget_summary"):
+    if run.get("budget_summary") or (
+        run.get("status") in {"budget_exceeded", "timed_out"}
+        and (run.get("result") or {}).get("answer_mode") == "budget_source_extract"
+    ):
         return {"outcome": "budget_limited", "issues": [], "claim_entailment": "not_verified"}
     if not answer.strip() and run.get("status") not in {None, "queued", "running", "completed"}:
         return {"outcome": "not_completed", "issues": [], "claim_entailment": "not_verified"}

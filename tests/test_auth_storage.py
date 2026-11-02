@@ -133,6 +133,7 @@ def test_provider_overage_is_atomic_audited_and_cannot_resume(tmp_path):
         store.settle_tokens(run["id"], admission["reserved"], 12000)
     saved = store.get(run["id"])
     assert saved["tokens"] == 12000 and saved["status"] == "budget_exceeded"
+    assert saved["result"]["answer_contract"]["outcome"] == "budget_limited"
     assert any(e["type"] == "model_usage_overage" for e in store.events(run["id"]))
     with pytest.raises(RunStopped):
         store.reserve_model(run["id"], 8192)

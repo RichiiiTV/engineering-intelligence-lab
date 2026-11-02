@@ -458,6 +458,10 @@ class RunMiddleware(AgentMiddleware):
         return response
 
     def wrap_tool_call(self, request, handler):
+        if self.store.get(self.run_id).get("finish_from_evidence"):
+            raise BudgetExceeded(
+                "Finishing from existing evidence allows no more tools", "tool_calls"
+            )
         if request.tool_call["name"] in {
             "ls",
             "read_file",
@@ -575,7 +579,13 @@ def _execute_run(directory, run_id, *, model=None, agent_mode="single"):
             )
             from .vision import analyze_images, visual_only_question
 
-            visual = analyze_images(directory, run, model=model) if vision else {}
+            visual = (
+                run.get("problem_visual_observations", {})
+                if run.get("finish_from_evidence")
+                else analyze_images(directory, run, model=model)
+                if vision
+                else {}
+            )
             if visual and visual_only_question(run["question"]):
                 lookup = {
                     "status": "visual_only",
